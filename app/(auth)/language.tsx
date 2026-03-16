@@ -6,6 +6,13 @@ import { useKhataSession } from "@/shared/context/KhataSessionContext";
 export default function LanguageRoute(): React.JSX.Element {
   const router = useRouter();
   const { state } = useKhataSession();
-  const Screen = React.useMemo(() => createLanguageSelectionScreen({ database: state.database, onContinue: () => router.push("/(auth)/onboarding") }), [router, state.database]);
+  const Screen = React.useMemo(
+    () =>
+      createLanguageSelectionScreen({
+        database: state.database,
+        onContinue: () => router.push("/(auth)/onboarding"),
+      }),
+    [router, state.database],
+  );
   return <Screen />;
 }

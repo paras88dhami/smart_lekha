@@ -6,6 +6,17 @@ import { useKhataSession } from "@/shared/context/KhataSessionContext";
 export default function PhoneAuthRoute(): React.JSX.Element {
   const router = useRouter();
   const { state, updatePhoneNumber } = useKhataSession();
-  const Screen = React.useMemo(() => createPhoneEntryScreen({ initialPhoneNumber: state.phoneNumber, onContinue: (phoneNumber: string) => { updatePhoneNumber(phoneNumber); router.push("/(tabs)/home"); }, onClose: () => router.back() }), [router, state.phoneNumber, updatePhoneNumber]);
+  const Screen = React.useMemo(
+    () =>
+      createPhoneEntryScreen({
+        initialPhoneNumber: state.phoneNumber,
+        onContinue: (phoneNumber: string) => {
+          updatePhoneNumber(phoneNumber);
+          router.push("/(tabs)/home");
+        },
+        onClose: () => router.back(),
+      }),
+    [router, state.phoneNumber, updatePhoneNumber],
+  );
   return <Screen />;
 }
