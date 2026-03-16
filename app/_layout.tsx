@@ -1,24 +1,23 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import React from "react";
+import { Stack } from "expo-router";
+import { KhataSessionProvider } from "@/shared/context/KhataSessionContext";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
+export default function RootLayout(): React.JSX.Element {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+    <KhataSessionProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="create-account" />
+        <Stack.Screen name="switch-profile" />
+        <Stack.Screen name="edit-shortcuts" />
+        <Stack.Screen name="notifications" />
+        <Stack.Screen name="reports" />
+        <Stack.Screen name="cash-bank" />
+        <Stack.Screen name="quick-entry" />
+        <Stack.Screen name="quick-pos" />
       </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    </KhataSessionProvider>
   );
 }
