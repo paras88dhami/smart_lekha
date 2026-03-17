@@ -7,14 +7,10 @@ import type { LanguageSelectionViewModel } from "./languageSelection.viewModel";
 import { changeLanguage } from "@/shared/i18n/resources";
 import { LANGUAGE_OPTIONS } from "./languageOptions";
 
-type Dependencies = {
-  onContinue?: () => void;
-};
-
 export const useLanguageSelectionViewModel = (
   loadSelectedLanguageUseCase: LoadSelectedLanguageUseCase,
   persistSelectedLanguageUseCase: PersistSelectedLanguageUseCase,
-  deps?: Dependencies,
+  deps?: {onContinue?: () => void;},
 ): LanguageSelectionViewModel => {
   const [state, setState] = useState<LanguageSelectionState>({
     status: Status.Idle,
