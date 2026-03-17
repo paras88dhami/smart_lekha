@@ -1,8 +1,7 @@
 import type { Result } from "@/shared/types/result.types";
 import type { Database } from "@nozbe/watermelondb";
+import type { AppSettingDataSource } from "./appSetting.dataSource";
 import type { AppSettingModel } from "./appSetting.model";
-import { AppSettingDataSource } from "./appSetting.dataSource";
-
 
 const APP_SETTING_TABLE = "app_settings";
 
@@ -13,52 +12,57 @@ type DefaultAppSetting = {
   lastSelectedCountryIso: string;
 };
 
-const getDefaultAppSetting = (): DefaultAppSetting => ({
+const createDefaultAppSettingInput = (): DefaultAppSetting => ({
   selectedLanguage: "en",
   onboardingCompleted: false,
   activeProfileId: null,
   lastSelectedCountryIso: "NP",
 });
 
-const getCollection = (database: Database) => {
-  return database.get<AppSettingModel>(APP_SETTING_TABLE);
-};
+const getAppSettingCollection = (database: Database) =>
+  database.get<AppSettingModel>(APP_SETTING_TABLE);
 
-const getExistingRecord = async (
+const getFirstAppSettingRecord = async (
   database: Database,
 ): Promise<AppSettingModel | null> => {
-  const records = await getCollection(database).query().fetch();
+  const records = await getAppSettingCollection(database).query().fetch();
   return records[0] ?? null;
 };
 
-const createRecord = async (
+const createAppSettingRecord = async (
   database: Database,
   input: DefaultAppSetting,
 ): Promise<AppSettingModel> => {
-  const timestamp = Date.now();
+  const createdTimestamp = Date.now();
 
-  return database.write(async () => {
-    return getCollection(database).create((record: AppSettingModel) => {
-      record.selectedLanguage = input.selectedLanguage;
-      record.onboardingCompleted = input.onboardingCompleted;
-      record.activeProfileId = input.activeProfileId;
-      record.lastSelectedCountryIso = input.lastSelectedCountryIso;
-      record.createdAt = timestamp;
-      record.updatedAt = timestamp;
-    });
+  return database.write(async (): Promise<AppSettingModel> => {
+    return getAppSettingCollection(database).create(
+      (record: AppSettingModel) => {
+        record.selectedLanguage = input.selectedLanguage;
+        record.onboardingCompleted = input.onboardingCompleted;
+        record.activeProfileId = input.activeProfileId;
+        record.lastSelectedCountryIso = input.lastSelectedCountryIso;
+        record.createdAt = createdTimestamp;
+        record.updatedAt = createdTimestamp;
+      },
+    );
   });
 };
 
-const getOrCreateRecord = async (
+const getOrCreateAppSettingRecord = async (
   database: Database,
 ): Promise<AppSettingModel> => {
-  const existingRecord = await getExistingRecord(database);
+  const existingRecord = await getFirstAppSettingRecord(database);
 
   if (existingRecord) {
     return existingRecord;
   }
 
-  return createRecord(database, getDefaultAppSetting());
+  return createAppSettingRecord(database, createDefaultAppSettingInput());
+};
+
+const mapUnknownError = (error: unknown, fallbackMessage: string): Error => {
+  return error instanceof Error ? error : new Error(fallbackMessage);
 };
 
 export const createLocalAppSettingDataSource = (
@@ -66,39 +70,33 @@ export const createLocalAppSettingDataSource = (
 ): AppSettingDataSource => ({
   async getAppSetting(): Promise<Result<AppSettingModel | null>> {
     try {
-      const appSetting = await getExistingRecord(database);
+      const appSetting = await getFirstAppSettingRecord(database);
       return { success: true, value: appSetting };
     } catch (error) {
       return {
         success: false,
-        error:
-          error instanceof Error
-            ? error
-            : new Error("Failed to load app setting"),
+        error: mapUnknownError(error, "Failed to load app setting."),
       };
     }
   },
 
   async createDefaultAppSetting(): Promise<Result<AppSettingModel>> {
     try {
-      const appSetting = await getOrCreateRecord(database);
+      const appSetting = await getOrCreateAppSettingRecord(database);
       return { success: true, value: appSetting };
     } catch (error) {
       return {
         success: false,
-        error:
-          error instanceof Error
-            ? error
-            : new Error("Failed to create app setting"),
+        error: mapUnknownError(error, "Failed to create app setting."),
       };
     }
   },
 
   async updateSelectedLanguage(languageCode: string): Promise<Result<void>> {
     try {
-      const appSetting = await getOrCreateRecord(database);
+      const appSetting = await getOrCreateAppSettingRecord(database);
 
-      await database.write(async () => {
+      await database.write(async (): Promise<void> => {
         await appSetting.update((record: AppSettingModel) => {
           record.selectedLanguage = languageCode;
           record.updatedAt = Date.now();
@@ -109,10 +107,7 @@ export const createLocalAppSettingDataSource = (
     } catch (error) {
       return {
         success: false,
-        error:
-          error instanceof Error
-            ? error
-            : new Error("Failed to update selected language"),
+        error: mapUnknownError(error, "Failed to update selected language."),
       };
     }
   },

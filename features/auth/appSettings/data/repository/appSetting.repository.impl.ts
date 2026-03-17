@@ -1,41 +1,48 @@
-import { AuthResult } from "@/features/auth/languageSelection/types/types";
-import { AppSettingDataSource } from "../dataSource/appSetting.dataSource";
+import {
+  AuthDatabaseError,
+  type AuthResult,
+} from "@/features/auth/shared/authError.types";
+import type { LanguageCodeType } from "@/features/auth/languageSelection/types/types";
+import type { AppSettingDataSource } from "../dataSource/appSetting.dataSource";
+import type { AppSettingModel } from "../dataSource/appSetting.model";
 import type { AppSettingRepository } from "./appSetting.repository";
-import { AuthDatabaseError } from "@/features/auth/shared/authError.types";
+
+const createFailureResult = <T>(): AuthResult<T> => {
+  return { success: false, error: AuthDatabaseError };
+};
 
 export const createAppSettingRepository = (
-  local: AppSettingDataSource,
+  localDataSource: AppSettingDataSource,
 ): AppSettingRepository => ({
-  async getAppSetting(): Promise<AuthResult<any>> {
-    const result = await local.getAppSetting();
+  async getAppSetting(): Promise<AuthResult<AppSettingModel | null>> {
+    const result = await localDataSource.getAppSetting();
 
-    if (result.success) {
-      return { success: true, value: result.value };
+    if (!result.success) {
+      return createFailureResult<AppSettingModel | null>();
     }
 
-    return { success: false, error: AuthDatabaseError };
+    return { success: true, value: result.value };
   },
 
-  async createDefaultAppSetting(): Promise<AuthResult<any>> {
-    const result = await local.createDefaultAppSetting();
+  async createDefaultAppSetting(): Promise<AuthResult<AppSettingModel>> {
+    const result = await localDataSource.createDefaultAppSetting();
 
-    if (result.success) {
-      return { success: true, value: result.value };
+    if (!result.success) {
+      return createFailureResult<AppSettingModel>();
     }
 
-    return { success: false, error: AuthDatabaseError };
+    return { success: true, value: result.value };
   },
 
   async updateSelectedLanguage(
-    languageCode: string,
+    languageCode: LanguageCodeType,
   ): Promise<AuthResult<void>> {
-    const trimmedLanguageCode = languageCode.trim();
-    const result = await local.updateSelectedLanguage(trimmedLanguageCode);
+    const result = await localDataSource.updateSelectedLanguage(languageCode);
 
-    if (result.success) {
-      return { success: true, value: undefined };
+    if (!result.success) {
+      return createFailureResult<void>();
     }
 
-    return { success: false, error: AuthDatabaseError };
+    return { success: true, value: undefined };
   },
 });
