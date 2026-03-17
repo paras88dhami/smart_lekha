@@ -1,9 +1,6 @@
 import { Status } from "@/shared/types/status.types";
 import React from "react";
-import type {
-  LanguageCodeType,
-  LanguageSelectionState,
-} from "../types/types";
+import type { LanguageCodeType, LanguageSelectionState } from "../types/types";
 import { LANGUAGE_OPTIONS } from "../types/types";
 import type { GetSelectedLanguageUseCase } from "../useCase/getSelectedLanguage.useCase";
 import type { UpdateSelectedLanguageUseCase } from "../useCase/updateSelectedLanguage.useCase";
@@ -21,20 +18,22 @@ const getInitialState = (): LanguageSelectionState => ({
   options: LANGUAGE_OPTIONS,
 });
 
-export const useLanguageSelectionViewModel = (
-  params: UseLanguageSelectionViewModelParams,
-): LanguageSelectionViewModel => {
-  const [state, setState] = React.useState<LanguageSelectionState>(
-    getInitialState(),
-  );
+export const useLanguageSelectionViewModel = ({
+  getSelectedLanguageUseCase,
+  updateSelectedLanguageUseCase,
+  onContinue,
+}: UseLanguageSelectionViewModelParams): LanguageSelectionViewModel => {
+  const [state, setState] =
+    React.useState<LanguageSelectionState>(getInitialState());
 
   const loadSelectedLanguage = React.useCallback(async (): Promise<void> => {
     setState((currentState) => ({
       ...currentState,
       status: Status.Loading,
+      error: undefined,
     }));
 
-    const result = await params.getSelectedLanguageUseCase.execute();
+    const result = await getSelectedLanguageUseCase.execute();
 
     if (!result.success) {
       setState((currentState) => ({
@@ -50,7 +49,7 @@ export const useLanguageSelectionViewModel = (
       status: Status.Success,
       selectedLanguageCode: (result.value ?? "en") as LanguageCodeType,
     }));
-  }, [params]);
+  }, [getSelectedLanguageUseCase]);
 
   const selectLanguage = React.useCallback(
     (languageCode: LanguageCodeType): void => {
@@ -66,9 +65,10 @@ export const useLanguageSelectionViewModel = (
     setState((currentState) => ({
       ...currentState,
       status: Status.Loading,
+      error: undefined,
     }));
 
-    const result = await params.updateSelectedLanguageUseCase.execute({
+    const result = await updateSelectedLanguageUseCase.execute({
       languageCode: state.selectedLanguageCode,
     });
 
@@ -85,8 +85,9 @@ export const useLanguageSelectionViewModel = (
       ...currentState,
       status: Status.Success,
     }));
-    params.onContinue();
-  }, [params, state.selectedLanguageCode]);
+
+    onContinue();
+  }, [onContinue, state.selectedLanguageCode, updateSelectedLanguageUseCase]);
 
   React.useEffect(() => {
     void loadSelectedLanguage();

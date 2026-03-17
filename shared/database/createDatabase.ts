@@ -15,7 +15,7 @@ export function createDatabase({
   const adapter = new SQLiteAdapter({
     schema,
     migrations,
-    jsi: true,
+    jsi: false,
     onSetUpError: (error) => {
       console.error(error);
     },

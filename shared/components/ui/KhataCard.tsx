@@ -14,6 +14,6 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     borderWidth: 1,
     borderColor: KhataColors.border,
-    padding: 18,
+    padding: 10,
   },
 });

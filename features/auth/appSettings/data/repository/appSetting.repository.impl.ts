@@ -1,9 +1,7 @@
-import {
-  AuthDatabaseError,
-  type AuthResult,
-} from "@/features/auth/types/authError.types";
-import type { AppSettingDataSource } from "../dataSource/appSetting.dataSource";
+import { AuthResult } from "@/features/auth/languageSelection/types/types";
+import { AppSettingDataSource } from "../dataSource/appSetting.dataSource";
 import type { AppSettingRepository } from "./appSetting.repository";
+import { AuthDatabaseError } from "@/features/auth/shared/authError.types";
 
 export const createAppSettingRepository = (
   local: AppSettingDataSource,
@@ -28,7 +26,9 @@ export const createAppSettingRepository = (
     return { success: false, error: AuthDatabaseError };
   },
 
-  async updateSelectedLanguage(languageCode: string): Promise<AuthResult<void>> {
+  async updateSelectedLanguage(
+    languageCode: string,
+  ): Promise<AuthResult<void>> {
     const trimmedLanguageCode = languageCode.trim();
     const result = await local.updateSelectedLanguage(trimmedLanguageCode);
 

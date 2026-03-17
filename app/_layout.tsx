@@ -1,11 +1,11 @@
 import React from "react";
 import { Stack } from "expo-router";
-import { KhataSessionProvider } from "@/shared/context/KhataSessionContext";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout(): React.JSX.Element {
   return (
-    <KhataSessionProvider>
+    <SafeAreaProvider style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false }} />
-    </KhataSessionProvider>
+    </SafeAreaProvider>
   );
 }
