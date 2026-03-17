@@ -5,7 +5,7 @@ import type {
 
 export interface LanguageSelectionViewModel {
   state: LanguageSelectionState;
-  loadSelectedLanguage(): Promise<void>;
-  selectLanguage(languageCode: LanguageCodeType): void;
-  continueToNextStep(): Promise<void>;
+  handleLoadSelectedLanguage(): Promise<void>;
+  onLanguagePress(languageCode: LanguageCodeType): void;
+  onContinuePress(): Promise<void>;
 }

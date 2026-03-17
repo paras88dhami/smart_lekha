@@ -1,102 +1,105 @@
 import { Status } from "@/shared/types/status.types";
-import React from "react";
+import { useEffect, useState } from "react";
 import type { LanguageCodeType, LanguageSelectionState } from "../types/types";
-import { LANGUAGE_OPTIONS } from "../types/types";
-import type { GetSelectedLanguageUseCase } from "../useCase/getSelectedLanguage.useCase";
-import type { UpdateSelectedLanguageUseCase } from "../useCase/updateSelectedLanguage.useCase";
+import type { LoadSelectedLanguageUseCase } from "../useCase/loadSelectedLanguage.useCase";
+import type { PersistSelectedLanguageUseCase } from "../useCase/persistSelectedLanguage.useCase";
 import type { LanguageSelectionViewModel } from "./languageSelection.viewModel";
+import { changeLanguage } from "@/shared/i18n/resources";
+import { LANGUAGE_OPTIONS } from "./languageOptions";
 
-type UseLanguageSelectionViewModelParams = {
-  getSelectedLanguageUseCase: GetSelectedLanguageUseCase;
-  updateSelectedLanguageUseCase: UpdateSelectedLanguageUseCase;
-  onContinue: () => void;
+type Dependencies = {
+  onContinue?: () => void;
 };
 
-const getInitialState = (): LanguageSelectionState => ({
-  status: Status.Idle,
-  selectedLanguageCode: "en",
-  options: LANGUAGE_OPTIONS,
-});
+export const useLanguageSelectionViewModel = (
+  loadSelectedLanguageUseCase: LoadSelectedLanguageUseCase,
+  persistSelectedLanguageUseCase: PersistSelectedLanguageUseCase,
+  deps?: Dependencies,
+): LanguageSelectionViewModel => {
+  const [state, setState] = useState<LanguageSelectionState>({
+    status: Status.Idle,
+    selectedLanguageCode: "en",
+    options: LANGUAGE_OPTIONS,
+    errorMessage: "",
+  });
 
-export const useLanguageSelectionViewModel = ({
-  getSelectedLanguageUseCase,
-  updateSelectedLanguageUseCase,
-  onContinue,
-}: UseLanguageSelectionViewModelParams): LanguageSelectionViewModel => {
-  const [state, setState] =
-    React.useState<LanguageSelectionState>(getInitialState());
+  const onLanguagePress = (languageCode: LanguageCodeType): void => {
+    changeLanguage(languageCode);
 
-  const loadSelectedLanguage = React.useCallback(async (): Promise<void> => {
+    setState((currentState) => ({
+      ...currentState,
+      selectedLanguageCode: languageCode,
+      errorMessage: "",
+    }));
+  };
+
+  const onContinuePress = async (): Promise<void> => {
     setState((currentState) => ({
       ...currentState,
       status: Status.Loading,
-      error: undefined,
+      errorMessage: "",
     }));
 
-    const result = await getSelectedLanguageUseCase.execute();
+    const selectedLanguageCode = state.selectedLanguageCode;
 
-    if (!result.success) {
-      setState((currentState) => ({
-        ...currentState,
-        status: Status.Failure,
-        error: result.error.message,
-      }));
-      return;
-    }
-
-    setState((currentState) => ({
-      ...currentState,
-      status: Status.Success,
-      selectedLanguageCode: (result.value ?? "en") as LanguageCodeType,
-    }));
-  }, [getSelectedLanguageUseCase]);
-
-  const selectLanguage = React.useCallback(
-    (languageCode: LanguageCodeType): void => {
-      setState((currentState) => ({
-        ...currentState,
-        selectedLanguageCode: languageCode,
-      }));
-    },
-    [],
-  );
-
-  const continueToNextStep = React.useCallback(async (): Promise<void> => {
-    setState((currentState) => ({
-      ...currentState,
-      status: Status.Loading,
-      error: undefined,
-    }));
-
-    const result = await updateSelectedLanguageUseCase.execute({
-      languageCode: state.selectedLanguageCode,
+    const result = await persistSelectedLanguageUseCase.execute({
+      languageCode: selectedLanguageCode,
     });
 
-    if (!result.success) {
+    if (result.success) {
       setState((currentState) => ({
         ...currentState,
-        status: Status.Failure,
-        error: result.error.message,
+        status: Status.Success,
+        errorMessage: "",
+      }));
+
+      deps?.onContinue?.();
+      return;
+    }
+
+    setState((currentState) => ({
+      ...currentState,
+      status: Status.Failure,
+      errorMessage: result.error.message,
+    }));
+  };
+
+  const handleLoadSelectedLanguage = async (): Promise<void> => {
+    setState((currentState) => ({
+      ...currentState,
+      status: Status.Loading,
+      errorMessage: "",
+    }));
+
+    const result = await loadSelectedLanguageUseCase.execute();
+
+    if (result.success) {
+      changeLanguage(result.value);
+
+      setState((currentState) => ({
+        ...currentState,
+        status: Status.Success,
+        selectedLanguageCode: result.value,
+        errorMessage: "",
       }));
       return;
     }
 
     setState((currentState) => ({
       ...currentState,
-      status: Status.Success,
+      status: Status.Failure,
+      errorMessage: result.error.message,
     }));
+  };
 
-    onContinue();
-  }, [onContinue, state.selectedLanguageCode, updateSelectedLanguageUseCase]);
-
-  React.useEffect(() => {
-    void loadSelectedLanguage();
-  }, [loadSelectedLanguage]);
+  useEffect(() => {
+    void handleLoadSelectedLanguage();
+  }, []);
 
   return {
     state,
-    loadSelectedLanguage,
-    selectLanguage,
-    continueToNextStep,
+    handleLoadSelectedLanguage,
+    onLanguagePress,
+    onContinuePress,
   };
 };
