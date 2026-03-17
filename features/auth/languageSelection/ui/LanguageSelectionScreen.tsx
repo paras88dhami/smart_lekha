@@ -6,6 +6,7 @@ import KhataCard from "@/shared/components/ui/KhataCard";
 import ScreenContainer from "@/shared/components/ui/ScreenContainer";
 import { KhataColors } from "@/shared/theme/colors";
 import { LanguageSelectionViewModel } from "@/features/auth/languageSelection/viewModel/languageSelection.viewModel";
+import ELekhaLogo from "@/shared/components/icons/ELekhaIcon";
 
 type Props = { viewModel: LanguageSelectionViewModel };
 export default function LanguageSelectionScreen(
@@ -14,7 +15,7 @@ export default function LanguageSelectionScreen(
   return (
     <ScreenContainer contentStyle={styles.container}>
       <View>
-        <Text style={styles.brand}>e-Lekha</Text>
+        <ELekhaLogo />
         <Text style={styles.title}>Select Language</Text>
         <Text style={styles.subtitle}>
           You can change it later from settings

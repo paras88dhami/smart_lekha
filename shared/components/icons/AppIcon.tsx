@@ -10,8 +10,20 @@ type Props = {
 
 export default function AppIcon(props: Props): React.JSX.Element {
   if (props.family === "ion") {
-    return <Ionicons name={props.name as never} size={props.size} color={props.color} />;
+    return (
+      <Ionicons
+        name={props.name as never}
+        size={props.size}
+        color={props.color}
+      />
+    );
   }
 
-  return <MaterialCommunityIcons name={props.name as never} size={props.size} color={props.color} />;
+  return (
+    <MaterialCommunityIcons
+      name={props.name as never}
+      size={props.size}
+      color={props.color}
+    />
+  );
 }
