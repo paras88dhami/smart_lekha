@@ -1,13 +1,13 @@
 import en from "../resources/en";
 import hi from "../resources/hi";
 import ne from "../resources/ne";
-
-export const SUPPORTED_LANGUAGE_CODES = ["en", "ne", "hi"] as const;
-export type SupportedLanguageCode = (typeof SUPPORTED_LANGUAGE_CODES)[number];
-
-type TranslationTree = {
-  [key: string]: string | TranslationTree;
-};
+import {
+    FALLBACK_LANGUAGE,
+    SUPPORTED_LANGUAGE_CODES,
+    SupportedLanguageCode,
+    TranslationTree,
+    TranslationValue,
+} from "./types";
 
 type TranslationResources = Record<SupportedLanguageCode, TranslationTree>;
 
@@ -17,13 +17,12 @@ const resources: TranslationResources = {
   hi,
 };
 
-const FALLBACK_LANGUAGE: SupportedLanguageCode = "en";
-
 let currentLanguage: SupportedLanguageCode = FALLBACK_LANGUAGE;
+
 const listeners = new Set<() => void>();
 
 const notifyListeners = (): void => {
-  listeners.forEach((listener: () => void) => {
+  listeners.forEach((listener) => {
     listener();
   });
 };
@@ -32,24 +31,23 @@ const readNestedValue = (
   tree: TranslationTree,
   keyParts: string[],
 ): string | null => {
-  let currentValue: string | TranslationTree = tree;
+  let currentNode: TranslationValue = tree;
 
   for (const keyPart of keyParts) {
-    if (typeof currentValue === "string") {
+    if (typeof currentNode === "string") {
       return null;
     }
 
-    const nextValue: string | TranslationTree | undefined =
-      currentValue[keyPart];
+    const nextNode: TranslationValue | undefined = currentNode[keyPart];
 
-    if (nextValue === undefined) {
+    if (nextNode === undefined) {
       return null;
     }
 
-    currentValue = nextValue;
+    currentNode = nextNode;
   }
 
-  return typeof currentValue === "string" ? currentValue : null;
+  return typeof currentNode === "string" ? currentNode : null;
 };
 
 export const isSupportedLanguageCode = (
@@ -75,17 +73,22 @@ export const changeLanguage = (languageCode: SupportedLanguageCode): void => {
 
 export const translate = (translationKey: string): string => {
   const keyParts = translationKey.split(".");
-  const selectedResource = resources[currentLanguage];
-  const selectedValue = readNestedValue(selectedResource, keyParts);
 
-  if (selectedValue) {
-    return selectedValue;
+  const currentResource = resources[currentLanguage];
+  const currentTranslation = readNestedValue(currentResource, keyParts);
+
+  if (currentTranslation !== null) {
+    return currentTranslation;
   }
 
   const fallbackResource = resources[FALLBACK_LANGUAGE];
-  const fallbackValue = readNestedValue(fallbackResource, keyParts);
+  const fallbackTranslation = readNestedValue(fallbackResource, keyParts);
 
-  return fallbackValue ?? translationKey;
+  if (fallbackTranslation !== null) {
+    return fallbackTranslation;
+  }
+
+  return translationKey;
 };
 
 export const subscribeToLanguageChange = (
