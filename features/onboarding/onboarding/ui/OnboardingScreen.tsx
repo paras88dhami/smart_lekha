@@ -5,6 +5,7 @@ import KhataButton from "@/shared/components/ui/KhataButton";
 import ScreenContainer from "@/shared/components/ui/ScreenContainer";
 import { KhataColors } from "@/shared/theme/colors";
 import { OnboardingViewModel } from "@/features/onboarding/onboarding/viewModel/onboarding.viewModel";
+import ELekhaLogo from "@/shared/components/icons/ELekhaIcon";
 
 type Props = { viewModel: OnboardingViewModel };
 export default function OnboardingScreen(props: Props): React.JSX.Element {
@@ -14,7 +15,7 @@ export default function OnboardingScreen(props: Props): React.JSX.Element {
   return (
     <ScreenContainer contentStyle={styles.container}>
       <View style={styles.topBar}>
-        <Text style={styles.brand}>Lekha</Text>
+        <ELekhaLogo />
         <Text style={styles.language}>🇺🇸 English</Text>
       </View>
       <View style={styles.artArea}>

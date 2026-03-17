@@ -3,6 +3,7 @@ import { KhataDatabase } from "@/shared/database/khata.database";
 import { OnboardingViewModel } from "./onboarding.viewModel";
 
 type Params = { database: KhataDatabase; onFinished: () => void };
+
 const slides = [
   {
     id: "mobile",
@@ -40,20 +41,24 @@ const slides = [
     iconName: "shield-checkmark-outline",
   },
 ];
+
 export function useOnboardingViewModel(params: Params): OnboardingViewModel {
   const [activeIndex, setActiveIndex] = React.useState(0);
+
   const nextSlide = React.useCallback(() => {
-    setActiveIndex((current) => {
-      const next = current + 1;
-      if (next >= slides.length) {
-        params.onFinished();
-        return current;
-      }
-      return next;
-    });
-  }, [params]);
+    const isLastSlide = activeIndex >= slides.length - 1;
+
+    if (isLastSlide) {
+      params.onFinished();
+      return;
+    }
+
+    setActiveIndex((current) => current + 1);
+  }, [activeIndex, params]);
+
   const skipSlides = React.useCallback(() => {
     params.onFinished();
   }, [params]);
+
   return { slides, activeIndex, nextSlide, skipSlides };
 }

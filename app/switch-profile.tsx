@@ -1,1 +1,5 @@
-// Route placeholder in starter scaffold.
+import React from "react";
+
+export default function SwitchProfileRoute() {
+  return <></>;
+}
