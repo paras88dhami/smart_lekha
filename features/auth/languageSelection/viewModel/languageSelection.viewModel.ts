@@ -1,2 +1,11 @@
-import { LanguageItem } from "@/shared/database/khata.database";
-export type LanguageSelectionViewModel = { languages: LanguageItem[]; selectedLanguageId: string; selectLanguage: (languageId: string) => void; continueFlow: () => void; };
+import type {
+  LanguageCodeType,
+  LanguageSelectionState,
+} from "../types/types";
+
+export interface LanguageSelectionViewModel {
+  state: LanguageSelectionState;
+  loadSelectedLanguage(): Promise<void>;
+  selectLanguage(languageCode: LanguageCodeType): void;
+  continueToNextStep(): Promise<void>;
+}

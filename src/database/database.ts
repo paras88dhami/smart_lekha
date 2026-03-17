@@ -1,6 +1,3 @@
-import { migrations } from "@/app/database/migration";
-import { seedBusinessCategories } from "@/app/database/seed/seedBusinessCategories";
-import { seedDefaultAppSettings } from "@/app/database/seed/seedDefaultAppSettings";
 import { appSchema } from "@nozbe/watermelondb";
 import { appSettingsDbConfig } from "@/features/auth/appSettings/data/dataSource/db/appSettingsDbConfig";
 import { authSessionDbConfig } from "@/features/auth/session/data/dataSource/db/authSessionDbConfig";
@@ -9,6 +6,9 @@ import { businessProfileDbConfig } from "@/features/auth/businessProfile/data/da
 import { businessCategoryDbConfig } from "@/features/auth/businessCategory/data/dataSource/db/businessCategoryDbConfig";
 import { otpRequestDbConfig } from "@/features/auth/otp/data/dataSource/db/otpRequestDbConfig";
 import { createDatabase } from "@/shared/database/createDatabase";
+import { migrations } from "./migration";
+import { seedDefaultAppSettings } from "./seed/seedDefaultAppSettings";
+import { seedBusinessCategories } from "./seed/seedBusinessCategories";
 
 const schema = appSchema({
   version: 2,
