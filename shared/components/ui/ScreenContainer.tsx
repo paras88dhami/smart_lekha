@@ -1,6 +1,12 @@
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ScrollView, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import {
+  ScrollView,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
+} from "react-native";
 import { KhataColors } from "@/shared/theme/colors";
 
 type Props = {
@@ -13,7 +19,11 @@ export default function ScreenContainer(props: Props): React.JSX.Element {
   if (props.scrollable) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView contentContainerStyle={[styles.scrollContent, props.contentStyle]}>{props.children}</ScrollView>
+        <ScrollView
+          contentContainerStyle={[styles.scrollContent, props.contentStyle]}
+        >
+          {props.children}
+        </ScrollView>
       </SafeAreaView>
     );
   }

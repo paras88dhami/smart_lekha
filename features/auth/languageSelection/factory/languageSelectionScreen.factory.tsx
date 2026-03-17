@@ -5,10 +5,17 @@ import { KhataDatabase } from "@/shared/database/khata.database";
 
 type Params = { database: KhataDatabase; onContinue: () => void };
 
-export function createLanguageSelectionScreen(params: Params): React.ComponentType {
+export function createLanguageSelectionScreen(
+  params: Params,
+): React.ComponentType {
   return function LanguageSelectionScreenFactory(): React.JSX.Element {
-    const onContinue = React.useCallback((): void => { params.onContinue(); }, [params]);
-    const viewModel = useLanguageSelectionViewModel({ database: params.database, onContinue });
+    const onContinue = React.useCallback((): void => {
+      params.onContinue();
+    }, [params]);
+    const viewModel = useLanguageSelectionViewModel({
+      database: params.database,
+      onContinue,
+    });
     return <LanguageSelectionScreen viewModel={viewModel} />;
   };
 }

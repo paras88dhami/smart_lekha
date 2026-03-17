@@ -1,12 +1,12 @@
 export const KhataColors = {
   background: "#F7F7FA",
   surface: "#FFFFFF",
-  primary: "#39C08D",
-  primaryDark: "#1F8C66",
+  primary: "#46beed",
+  primaryDark: "#0ec3ec",
   border: "#E8E7EE",
   text: "#22212A",
   mutedText: "#7D7A88",
-  softGreen: "#E7F8F0",
-  softRed: "#FCECF2",
-  danger: "#EF5A78",
+  softGreen: "#d3eff7",
+  softRed: "#f5dbe4",
+  danger: "#ea2f54",
 } as const;

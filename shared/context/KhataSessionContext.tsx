@@ -17,7 +17,9 @@ type ContextValue = {
 
 const SessionContext = React.createContext<ContextValue | null>(null);
 
-export function KhataSessionProvider(props: { children: React.ReactNode }): React.JSX.Element {
+export function KhataSessionProvider(props: {
+  children: React.ReactNode;
+}): React.JSX.Element {
   const [state, setState] = React.useState<SessionState>({
     database: createMockKhataDatabase(),
     onboardingComplete: false,
@@ -37,8 +39,15 @@ export function KhataSessionProvider(props: { children: React.ReactNode }): Reac
     setState((current) => ({ ...current, selectedProfileId: profileId }));
   }, []);
 
-  const value = React.useMemo(() => ({ state, completeOnboarding, updatePhoneNumber, selectProfile }), [state, completeOnboarding, updatePhoneNumber, selectProfile]);
-  return <SessionContext.Provider value={value}>{props.children}</SessionContext.Provider>;
+  const value = React.useMemo(
+    () => ({ state, completeOnboarding, updatePhoneNumber, selectProfile }),
+    [state, completeOnboarding, updatePhoneNumber, selectProfile],
+  );
+  return (
+    <SessionContext.Provider value={value}>
+      {props.children}
+    </SessionContext.Provider>
+  );
 }
 
 export function useKhataSession(): ContextValue {

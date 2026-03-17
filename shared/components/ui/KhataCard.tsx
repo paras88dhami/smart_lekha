@@ -9,5 +9,11 @@ export default function KhataCard(props: Props): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: KhataColors.surface, borderRadius: 22, borderWidth: 1, borderColor: KhataColors.border, padding: 18 },
+  card: {
+    backgroundColor: KhataColors.surface,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: KhataColors.border,
+    padding: 18,
+  },
 });
