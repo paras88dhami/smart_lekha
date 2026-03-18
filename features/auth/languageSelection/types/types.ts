@@ -4,7 +4,7 @@ export const LanguageCode = {
   English: "en",
   Nepali: "ne",
   Hindi: "hi",
-  Bangla: "bn",
+
 } as const;
 
 export type LanguageOption = {
@@ -21,3 +21,4 @@ export type LanguageSelectionState = {
   options: LanguageOption[];
   errorMessage: string;
 };
+

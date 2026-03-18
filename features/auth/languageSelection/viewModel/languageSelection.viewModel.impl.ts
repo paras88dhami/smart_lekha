@@ -1,16 +1,20 @@
+import { changeLanguage } from "@/shared/i18n/resources";
 import { Status } from "@/shared/types/status.types";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { LanguageCodeType, LanguageSelectionState } from "../types/types";
 import type { LoadSelectedLanguageUseCase } from "../useCase/loadSelectedLanguage.useCase";
 import type { PersistSelectedLanguageUseCase } from "../useCase/persistSelectedLanguage.useCase";
 import type { LanguageSelectionViewModel } from "./languageSelection.viewModel";
-import { changeLanguage } from "@/shared/i18n/resources";
 import { LANGUAGE_OPTIONS } from "./languageOptions";
+
+type LanguageSelectionDeps = {
+  onContinue?: () => void;
+};
 
 export const useLanguageSelectionViewModel = (
   loadSelectedLanguageUseCase: LoadSelectedLanguageUseCase,
   persistSelectedLanguageUseCase: PersistSelectedLanguageUseCase,
-  deps?: {onContinue?: () => void;},
+  deps?: LanguageSelectionDeps,
 ): LanguageSelectionViewModel => {
   const [state, setState] = useState<LanguageSelectionState>({
     status: Status.Idle,
@@ -19,48 +23,7 @@ export const useLanguageSelectionViewModel = (
     errorMessage: "",
   });
 
-  const onLanguagePress = (languageCode: LanguageCodeType): void => {
-    changeLanguage(languageCode);
-
-    setState((currentState) => ({
-      ...currentState,
-      selectedLanguageCode: languageCode,
-      errorMessage: "",
-    }));
-  };
-
-  const onContinuePress = async (): Promise<void> => {
-    setState((currentState) => ({
-      ...currentState,
-      status: Status.Loading,
-      errorMessage: "",
-    }));
-
-    const selectedLanguageCode = state.selectedLanguageCode;
-
-    const result = await persistSelectedLanguageUseCase.execute({
-      languageCode: selectedLanguageCode,
-    });
-
-    if (result.success) {
-      setState((currentState) => ({
-        ...currentState,
-        status: Status.Success,
-        errorMessage: "",
-      }));
-
-      deps?.onContinue?.();
-      return;
-    }
-
-    setState((currentState) => ({
-      ...currentState,
-      status: Status.Failure,
-      errorMessage: result.error.message,
-    }));
-  };
-
-  const handleLoadSelectedLanguage = async (): Promise<void> => {
+  const handleLoadSelectedLanguage = useCallback(async (): Promise<void> => {
     setState((currentState) => ({
       ...currentState,
       status: Status.Loading,
@@ -86,11 +49,53 @@ export const useLanguageSelectionViewModel = (
       status: Status.Failure,
       errorMessage: result.error.message,
     }));
-  };
+  }, [loadSelectedLanguageUseCase]);
+
+  const onLanguagePress = useCallback(
+    (languageCode: LanguageCodeType): void => {
+      changeLanguage(languageCode);
+
+      setState((currentState) => ({
+        ...currentState,
+        selectedLanguageCode: languageCode,
+        errorMessage: "",
+      }));
+    },
+    [],
+  );
+
+  const onContinuePress = useCallback(async (): Promise<void> => {
+    setState((currentState) => ({
+      ...currentState,
+      status: Status.Loading,
+      errorMessage: "",
+    }));
+
+    const result = await persistSelectedLanguageUseCase.execute({
+      languageCode: state.selectedLanguageCode,
+    });
+
+    if (result.success) {
+      setState((currentState) => ({
+        ...currentState,
+        status: Status.Success,
+        errorMessage: "",
+      }));
+
+      deps?.onContinue?.();
+      return;
+    }
+
+    setState((currentState) => ({
+      ...currentState,
+      status: Status.Failure,
+      errorMessage: result.error.message,
+    }));
+  }, [deps, persistSelectedLanguageUseCase, state.selectedLanguageCode]);
 
   useEffect(() => {
     void handleLoadSelectedLanguage();
-  }, []);
+  }, [handleLoadSelectedLanguage]);
 
   return {
     state,

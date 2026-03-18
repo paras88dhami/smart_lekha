@@ -9,4 +9,5 @@ export const KhataColors = {
   softGreen: "#d3eff7",
   softRed: "#f5dbe4",
   danger: "#ea2f54",
+  error:"#b80529"
 } as const;

@@ -1,4 +1,4 @@
-import React from "react";
+import { useMemo } from "react";
 import type { Database } from "@nozbe/watermelondb";
 import LanguageSelectionScreen from "../ui/LanguageSelectionScreen";
 import { createLoadSelectedLanguageUseCase } from "../useCase/loadSelectedLanguage.useCase";
@@ -15,23 +15,22 @@ type LanguageSelectionFactoryParams = {
 export const createLanguageSelectionFactory = ({
   database,
   onContinue,
-}: LanguageSelectionFactoryParams): (() => React.JSX.Element) => {
-  return function LanguageSelectionFactory(): React.JSX.Element {
-    const appSettingDataSource = React.useMemo(() => {
-      return createLocalAppSettingDataSource(database);
+}: LanguageSelectionFactoryParams) => {
+  return function LanguageSelectionFactory() {
+    const appSettingRepository = useMemo(() => {
+      const appSettingDataSource = createLocalAppSettingDataSource(database);
+      return createAppSettingRepository(appSettingDataSource);
     }, [database]);
 
-    const appSettingRepository = React.useMemo(() => {
-      return createAppSettingRepository(appSettingDataSource);
-    }, [appSettingDataSource]);
+    const loadSelectedLanguageUseCase = useMemo(
+      () => createLoadSelectedLanguageUseCase(appSettingRepository),
+      [appSettingRepository],
+    );
 
-    const loadSelectedLanguageUseCase = React.useMemo(() => {
-      return createLoadSelectedLanguageUseCase(appSettingRepository);
-    }, [appSettingRepository]);
-
-    const persistSelectedLanguageUseCase = React.useMemo(() => {
-      return createPersistSelectedLanguageUseCase(appSettingRepository);
-    }, [appSettingRepository]);
+    const persistSelectedLanguageUseCase = useMemo(
+      () => createPersistSelectedLanguageUseCase(appSettingRepository),
+      [appSettingRepository],
+    );
 
     const viewModel = useLanguageSelectionViewModel(
       loadSelectedLanguageUseCase,

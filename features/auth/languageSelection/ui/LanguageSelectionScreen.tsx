@@ -1,46 +1,31 @@
-import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import type { LanguageSelectionViewModel } from "@/features/auth/languageSelection/viewModel/languageSelection.viewModel";
 import AppIcon from "@/shared/components/icons/AppIcon";
 import KhataButton from "@/shared/components/ui/KhataButton";
 import KhataCard from "@/shared/components/ui/KhataCard";
 import ScreenContainer from "@/shared/components/ui/ScreenContainer";
+import { useTranslation } from "@/shared/i18n/resources";
 import { KhataColors } from "@/shared/theme/colors";
 import { Status } from "@/shared/types/status.types";
-import type { LanguageCodeType } from "@/features/auth/languageSelection/types/types";
-import type { LanguageSelectionViewModel } from "@/features/auth/languageSelection/viewModel/languageSelection.viewModel";
-import { useTranslation } from "@/shared/i18n/resources";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type Props = {
   viewModel: LanguageSelectionViewModel;
 };
 
-type LanguageOptionTestIdMap = Record<LanguageCodeType, string>;
-
-const LANGUAGE_OPTION_TEST_IDS: LanguageOptionTestIdMap = {
-  en: "language-option-en",
-  ne: "language-option-ne",
-  hi: "language-option-hi",
-};
-
-export default function LanguageSelectionScreen({
-  viewModel,
-}: Props): React.JSX.Element {
+export default function LanguageSelectionScreen({ viewModel }: Props) {
   const { t } = useTranslation();
 
   return (
     <ScreenContainer contentStyle={styles.container}>
       <View>
         <Text style={styles.brand}>{t("common.appName")}</Text>
-
-        <Text style={styles.title}>
-          {t("auth.languageSelection.title")}
-        </Text>
-
+        <Text style={styles.title}>{t("auth.languageSelection.title")}</Text>
         <Text style={styles.subtitle}>
           {t("auth.languageSelection.subtitle")}
         </Text>
 
-        {viewModel.state.status === Status.Failure ? (
+        {viewModel.state.status === Status.Failure &&
+        viewModel.state.errorMessage ? (
           <Text style={styles.errorText}>{viewModel.state.errorMessage}</Text>
         ) : null}
 
@@ -52,7 +37,8 @@ export default function LanguageSelectionScreen({
             return (
               <Pressable
                 key={option.code}
-                testID={LANGUAGE_OPTION_TEST_IDS[option.code]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
                 onPress={(): void => viewModel.onLanguagePress(option.code)}
               >
                 <KhataCard
@@ -120,7 +106,7 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: 12,
     fontSize: 16,
-    color: "#D32F2F",
+    color: KhataColors.error,
   },
   list: {
     gap: 18,
