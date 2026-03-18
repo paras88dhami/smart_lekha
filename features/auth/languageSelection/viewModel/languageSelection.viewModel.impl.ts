@@ -2,10 +2,10 @@ import { changeLanguage } from "@/shared/i18n/resources";
 import { Status } from "@/shared/types/status.types";
 import { useCallback, useEffect, useState } from "react";
 import type { LanguageCodeType, LanguageSelectionState } from "../types/types";
-import type { LoadSelectedLanguageUseCase } from "../useCase/loadSelectedLanguage.useCase";
+import { LoadSelectedLanguageUseCase } from "../useCase/loadSelectedLanguage.useCase";
+import { PersistSelectedLanguageUseCase } from "../useCase/persistSelectedLanguage.useCase";
 import { LANGUAGE_OPTIONS } from "./languageOptions";
 import type { LanguageSelectionViewModel } from "./languageSelection.viewModel";
-import { PersistSelectedLanguageUseCase } from "../useCase/persistSelectedLanguage.useCase";
 
 type LanguageSelectionDeps = {
   onContinue?: () => void;

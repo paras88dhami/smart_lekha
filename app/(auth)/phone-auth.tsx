@@ -6,7 +6,7 @@ export default function PhoneAuthRoute(): React.JSX.Element {
   const router = useRouter();
   const Screen =
       createPhoneEntryScreen({
-        initialPhoneNumber: "m",
+        initialPhoneNumber: "",
         onContinue: () => {
           router.push("/(tabs)/home");
         },

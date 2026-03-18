@@ -1,5 +1,6 @@
 import type { LanguageSelectionViewModel } from "@/features/auth/languageSelection/viewModel/languageSelection.viewModel";
 import AppIcon from "@/shared/components/icons/AppIcon";
+import ELekhaLogo from "@/shared/components/icons/ELekhaIcon";
 import KhataButton from "@/shared/components/ui/KhataButton";
 import KhataCard from "@/shared/components/ui/KhataCard";
 import ScreenContainer from "@/shared/components/ui/ScreenContainer";
@@ -18,7 +19,7 @@ export default function LanguageSelectionScreen({ viewModel }: Props) {
   return (
     <ScreenContainer contentStyle={styles.container}>
       <View>
-        <Text style={styles.brand}>{t("common.appName")}</Text>
+        <ELekhaLogo />
         <Text style={styles.title}>{t("auth.languageSelection.title")}</Text>
         <Text style={styles.subtitle}>
           {t("auth.languageSelection.subtitle")}

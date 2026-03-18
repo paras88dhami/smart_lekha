@@ -4,16 +4,15 @@ export const LanguageCode = {
   English: "en",
   Nepali: "ne",
   Hindi: "hi",
-
 } as const;
+
+export type LanguageCodeType = "en" | "ne" | "hi";
 
 export type LanguageOption = {
   code: LanguageCodeType;
   title: string;
   nativeTitle: string;
 };
-
-export type LanguageCodeType = "en" | "ne" | "hi";
 
 export type LanguageSelectionState = {
   status: StatusType;
