@@ -22,3 +22,6 @@ export type LanguageSelectionState = {
   errorMessage: string;
 };
 
+export type PersistSelectedLanguageInput = {
+  languageCode: LanguageCodeType;
+};
