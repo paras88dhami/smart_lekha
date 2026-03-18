@@ -21,6 +21,12 @@ const en = {
       phoneNumber: "Phone Number",
       password: "Password",
     },
+    phoneEntry: {
+      title: "Let's Get Started",
+      subtitle: "Please enter phone number to continue",
+      placeholder: "9XXXXXXXXX",
+      footer: "By continuing, you agree to our Terms of Use & Privacy Policy.",
+    },
   },
   settings: {
     title: "Settings",

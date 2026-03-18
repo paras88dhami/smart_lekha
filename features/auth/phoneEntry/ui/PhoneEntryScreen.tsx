@@ -6,42 +6,48 @@ import KhataCard from "@/shared/components/ui/KhataCard";
 import ScreenContainer from "@/shared/components/ui/ScreenContainer";
 import { KhataColors } from "@/shared/theme/colors";
 import { PhoneEntryViewModel } from "@/features/auth/phoneEntry/viewModel/phoneEntry.viewModel";
+import { useTranslation } from "@/shared/i18n/resources";
 
 type Props = { viewModel: PhoneEntryViewModel };
+
 export default function PhoneEntryScreen(props: Props): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <ScreenContainer contentStyle={styles.container}>
       <Pressable onPress={props.viewModel.closeFlow}>
         <AppIcon family="ion" name="close" size={34} color={KhataColors.text} />
       </Pressable>
+
       <View>
-        <Text style={styles.title}>Let\'s Get Started</Text>
-        <Text style={styles.subtitle}>
-          Please enter phone number to continue
-        </Text>
+        <Text style={styles.title}>{t("auth.phoneEntry.title")}</Text>
+
+        <Text style={styles.subtitle}>{t("auth.phoneEntry.subtitle")}</Text>
+
         <KhataCard style={styles.inputCard}>
           <Text style={styles.prefix}>🇳🇵 +977</Text>
           <TextInput
             value={props.viewModel.phoneNumber}
             onChangeText={props.viewModel.changePhoneNumber}
-            placeholder="9XXXXXXXXX"
+            placeholder={t("auth.phoneEntry.placeholder")}
             keyboardType="number-pad"
             style={styles.input}
           />
         </KhataCard>
+
         <KhataButton
-          title="Continue"
+          title={t("common.continue")}
           disabled={props.viewModel.phoneNumber.length < 10}
           onPress={props.viewModel.continueFlow}
           style={styles.button}
         />
       </View>
-      <Text style={styles.footer}>
-        By continuing, you agree to our Terms of Use & Privacy Policy.
-      </Text>
+
+      <Text style={styles.footer}>{t("auth.phoneEntry.footer")}</Text>
     </ScreenContainer>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

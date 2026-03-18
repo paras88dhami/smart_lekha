@@ -23,6 +23,13 @@ const ne = {
       phoneNumber: "फोन नम्बर",
       password: "पासवर्ड",
     },
+    phoneEntry: {
+      title: "सुरु गरौं",
+      subtitle: "अगाडि बढ्न कृपया फोन नम्बर प्रविष्ट गर्नुहोस्",
+      placeholder: "9XXXXXXXXX",
+      footer:
+        "जारी राखेर, तपाईं हाम्रो प्रयोगका सर्तहरू र गोपनीयता नीतिसँग सहमत हुनुहुन्छ।",
+    },
   },
   settings: {
     title: "सेटिङ",

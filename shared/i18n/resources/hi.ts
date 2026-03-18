@@ -23,6 +23,13 @@ const hi = {
       phoneNumber: "फोन नंबर",
       password: "पासवर्ड",
     },
+    phoneEntry: {
+      title: "चलिए शुरू करते हैं",
+      subtitle: "आगे बढ़ने के लिए कृपया फ़ोन नंबर दर्ज करें",
+      placeholder: "9XXXXXXXXX",
+      footer:
+        "जारी रखकर, आप हमारी उपयोग की शर्तों और गोपनीयता नीति से सहमत होते हैं।",
+    },
   },
   settings: {
     title: "सेटिंग्स",
