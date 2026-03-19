@@ -1,13 +1,13 @@
-// Route placeholder in starter scaffold.
-import { View, Text } from 'react-native'
-import React from 'react'
+import React from "react";
+import { Text, View } from "react-native";
+import { useTranslation } from "@/shared/i18n/resources";
 
-const select = () => {
+export default function SelectProfileRoute(): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <View>
-      <Text>select-profile</Text>
+      <Text>{t("auth.selectProfile.title")}</Text>
     </View>
-  )
+  );
 }
-
-export default select

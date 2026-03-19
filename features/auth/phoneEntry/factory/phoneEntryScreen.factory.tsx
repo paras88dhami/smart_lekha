@@ -8,21 +8,27 @@ type Params = {
   onClose: () => void;
 };
 export function createPhoneEntryScreen(params: Params): React.ComponentType {
+  const { initialPhoneNumber, onContinue: onContinueParam, onClose: onCloseParam } =
+    params;
+
   return function PhoneEntryScreenFactory(): React.JSX.Element {
     const onContinue = React.useCallback(
       (phoneNumber: string): void => {
-        params.onContinue(phoneNumber);
+        onContinueParam(phoneNumber);
       },
-      [params],
+      [onContinueParam],
     );
+
     const onClose = React.useCallback((): void => {
-      params.onClose();
-    }, [params]);
+      onCloseParam();
+    }, [onCloseParam]);
+
     const viewModel = usePhoneEntryViewModel({
-      initialPhoneNumber: params.initialPhoneNumber,
+      initialPhoneNumber,
       onContinue,
       onClose,
     });
+
     return <PhoneEntryScreen viewModel={viewModel} />;
   };
 }

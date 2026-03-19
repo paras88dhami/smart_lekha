@@ -1,13 +1,13 @@
-// Tab route placeholder in starter scaffold.
-import { View, Text } from 'react-native'
-import React from 'react'
+import React from "react";
+import { Text, View } from "react-native";
+import { useTranslation } from "@/shared/i18n/resources";
 
-const inventory = () => {
+export default function InventoryRoute(): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <View>
-      <Text>inventory</Text>
+      <Text>{t("tabs.inventory")}</Text>
     </View>
-  )
+  );
 }
-
-export default inventory

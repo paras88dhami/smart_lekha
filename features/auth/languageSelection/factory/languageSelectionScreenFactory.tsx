@@ -20,7 +20,7 @@ export const createLanguageSelectionFactory = ({
     const appSettingRepository = useMemo(() => {
       const appSettingDataSource = createLocalAppSettingDataSource(database);
       return createAppSettingRepository(appSettingDataSource);
-    }, [database]);
+    }, []);
 
     const loadSelectedLanguageUseCase = useMemo(
       () => createLoadSelectedLanguageUseCase(appSettingRepository),

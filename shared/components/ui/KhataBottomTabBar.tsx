@@ -2,23 +2,31 @@ import React from "react";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import AppIcon from "@/shared/components/icons/AppIcon";
+import { useTranslation } from "@/shared/i18n/resources";
 import { KhataColors } from "@/shared/theme/colors";
 
-const tabMap: Record<string, { label: string; iconName: string }> = {
-  transactions: { label: "Transactions", iconName: "cash-outline" },
-  parties: { label: "Parties", iconName: "people-outline" },
-  home: { label: "Home", iconName: "home-outline" },
-  inventory: { label: "Inventory", iconName: "archive-outline" },
-  more: { label: "More", iconName: "grid-outline" },
+const tabMap: Record<string, { labelKey: string; iconName: string }> = {
+  transactions: { labelKey: "tabs.transactions", iconName: "cash-outline" },
+  parties: { labelKey: "tabs.parties", iconName: "people-outline" },
+  home: { labelKey: "tabs.home", iconName: "home-outline" },
+  inventory: { labelKey: "tabs.inventory", iconName: "archive-outline" },
+  more: { labelKey: "tabs.more", iconName: "grid-outline" },
 };
 
 export default function KhataBottomTabBar(
   props: BottomTabBarProps,
 ): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.wrapper}>
       {props.state.routes.map((route, index) => {
         const config = tabMap[route.name];
+
+        if (!config) {
+          return null;
+        }
+
         const isFocused = props.state.index === index;
         return (
           <Pressable
@@ -39,7 +47,7 @@ export default function KhataBottomTabBar(
               color={isFocused ? KhataColors.primary : KhataColors.mutedText}
             />
             <Text style={[styles.label, isFocused ? styles.activeLabel : null]}>
-              {config.label}
+              {t(config.labelKey)}
             </Text>
           </Pressable>
         );

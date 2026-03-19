@@ -1,10 +1,10 @@
-import { useMemo } from "react";
+import React from "react";
 import { router } from "expo-router";
 import { createLanguageSelectionFactory } from "@/features/auth/languageSelection/factory/languageSelectionScreenFactory";
-import database from "@/src/database/database";
+import { database } from "@/src/database/database";
 
-export default function LanguageScreenRoute() {
-  const Screen = useMemo(
+export default function LanguageScreenRoute(): React.JSX.Element {
+  const Screen = React.useMemo(
     () =>
       createLanguageSelectionFactory({
         database,

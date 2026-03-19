@@ -1,6 +1,7 @@
 import { changeLanguage } from "@/shared/i18n/resources";
 import { Status } from "@/shared/types/status.types";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { getAuthErrorMessage } from "../../shared/authErrorMessage";
 import type { LanguageCodeType, LanguageSelectionState } from "../types/types";
 import { LoadSelectedLanguageUseCase } from "../useCase/loadSelectedLanguage.useCase";
 import { PersistSelectedLanguageUseCase } from "../useCase/persistSelectedLanguage.useCase";
@@ -16,6 +17,9 @@ export const useLanguageSelectionViewModel = (
   persistSelectedLanguageUseCase: PersistSelectedLanguageUseCase,
   deps?: LanguageSelectionDeps,
 ): LanguageSelectionViewModel => {
+  const hasUserSelectionRef = useRef(false);
+  const isPersistingSelectionRef = useRef(false);
+
   const [state, setState] = useState<LanguageSelectionState>({
     status: Status.Idle,
     selectedLanguageCode: "en",
@@ -33,12 +37,16 @@ export const useLanguageSelectionViewModel = (
     const result = await loadSelectedLanguageUseCase.execute();
 
     if (result.success) {
-      changeLanguage(result.value);
+      if (!hasUserSelectionRef.current) {
+        changeLanguage(result.value);
+      }
 
       setState((currentState) => ({
         ...currentState,
         status: Status.Success,
-        selectedLanguageCode: result.value,
+        selectedLanguageCode: hasUserSelectionRef.current
+          ? currentState.selectedLanguageCode
+          : result.value,
         errorMessage: "",
       }));
       return;
@@ -47,12 +55,13 @@ export const useLanguageSelectionViewModel = (
     setState((currentState) => ({
       ...currentState,
       status: Status.Failure,
-      errorMessage: result.error.message,
+      errorMessage: getAuthErrorMessage(result.error),
     }));
   }, [loadSelectedLanguageUseCase]);
 
   const onLanguagePress = useCallback(
     (languageCode: LanguageCodeType): void => {
+      hasUserSelectionRef.current = true;
       changeLanguage(languageCode);
 
       setState((currentState) => ({
@@ -65,32 +74,42 @@ export const useLanguageSelectionViewModel = (
   );
 
   const onContinuePress = useCallback(async (): Promise<void> => {
+    if (isPersistingSelectionRef.current) {
+      return;
+    }
+
+    isPersistingSelectionRef.current = true;
+
     setState((currentState) => ({
       ...currentState,
       status: Status.Loading,
       errorMessage: "",
     }));
 
-    const result = await persistSelectedLanguageUseCase.execute({
-      languageCode: state.selectedLanguageCode,
-    });
+    try {
+      const result = await persistSelectedLanguageUseCase.execute({
+        languageCode: state.selectedLanguageCode,
+      });
 
-    if (result.success) {
+      if (result.success) {
+        setState((currentState) => ({
+          ...currentState,
+          status: Status.Success,
+          errorMessage: "",
+        }));
+
+        deps?.onContinue?.();
+        return;
+      }
+
       setState((currentState) => ({
         ...currentState,
-        status: Status.Success,
-        errorMessage: "",
+        status: Status.Failure,
+        errorMessage: getAuthErrorMessage(result.error),
       }));
-
-      deps?.onContinue?.();
-      return;
+    } finally {
+      isPersistingSelectionRef.current = false;
     }
-
-    setState((currentState) => ({
-      ...currentState,
-      status: Status.Failure,
-      errorMessage: result.error.message,
-    }));
   }, [deps, persistSelectedLanguageUseCase, state.selectedLanguageCode]);
 
   useEffect(() => {

@@ -27,10 +27,32 @@ const en = {
       placeholder: "9XXXXXXXXX",
       footer: "By continuing, you agree to our Terms of Use & Privacy Policy.",
     },
+    downloadData: {
+      title: "Download Data",
+    },
+    selectProfile: {
+      title: "Select Profile",
+    },
   },
   settings: {
     title: "Settings",
     language: "Language",
+  },
+  tabs: {
+    home: "Home",
+    transactions: "Transactions",
+    parties: "Parties",
+    inventory: "Inventory",
+    more: "More",
+  },
+  errors: {
+    auth: {
+      database: "An error occurred while accessing auth data.",
+      appSettingNotFound: "App setting was not found.",
+      invalidLanguageCode: "The selected language code is invalid.",
+      profileNotFound: "The requested profile was not found.",
+      fallback: "Something went wrong. Please try again.",
+    },
   },
 } as const;
 

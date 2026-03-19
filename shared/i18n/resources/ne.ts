@@ -24,16 +24,38 @@ const ne = {
       password: "पासवर्ड",
     },
     phoneEntry: {
-      title: "सुरु गरौं",
+      title: "सुरु गरौँ",
       subtitle: "अगाडि बढ्न कृपया फोन नम्बर प्रविष्ट गर्नुहोस्",
       placeholder: "9XXXXXXXXX",
       footer:
         "जारी राखेर, तपाईं हाम्रो प्रयोगका सर्तहरू र गोपनीयता नीतिसँग सहमत हुनुहुन्छ।",
     },
+    downloadData: {
+      title: "डाटा डाउनलोड",
+    },
+    selectProfile: {
+      title: "प्रोफाइल छान्नुहोस्",
+    },
   },
   settings: {
     title: "सेटिङ",
     language: "भाषा",
+  },
+  tabs: {
+    home: "होम",
+    transactions: "कारोबार",
+    parties: "पार्टीहरू",
+    inventory: "मौज्दात",
+    more: "थप",
+  },
+  errors: {
+    auth: {
+      database: "प्रमाणीकरण डेटा पहुँच गर्दा त्रुटि भयो।",
+      appSettingNotFound: "एप सेटिङ फेला परेन।",
+      invalidLanguageCode: "चयन गरिएको भाषा कोड अमान्य छ।",
+      profileNotFound: "मागिएको प्रोफाइल फेला परेन।",
+      fallback: "केही समस्या भयो। कृपया फेरि प्रयास गर्नुहोस्।",
+    },
   },
 } as const;
 

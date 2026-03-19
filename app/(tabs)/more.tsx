@@ -1,12 +1,13 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import React from "react";
+import { Text, View } from "react-native";
+import { useTranslation } from "@/shared/i18n/resources";
 
-const more = () => {
+export default function MoreRoute(): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <View>
-      <Text>more</Text>
+      <Text>{t("tabs.more")}</Text>
     </View>
-  )
+  );
 }
-
-export default more

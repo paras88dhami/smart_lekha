@@ -69,6 +69,7 @@ export default function LanguageSelectionScreen({ viewModel }: Props) {
 
       <KhataButton
         title={t("common.continue")}
+        disabled={viewModel.state.status === Status.Loading}
         onPress={(): void => {
           void viewModel.onContinuePress();
         }}

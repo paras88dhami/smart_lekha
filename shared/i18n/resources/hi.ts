@@ -30,10 +30,32 @@ const hi = {
       footer:
         "जारी रखकर, आप हमारी उपयोग की शर्तों और गोपनीयता नीति से सहमत होते हैं।",
     },
+    downloadData: {
+      title: "डेटा डाउनलोड",
+    },
+    selectProfile: {
+      title: "प्रोफाइल चुनें",
+    },
   },
   settings: {
     title: "सेटिंग्स",
     language: "भाषा",
+  },
+  tabs: {
+    home: "होम",
+    transactions: "लेनदेन",
+    parties: "पार्टियाँ",
+    inventory: "इन्वेंटरी",
+    more: "अधिक",
+  },
+  errors: {
+    auth: {
+      database: "प्रमाणीकरण डेटा तक पहुंचते समय त्रुटि हुई।",
+      appSettingNotFound: "ऐप सेटिंग नहीं मिली।",
+      invalidLanguageCode: "चयनित भाषा कोड अमान्य है।",
+      profileNotFound: "मांगी गई प्रोफाइल नहीं मिली।",
+      fallback: "कुछ गलत हुआ। कृपया फिर से प्रयास करें।",
+    },
   },
 } as const;
 

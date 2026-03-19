@@ -1,13 +1,13 @@
-// Route placeholder in starter scaffold.
-import { View, Text } from 'react-native'
-import React from 'react'
+import React from "react";
+import { Text, View } from "react-native";
+import { useTranslation } from "@/shared/i18n/resources";
 
-const download = () => {
+export default function DownloadDataRoute(): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <View>
-      <Text>download-data</Text>
+      <Text>{t("auth.downloadData.title")}</Text>
     </View>
-  )
+  );
 }
-
-export default download
