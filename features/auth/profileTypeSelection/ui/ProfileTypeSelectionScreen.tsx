@@ -7,7 +7,7 @@ import { useTranslation } from "@/shared/i18n/resources";
 import { KhataColors } from "@/shared/theme/colors";
 import { Status } from "@/shared/types/status.types";
 import React from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 type Props = {
   viewModel: ProfileTypeSelectionViewModel;
@@ -17,8 +17,18 @@ export default function ProfileTypeSelectionScreen({
   viewModel,
 }: Props): React.JSX.Element {
   const { t } = useTranslation();
-  const isBusinessSelected =
-    viewModel.state.selectedProfileType === "business";
+  const isBusinessSelected = viewModel.state.selectedProfileType === "business";
+  const selectedBusinessCategory = viewModel.state.businessCategories.find(
+    (category) => category.id === viewModel.state.selectedBusinessCategoryId,
+  );
+  const normalizedSearchTerm =
+    viewModel.state.businessCategorySearchTerm.trim().toLowerCase();
+  const filteredBusinessCategories =
+    normalizedSearchTerm.length === 0
+      ? viewModel.state.businessCategories
+      : viewModel.state.businessCategories.filter((category) =>
+          category.name.toLowerCase().includes(normalizedSearchTerm),
+        );
   const isContinueDisabled =
     viewModel.state.status === Status.Loading ||
     viewModel.state.profileName.trim().length < 2 ||
@@ -72,35 +82,89 @@ export default function ProfileTypeSelectionScreen({
         {isBusinessSelected ? (
           <>
             <Text style={styles.inputLabel}>{t("auth.selectProfile.categoryLabel")}</Text>
+            <KhataCard style={styles.dropdownTriggerCard}>
+              <Pressable
+                style={styles.dropdownTrigger}
+                onPress={viewModel.onBusinessCategoryDropdownPress}
+                disabled={viewModel.state.isBusinessCategoriesLoading}
+              >
+                <Text
+                  style={
+                    selectedBusinessCategory
+                      ? styles.dropdownTriggerValue
+                      : styles.dropdownTriggerPlaceholder
+                  }
+                >
+                  {selectedBusinessCategory
+                    ? selectedBusinessCategory.name
+                    : t("auth.selectProfile.categoryPlaceholder")}
+                </Text>
+                <AppIcon
+                  family="ion"
+                  name={
+                    viewModel.state.isBusinessCategoryDropdownOpen
+                      ? "chevron-up"
+                      : "chevron-down"
+                  }
+                  size={18}
+                  color={KhataColors.mutedText}
+                />
+              </Pressable>
+            </KhataCard>
+
             {viewModel.state.isBusinessCategoriesLoading ? (
               <Text style={styles.loadingText}>{t("common.loading")}</Text>
-            ) : (
-              <View style={styles.categoriesContainer}>
-                {viewModel.state.businessCategories.map((category) => {
-                  const isSelected =
-                    category.id === viewModel.state.selectedBusinessCategoryId;
+            ) : null}
 
-                  return (
-                    <Pressable
-                      key={category.id}
-                      style={styles.categoryItem}
-                      onPress={(): void => {
-                        viewModel.onBusinessCategoryPress(category.id);
-                      }}
-                    >
-                      <KhataCard
-                        style={[
-                          styles.categoryCard,
-                          isSelected ? styles.selectedCard : null,
-                        ]}
-                      >
-                        <Text style={styles.categoryTitle}>{category.name}</Text>
-                      </KhataCard>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            )}
+            {viewModel.state.isBusinessCategoryDropdownOpen ? (
+              <KhataCard style={styles.dropdownCard}>
+                <TextInput
+                  value={viewModel.state.businessCategorySearchTerm}
+                  onChangeText={viewModel.onBusinessCategorySearchChange}
+                  placeholder={t("auth.selectProfile.categorySearchPlaceholder")}
+                  style={styles.dropdownSearchInput}
+                />
+                <ScrollView
+                  style={styles.dropdownResults}
+                  contentContainerStyle={styles.dropdownResultsContent}
+                  nestedScrollEnabled
+                >
+                  {filteredBusinessCategories.length > 0 ? (
+                    filteredBusinessCategories.map((category) => {
+                      const isSelected =
+                        category.id === viewModel.state.selectedBusinessCategoryId;
+
+                      return (
+                        <Pressable
+                          key={category.id}
+                          style={[
+                            styles.dropdownItem,
+                            isSelected ? styles.dropdownItemSelected : null,
+                          ]}
+                          onPress={(): void => {
+                            viewModel.onBusinessCategoryPress(category.id);
+                          }}
+                        >
+                          <Text style={styles.dropdownItemText}>{category.name}</Text>
+                          {isSelected ? (
+                            <AppIcon
+                              family="ion"
+                              name="checkmark"
+                              size={18}
+                              color={KhataColors.primary}
+                            />
+                          ) : null}
+                        </Pressable>
+                      );
+                    })
+                  ) : (
+                    <Text style={styles.dropdownEmptyText}>
+                      {t("auth.selectProfile.categoryNoResult")}
+                    </Text>
+                  )}
+                </ScrollView>
+              </KhataCard>
+            ) : null}
           </>
         ) : null}
 
@@ -178,32 +242,81 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: KhataColors.text,
   },
+  dropdownTriggerCard: {
+    borderRadius: 16,
+    minHeight: 58,
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+  dropdownTrigger: {
+    minHeight: 38,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  dropdownTriggerValue: {
+    flex: 1,
+    fontSize: 15,
+    color: KhataColors.text,
+    fontWeight: "600",
+  },
+  dropdownTriggerPlaceholder: {
+    flex: 1,
+    fontSize: 15,
+    color: KhataColors.mutedText,
+  },
   loadingText: {
-    marginTop: 2,
+    marginTop: 8,
     fontSize: 14,
     color: KhataColors.mutedText,
   },
-  categoriesContainer: {
-    marginTop: 8,
+  dropdownCard: {
+    marginTop: 10,
+    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+  },
+  dropdownSearchInput: {
+    minHeight: 40,
+    borderRadius: 10,
+    backgroundColor: KhataColors.background,
+    paddingHorizontal: 10,
+    color: KhataColors.text,
+    fontSize: 15,
+  },
+  dropdownResults: {
+    maxHeight: 220,
+    marginTop: 10,
+  },
+  dropdownResultsContent: {
+    gap: 6,
+    paddingBottom: 2,
+  },
+  dropdownItem: {
+    borderRadius: 12,
+    minHeight: 42,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
     flexDirection: "row",
-    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: KhataColors.background,
     gap: 10,
   },
-  categoryItem: {
-    width: "48%",
+  dropdownItemSelected: {
+    backgroundColor: KhataColors.softGreen,
   },
-  categoryCard: {
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    minHeight: 68,
-    justifyContent: "center",
-  },
-  categoryTitle: {
-    fontSize: 13,
-    lineHeight: 19,
+  dropdownItemText: {
+    flex: 1,
+    fontSize: 14,
     color: KhataColors.text,
-    fontWeight: "600",
+  },
+  dropdownEmptyText: {
+    fontSize: 14,
+    color: KhataColors.mutedText,
+    textAlign: "center",
+    paddingVertical: 14,
   },
   errorText: {
     marginTop: 10,

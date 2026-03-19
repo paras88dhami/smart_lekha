@@ -61,6 +61,8 @@ export const useProfileTypeSelectionViewModel = (
     businessCategories: [],
     selectedBusinessCategoryId: "",
     isBusinessCategoriesLoading: true,
+    isBusinessCategoryDropdownOpen: false,
+    businessCategorySearchTerm: "",
     errorMessage: "",
   });
 
@@ -110,6 +112,32 @@ export const useProfileTypeSelectionViewModel = (
     setState((currentState) => ({
       ...currentState,
       selectedProfileType: profileType,
+      isBusinessCategoryDropdownOpen:
+        profileType === "business"
+          ? currentState.isBusinessCategoryDropdownOpen
+          : false,
+      businessCategorySearchTerm:
+        profileType === "business"
+          ? currentState.businessCategorySearchTerm
+          : "",
+      errorMessage: "",
+    }));
+  }, []);
+
+  const onBusinessCategoryDropdownPress = useCallback((): void => {
+    setState((currentState) => ({
+      ...currentState,
+      isBusinessCategoryDropdownOpen:
+        !currentState.isBusinessCategoryDropdownOpen,
+      errorMessage: "",
+    }));
+  }, []);
+
+  const onBusinessCategorySearchChange = useCallback((value: string): void => {
+    setState((currentState) => ({
+      ...currentState,
+      businessCategorySearchTerm: value,
+      isBusinessCategoryDropdownOpen: true,
       errorMessage: "",
     }));
   }, []);
@@ -118,6 +146,8 @@ export const useProfileTypeSelectionViewModel = (
     setState((currentState) => ({
       ...currentState,
       selectedBusinessCategoryId: categoryId,
+      isBusinessCategoryDropdownOpen: false,
+      businessCategorySearchTerm: "",
       errorMessage: "",
     }));
   }, []);
@@ -208,6 +238,8 @@ export const useProfileTypeSelectionViewModel = (
     state,
     onProfileNameChange,
     onProfileTypePress,
+    onBusinessCategoryDropdownPress,
+    onBusinessCategorySearchChange,
     onBusinessCategoryPress,
     onContinuePress,
     onClosePress,

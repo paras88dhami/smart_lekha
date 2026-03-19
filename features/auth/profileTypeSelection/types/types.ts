@@ -21,5 +21,7 @@ export type ProfileTypeSelectionState = {
   businessCategories: BusinessCategoryOption[];
   selectedBusinessCategoryId: string;
   isBusinessCategoriesLoading: boolean;
+  isBusinessCategoryDropdownOpen: boolean;
+  businessCategorySearchTerm: string;
   errorMessage: string;
 };
