@@ -7,16 +7,30 @@ import { useTranslation } from "@/shared/i18n/resources";
 import { KhataColors } from "@/shared/theme/colors";
 import { Status } from "@/shared/types/status.types";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 type Props = {
   viewModel: ProfileTypeSelectionViewModel;
+};
+
+const getProfileTypeLabelKey = (profileType: "business" | "personal"): string => {
+  return profileType === "business"
+    ? "auth.selectProfile.businessTitle"
+    : "auth.selectProfile.personalTitle";
 };
 
 export default function ProfileTypeSelectionScreen({
   viewModel,
 }: Props): React.JSX.Element {
   const { t } = useTranslation();
+  const isSelectionMode = viewModel.state.mode === "select-existing";
   const isBusinessSelected = viewModel.state.selectedProfileType === "business";
   const selectedBusinessCategory = viewModel.state.businessCategories.find(
     (category) => category.id === viewModel.state.selectedBusinessCategoryId,
@@ -29,12 +43,15 @@ export default function ProfileTypeSelectionScreen({
       : viewModel.state.businessCategories.filter((category) =>
           category.name.toLowerCase().includes(normalizedSearchTerm),
         );
-  const isContinueDisabled =
-    viewModel.state.status === Status.Loading ||
-    viewModel.state.profileName.trim().length < 2 ||
-    (isBusinessSelected &&
-      (viewModel.state.isBusinessCategoriesLoading ||
-        !viewModel.state.selectedBusinessCategoryId));
+  const isContinueDisabled = isSelectionMode
+    ? viewModel.state.status === Status.Loading ||
+      viewModel.state.isExistingProfilesLoading ||
+      !viewModel.state.selectedExistingProfileId
+    : viewModel.state.status === Status.Loading ||
+      viewModel.state.profileName.trim().length < 2 ||
+      (isBusinessSelected &&
+        (viewModel.state.isBusinessCategoriesLoading ||
+          !viewModel.state.selectedBusinessCategoryId));
 
   return (
     <ScreenContainer scrollable contentStyle={styles.container}>
@@ -43,130 +60,193 @@ export default function ProfileTypeSelectionScreen({
       </Pressable>
 
       <View>
-        <Text style={styles.title}>{t("auth.selectProfile.title")}</Text>
-        <Text style={styles.subtitle}>{t("auth.selectProfile.subtitle")}</Text>
+        <Text style={styles.title}>
+          {isSelectionMode
+            ? t("auth.selectProfile.selectExistingTitle")
+            : t("auth.selectProfile.title")}
+        </Text>
+        <Text style={styles.subtitle}>
+          {isSelectionMode
+            ? t("auth.selectProfile.selectExistingSubtitle")
+            : t("auth.selectProfile.subtitle")}
+        </Text>
 
-        <View style={styles.optionsContainer}>
-          {viewModel.state.options.map((option) => {
-            const isSelected =
-              option.profileType === viewModel.state.selectedProfileType;
-
-            return (
-              <Pressable
-                key={option.profileType}
-                onPress={(): void => {
-                  viewModel.onProfileTypePress(option.profileType);
-                }}
-              >
-                <KhataCard
-                  style={[styles.optionCard, isSelected ? styles.selectedCard : null]}
-                >
-                  <Text style={styles.optionTitle}>{t(option.titleKey)}</Text>
-                  <Text style={styles.optionSubtitle}>{t(option.subtitleKey)}</Text>
-                </KhataCard>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <Text style={styles.inputLabel}>{t("auth.selectProfile.nameLabel")}</Text>
-        <KhataCard style={styles.inputCard}>
-          <TextInput
-            value={viewModel.state.profileName}
-            onChangeText={viewModel.onProfileNameChange}
-            placeholder={t("auth.selectProfile.namePlaceholder")}
-            style={styles.input}
-          />
-        </KhataCard>
-
-        {isBusinessSelected ? (
+        {isSelectionMode ? (
           <>
-            <Text style={styles.inputLabel}>{t("auth.selectProfile.categoryLabel")}</Text>
-            <KhataCard style={styles.dropdownTriggerCard}>
-              <Pressable
-                style={styles.dropdownTrigger}
-                onPress={viewModel.onBusinessCategoryDropdownPress}
-                disabled={viewModel.state.isBusinessCategoriesLoading}
-              >
-                <Text
-                  style={
-                    selectedBusinessCategory
-                      ? styles.dropdownTriggerValue
-                      : styles.dropdownTriggerPlaceholder
-                  }
-                >
-                  {selectedBusinessCategory
-                    ? selectedBusinessCategory.name
-                    : t("auth.selectProfile.categoryPlaceholder")}
-                </Text>
-                <AppIcon
-                  family="ion"
-                  name={
-                    viewModel.state.isBusinessCategoryDropdownOpen
-                      ? "chevron-up"
-                      : "chevron-down"
-                  }
-                  size={18}
-                  color={KhataColors.mutedText}
-                />
-              </Pressable>
-            </KhataCard>
-
-            {viewModel.state.isBusinessCategoriesLoading ? (
+            {viewModel.state.isExistingProfilesLoading ? (
               <Text style={styles.loadingText}>{t("common.loading")}</Text>
-            ) : null}
+            ) : (
+              <View style={styles.optionsContainer}>
+                {viewModel.state.existingProfiles.map((profile) => {
+                  const isSelected =
+                    profile.id === viewModel.state.selectedExistingProfileId;
+                  const profileTitle = profile.displayName || profile.profileName;
+                  const profileTypeLabel = t(
+                    getProfileTypeLabelKey(profile.profileType),
+                  );
+                  const profileSubtitle = profile.businessCategoryName
+                    ? `${profileTypeLabel} • ${profile.businessCategoryName}`
+                    : profileTypeLabel;
 
-            {viewModel.state.isBusinessCategoryDropdownOpen ? (
-              <KhataCard style={styles.dropdownCard}>
-                <TextInput
-                  value={viewModel.state.businessCategorySearchTerm}
-                  onChangeText={viewModel.onBusinessCategorySearchChange}
-                  placeholder={t("auth.selectProfile.categorySearchPlaceholder")}
-                  style={styles.dropdownSearchInput}
-                />
-                <ScrollView
-                  style={styles.dropdownResults}
-                  contentContainerStyle={styles.dropdownResultsContent}
-                  nestedScrollEnabled
-                >
-                  {filteredBusinessCategories.length > 0 ? (
-                    filteredBusinessCategories.map((category) => {
-                      const isSelected =
-                        category.id === viewModel.state.selectedBusinessCategoryId;
-
-                      return (
-                        <Pressable
-                          key={category.id}
-                          style={[
-                            styles.dropdownItem,
-                            isSelected ? styles.dropdownItemSelected : null,
-                          ]}
-                          onPress={(): void => {
-                            viewModel.onBusinessCategoryPress(category.id);
-                          }}
-                        >
-                          <Text style={styles.dropdownItemText}>{category.name}</Text>
+                  return (
+                    <Pressable
+                      key={profile.id}
+                      onPress={(): void => {
+                        viewModel.onExistingProfilePress(profile.id);
+                      }}
+                    >
+                      <KhataCard
+                        style={[
+                          styles.optionCard,
+                          isSelected ? styles.selectedCard : null,
+                        ]}
+                      >
+                        <View style={styles.profileOptionRow}>
+                          <View style={styles.profileOptionTextContainer}>
+                            <Text style={styles.optionTitle}>{profileTitle}</Text>
+                            <Text style={styles.optionSubtitle}>{profileSubtitle}</Text>
+                          </View>
                           {isSelected ? (
                             <AppIcon
                               family="ion"
-                              name="checkmark"
-                              size={18}
+                              name="checkmark-circle"
+                              size={22}
                               color={KhataColors.primary}
                             />
                           ) : null}
-                        </Pressable>
-                      );
-                    })
-                  ) : (
-                    <Text style={styles.dropdownEmptyText}>
-                      {t("auth.selectProfile.categoryNoResult")}
+                        </View>
+                      </KhataCard>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
+          </>
+        ) : (
+          <>
+            <View style={styles.optionsContainer}>
+              {viewModel.state.options.map((option) => {
+                const isSelected =
+                  option.profileType === viewModel.state.selectedProfileType;
+
+                return (
+                  <Pressable
+                    key={option.profileType}
+                    onPress={(): void => {
+                      viewModel.onProfileTypePress(option.profileType);
+                    }}
+                  >
+                    <KhataCard
+                      style={[styles.optionCard, isSelected ? styles.selectedCard : null]}
+                    >
+                      <Text style={styles.optionTitle}>{t(option.titleKey)}</Text>
+                      <Text style={styles.optionSubtitle}>{t(option.subtitleKey)}</Text>
+                    </KhataCard>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.inputLabel}>{t("auth.selectProfile.nameLabel")}</Text>
+            <KhataCard style={styles.inputCard}>
+              <TextInput
+                value={viewModel.state.profileName}
+                onChangeText={viewModel.onProfileNameChange}
+                placeholder={t("auth.selectProfile.namePlaceholder")}
+                style={styles.input}
+              />
+            </KhataCard>
+
+            {isBusinessSelected ? (
+              <>
+                <Text style={styles.inputLabel}>{t("auth.selectProfile.categoryLabel")}</Text>
+                <KhataCard style={styles.dropdownTriggerCard}>
+                  <Pressable
+                    style={styles.dropdownTrigger}
+                    onPress={viewModel.onBusinessCategoryDropdownPress}
+                    disabled={viewModel.state.isBusinessCategoriesLoading}
+                  >
+                    <Text
+                      style={
+                        selectedBusinessCategory
+                          ? styles.dropdownTriggerValue
+                          : styles.dropdownTriggerPlaceholder
+                      }
+                    >
+                      {selectedBusinessCategory
+                        ? selectedBusinessCategory.name
+                        : t("auth.selectProfile.categoryPlaceholder")}
                     </Text>
-                  )}
-                </ScrollView>
-              </KhataCard>
+                    <AppIcon
+                      family="ion"
+                      name={
+                        viewModel.state.isBusinessCategoryDropdownOpen
+                          ? "chevron-up"
+                          : "chevron-down"
+                      }
+                      size={18}
+                      color={KhataColors.mutedText}
+                    />
+                  </Pressable>
+                </KhataCard>
+
+                {viewModel.state.isBusinessCategoriesLoading ? (
+                  <Text style={styles.loadingText}>{t("common.loading")}</Text>
+                ) : null}
+
+                {viewModel.state.isBusinessCategoryDropdownOpen ? (
+                  <KhataCard style={styles.dropdownCard}>
+                    <TextInput
+                      value={viewModel.state.businessCategorySearchTerm}
+                      onChangeText={viewModel.onBusinessCategorySearchChange}
+                      placeholder={t("auth.selectProfile.categorySearchPlaceholder")}
+                      style={styles.dropdownSearchInput}
+                    />
+                    <ScrollView
+                      style={styles.dropdownResults}
+                      contentContainerStyle={styles.dropdownResultsContent}
+                      nestedScrollEnabled
+                    >
+                      {filteredBusinessCategories.length > 0 ? (
+                        filteredBusinessCategories.map((category) => {
+                          const isSelected =
+                            category.id === viewModel.state.selectedBusinessCategoryId;
+
+                          return (
+                            <Pressable
+                              key={category.id}
+                              style={[
+                                styles.dropdownItem,
+                                isSelected ? styles.dropdownItemSelected : null,
+                              ]}
+                              onPress={(): void => {
+                                viewModel.onBusinessCategoryPress(category.id);
+                              }}
+                            >
+                              <Text style={styles.dropdownItemText}>{category.name}</Text>
+                              {isSelected ? (
+                                <AppIcon
+                                  family="ion"
+                                  name="checkmark"
+                                  size={18}
+                                  color={KhataColors.primary}
+                                />
+                              ) : null}
+                            </Pressable>
+                          );
+                        })
+                      ) : (
+                        <Text style={styles.dropdownEmptyText}>
+                          {t("auth.selectProfile.categoryNoResult")}
+                        </Text>
+                      )}
+                    </ScrollView>
+                  </KhataCard>
+                ) : null}
+              </>
             ) : null}
           </>
-        ) : null}
+        )}
 
         {viewModel.state.status === Status.Failure &&
         viewModel.state.errorMessage ? (
@@ -215,6 +295,15 @@ const styles = StyleSheet.create({
   selectedCard: {
     backgroundColor: KhataColors.softGreen,
     borderColor: KhataColors.primary,
+  },
+  profileOptionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  profileOptionTextContainer: {
+    flex: 1,
   },
   optionTitle: {
     fontSize: 18,

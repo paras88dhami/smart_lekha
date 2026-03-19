@@ -1,5 +1,7 @@
-import type { ProfileType } from "../../profile/data/dataSource/profile.model";
 import type { StatusType } from "@/shared/types/status.types";
+import type { ProfileType } from "../../profile/data/dataSource/profile.model";
+
+export type ProfileTypeSelectionMode = "create" | "select-existing";
 
 export type ProfileTypeOption = {
   profileType: ProfileType;
@@ -13,8 +15,18 @@ export type BusinessCategoryOption = {
   slug: string;
 };
 
+export type ExistingProfileOption = {
+  id: string;
+  profileType: ProfileType;
+  profileName: string;
+  displayName: string | null;
+  businessCategoryName: string | null;
+  isActive: boolean;
+};
+
 export type ProfileTypeSelectionState = {
   status: StatusType;
+  mode: ProfileTypeSelectionMode;
   profileName: string;
   selectedProfileType: ProfileType;
   options: ProfileTypeOption[];
@@ -23,5 +35,8 @@ export type ProfileTypeSelectionState = {
   isBusinessCategoriesLoading: boolean;
   isBusinessCategoryDropdownOpen: boolean;
   businessCategorySearchTerm: string;
+  existingProfiles: ExistingProfileOption[];
+  selectedExistingProfileId: string;
+  isExistingProfilesLoading: boolean;
   errorMessage: string;
 };

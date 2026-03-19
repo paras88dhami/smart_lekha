@@ -20,14 +20,24 @@ export default function OtpVerificationRoute(): React.JSX.Element {
       createOtpVerificationScreenFactory({
         database,
         routeParams,
-        onVerifiedExistingUser: () => {
+        onNavigateHome: () => {
           router.replace("/(tabs)/home");
         },
-        onVerifiedNewUser: (accountId: string) => {
+        onNavigateCreateProfile: (accountId: string) => {
           router.replace({
             pathname: "/(auth)/select-profile",
             params: {
               accountId,
+              selectionMode: "create",
+            },
+          });
+        },
+        onNavigateSelectExistingProfile: (accountId: string) => {
+          router.replace({
+            pathname: "/(auth)/select-profile",
+            params: {
+              accountId,
+              selectionMode: "select-existing",
             },
           });
         },

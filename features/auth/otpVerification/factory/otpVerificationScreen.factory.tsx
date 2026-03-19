@@ -1,6 +1,10 @@
 import type { Database } from "@nozbe/watermelondb";
 import React from "react";
 import { isSupportedLanguageCode } from "@/shared/i18n/resources";
+import { createLocalProfileDataSource } from "../../profile/data/dataSource/profile.datasource.impl";
+import { createProfileRepository } from "../../profile/data/repository/profile.repository.impl";
+import { createGetProfilesByAccountIdUseCase } from "../../profile/useCase/getProfilesByAccountId.useCase.impl";
+import { createSetActiveProfileUseCase } from "../../profile/useCase/setActiveProfile.useCase.impl";
 import type { LanguageCodeType } from "../../languageSelection/types/types";
 import { createLocalOtpRequestDataSource } from "../../otp/data/dataSource/localOtpRequest.dataSource.impl";
 import { createRemoteOtpAuthDataSource } from "../../otp/data/dataSource/remoteOtpAuth.dataSource.impl";
@@ -49,8 +53,9 @@ type CreateOtpVerificationScreenParams = {
 type Params = {
   database: Database;
   routeParams: RawRouteParams;
-  onVerifiedExistingUser(): void;
-  onVerifiedNewUser(accountId: string): void;
+  onNavigateHome(): void;
+  onNavigateCreateProfile(accountId: string): void;
+  onNavigateSelectExistingProfile(accountId: string): void;
   onInvalidRoute(): React.JSX.Element;
   onClose(): void;
 };
@@ -126,7 +131,7 @@ const createOtpVerificationScreen = ({
       const localOtpRequestDataSource = createLocalOtpRequestDataSource(database);
 
       return createOtpRepository(remoteOtpAuthDataSource, localOtpRequestDataSource);
-    }, []);
+    }, [database]);
 
     const requestOtpUseCase = React.useMemo(
       () => createRequestOtpUseCase(otpRepository),
@@ -141,7 +146,7 @@ const createOtpVerificationScreen = ({
     const authSessionRepository = React.useMemo(() => {
       const localAuthSessionDataSource = createLocalAuthSessionDataSource(database);
       return createAuthSessionRepository(localAuthSessionDataSource);
-    }, []);
+    }, [database]);
 
     const upsertAuthSessionUseCase = React.useMemo(
       () => createUpsertAuthSessionUseCase(authSessionRepository),
@@ -171,8 +176,9 @@ const createOtpVerificationScreen = ({
 export const createOtpVerificationScreenFactory = ({
   database,
   routeParams,
-  onVerifiedExistingUser,
-  onVerifiedNewUser,
+  onNavigateHome,
+  onNavigateCreateProfile,
+  onNavigateSelectExistingProfile,
   onInvalidRoute,
   onClose,
 }: Params) => {
@@ -205,6 +211,81 @@ export const createOtpVerificationScreenFactory = ({
       30,
     );
 
+    const profileRepository = React.useMemo(() => {
+      const profileDataSource = createLocalProfileDataSource(database);
+      return createProfileRepository(profileDataSource);
+    }, [database]);
+
+    const getProfilesByAccountIdUseCase = React.useMemo(
+      () => createGetProfilesByAccountIdUseCase(profileRepository),
+      [profileRepository],
+    );
+
+    const setActiveProfileUseCase = React.useMemo(
+      () => createSetActiveProfileUseCase(profileRepository),
+      [profileRepository],
+    );
+
+    const isResolvingNextRouteRef = React.useRef(false);
+
+    const handleVerified = React.useCallback(
+      async (input: OtpVerificationResult): Promise<void> => {
+        if (isResolvingNextRouteRef.current) {
+          return;
+        }
+
+        isResolvingNextRouteRef.current = true;
+
+        try {
+          const profilesResult = await getProfilesByAccountIdUseCase.execute(
+            input.accountId,
+          );
+
+          if (!profilesResult.success) {
+            if (input.isExistingUser) {
+              onNavigateHome();
+              return;
+            }
+
+            onNavigateCreateProfile(input.accountId);
+            return;
+          }
+
+          const profiles = profilesResult.value;
+
+          if (profiles.length <= 0) {
+            onNavigateCreateProfile(input.accountId);
+            return;
+          }
+
+          if (profiles.length === 1) {
+            const setActiveResult = await setActiveProfileUseCase.execute(
+              profiles[0].id,
+            );
+
+            if (!setActiveResult.success) {
+              onNavigateHome();
+              return;
+            }
+
+            onNavigateHome();
+            return;
+          }
+
+          onNavigateSelectExistingProfile(input.accountId);
+        } finally {
+          isResolvingNextRouteRef.current = false;
+        }
+      },
+      [
+        getProfilesByAccountIdUseCase,
+        onNavigateCreateProfile,
+        onNavigateHome,
+        onNavigateSelectExistingProfile,
+        setActiveProfileUseCase,
+      ],
+    );
+
     const Screen = React.useMemo(
       () =>
         createOtpVerificationScreen({
@@ -218,12 +299,7 @@ export const createOtpVerificationScreenFactory = ({
           otpExpiresAt,
           resendAfterSeconds,
           onVerified: (input) => {
-            if (input.isExistingUser) {
-              onVerifiedExistingUser();
-              return;
-            }
-
-            onVerifiedNewUser(input.accountId);
+            void handleVerified(input);
           },
           onClose,
         }),
@@ -231,11 +307,10 @@ export const createOtpVerificationScreenFactory = ({
         countryCode,
         countryIso,
         database,
+        handleVerified,
         isExistingUser,
         languageCode,
         onClose,
-        onVerifiedExistingUser,
-        onVerifiedNewUser,
         otpExpiresAt,
         otpReferenceId,
         phoneNumber,

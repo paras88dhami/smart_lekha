@@ -3,12 +3,16 @@ import { Status } from "@/shared/types/status.types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DEFAULT_BUSINESS_CATEGORY_SEEDS } from "../../businessCategory/data/defaultBusinessCategories";
 import type { GetActiveBusinessCategoriesUseCase } from "../../businessCategory/useCase/getActiveBusinessCategories.useCase";
+import type { SetActiveProfileUseCase } from "../../profile/useCase/setActiveProfile.useCase";
 import { getAuthErrorMessage } from "../../shared/authErrorMessage";
 import type { ProfileType } from "../../profile/data/dataSource/profile.model";
 import type { CreateProfileUseCase } from "../../profile/useCase/createProfile.useCase";
+import type { GetProfilesByAccountIdUseCase } from "../../profile/useCase/getProfilesByAccountId.useCase";
 import type {
   BusinessCategoryOption,
+  ExistingProfileOption,
   ProfileTypeOption,
+  ProfileTypeSelectionMode,
   ProfileTypeSelectionState,
 } from "../types/types";
 import type { ProfileTypeSelectionViewModel } from "./profileTypeSelection.viewModel";
@@ -35,10 +39,38 @@ const FALLBACK_BUSINESS_CATEGORIES: BusinessCategoryOption[] =
 
 type Params = {
   accountId: string;
+  mode: ProfileTypeSelectionMode;
   createProfileUseCase: CreateProfileUseCase;
   getActiveBusinessCategoriesUseCase: GetActiveBusinessCategoriesUseCase;
+  getProfilesByAccountIdUseCase: GetProfilesByAccountIdUseCase;
+  setActiveProfileUseCase: SetActiveProfileUseCase;
   onContinue: () => void;
   onClose: () => void;
+};
+
+const mapExistingProfiles = (
+  accountId: string,
+  profiles: {
+    id: string;
+    accountId?: string;
+    profileType?: ProfileType;
+    profileName?: string;
+    displayName?: string | null;
+    businessCategoryName?: string | null;
+    isActive?: boolean;
+  }[],
+): ExistingProfileOption[] => {
+  return profiles
+    .filter((profile) => profile.accountId === accountId)
+    .map((profile) => ({
+      id: profile.id,
+      profileType: profile.profileType ?? "personal",
+      profileName: profile.profileName?.trim() || "",
+      displayName: profile.displayName?.trim() || null,
+      businessCategoryName: profile.businessCategoryName?.trim() || null,
+      isActive: Boolean(profile.isActive),
+    }))
+    .filter((profile) => profile.profileName.length > 0);
 };
 
 export const useProfileTypeSelectionViewModel = (
@@ -46,8 +78,11 @@ export const useProfileTypeSelectionViewModel = (
 ): ProfileTypeSelectionViewModel => {
   const {
     accountId,
+    mode,
     createProfileUseCase,
     getActiveBusinessCategoriesUseCase,
+    getProfilesByAccountIdUseCase,
+    setActiveProfileUseCase,
     onContinue,
     onClose,
   } = params;
@@ -55,18 +90,26 @@ export const useProfileTypeSelectionViewModel = (
   const isCreatingProfileRef = useRef(false);
   const [state, setState] = useState<ProfileTypeSelectionState>({
     status: Status.Idle,
+    mode,
     profileName: "",
     selectedProfileType: "business",
     options: PROFILE_TYPE_OPTIONS,
     businessCategories: [],
     selectedBusinessCategoryId: "",
-    isBusinessCategoriesLoading: true,
+    isBusinessCategoriesLoading: mode === "create",
     isBusinessCategoryDropdownOpen: false,
     businessCategorySearchTerm: "",
+    existingProfiles: [],
+    selectedExistingProfileId: "",
+    isExistingProfilesLoading: mode === "select-existing",
     errorMessage: "",
   });
 
   const loadBusinessCategories = useCallback(async (): Promise<void> => {
+    if (mode !== "create") {
+      return;
+    }
+
     setState((currentState) => ({
       ...currentState,
       isBusinessCategoriesLoading: true,
@@ -98,7 +141,57 @@ export const useProfileTypeSelectionViewModel = (
       isBusinessCategoriesLoading: false,
       errorMessage: "",
     }));
-  }, [getActiveBusinessCategoriesUseCase]);
+  }, [getActiveBusinessCategoriesUseCase, mode]);
+
+  const loadExistingProfiles = useCallback(async (): Promise<void> => {
+    if (mode !== "select-existing") {
+      return;
+    }
+
+    setState((currentState) => ({
+      ...currentState,
+      isExistingProfilesLoading: true,
+      errorMessage: "",
+    }));
+
+    const result = await getProfilesByAccountIdUseCase.execute(accountId);
+
+    if (!result.success) {
+      setState((currentState) => ({
+        ...currentState,
+        status: Status.Failure,
+        isExistingProfilesLoading: false,
+        errorMessage: getAuthErrorMessage(result.error),
+      }));
+      return;
+    }
+
+    const profiles = mapExistingProfiles(accountId, result.value);
+
+    if (profiles.length === 0) {
+      setState((currentState) => ({
+        ...currentState,
+        status: Status.Failure,
+        existingProfiles: [],
+        selectedExistingProfileId: "",
+        isExistingProfilesLoading: false,
+        errorMessage: translate("auth.selectProfile.noProfilesFound"),
+      }));
+      return;
+    }
+
+    const activeProfile = profiles.find((profile) => profile.isActive);
+    const selectedExistingProfileId = activeProfile?.id ?? profiles[0].id;
+
+    setState((currentState) => ({
+      ...currentState,
+      status: Status.Success,
+      existingProfiles: profiles,
+      selectedExistingProfileId,
+      isExistingProfilesLoading: false,
+      errorMessage: "",
+    }));
+  }, [accountId, getProfilesByAccountIdUseCase, mode]);
 
   const onProfileNameChange = useCallback((value: string): void => {
     setState((currentState) => ({
@@ -152,8 +245,62 @@ export const useProfileTypeSelectionViewModel = (
     }));
   }, []);
 
+  const onExistingProfilePress = useCallback((profileId: string): void => {
+    setState((currentState) => ({
+      ...currentState,
+      selectedExistingProfileId: profileId,
+      errorMessage: "",
+    }));
+  }, []);
+
   const onContinuePress = useCallback(async (): Promise<void> => {
     if (isCreatingProfileRef.current) {
+      return;
+    }
+
+    if (state.mode === "select-existing") {
+      if (!state.selectedExistingProfileId) {
+        setState((currentState) => ({
+          ...currentState,
+          status: Status.Failure,
+          errorMessage: translate("auth.selectProfile.validationExistingProfile"),
+        }));
+        return;
+      }
+
+      isCreatingProfileRef.current = true;
+
+      setState((currentState) => ({
+        ...currentState,
+        status: Status.Loading,
+        errorMessage: "",
+      }));
+
+      try {
+        const setActiveResult = await setActiveProfileUseCase.execute(
+          state.selectedExistingProfileId,
+        );
+
+        if (!setActiveResult.success) {
+          setState((currentState) => ({
+            ...currentState,
+            status: Status.Failure,
+            errorMessage: getAuthErrorMessage(setActiveResult.error),
+          }));
+          return;
+        }
+
+        setState((currentState) => ({
+          ...currentState,
+          status: Status.Success,
+          errorMessage: "",
+        }));
+
+        onContinue();
+      } finally {
+        isCreatingProfileRef.current = false;
+      }
+
       return;
     }
 
@@ -233,9 +380,12 @@ export const useProfileTypeSelectionViewModel = (
     accountId,
     createProfileUseCase,
     onContinue,
-    state.profileName,
+    setActiveProfileUseCase,
     state.businessCategories,
+    state.mode,
+    state.profileName,
     state.selectedBusinessCategoryId,
+    state.selectedExistingProfileId,
     state.selectedProfileType,
   ]);
 
@@ -244,8 +394,13 @@ export const useProfileTypeSelectionViewModel = (
   }, [onClose]);
 
   useEffect(() => {
+    if (mode === "select-existing") {
+      void loadExistingProfiles();
+      return;
+    }
+
     void loadBusinessCategories();
-  }, [loadBusinessCategories]);
+  }, [loadBusinessCategories, loadExistingProfiles, mode]);
 
   return {
     state,
@@ -254,6 +409,7 @@ export const useProfileTypeSelectionViewModel = (
     onBusinessCategoryDropdownPress,
     onBusinessCategorySearchChange,
     onBusinessCategoryPress,
+    onExistingProfilePress,
     onContinuePress,
     onClosePress,
   };

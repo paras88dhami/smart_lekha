@@ -50,6 +50,8 @@ const en = {
     selectProfile: {
       title: "Create Profile",
       subtitle: "Choose profile type and add a profile name",
+      selectExistingTitle: "Select Profile",
+      selectExistingSubtitle: "Choose a profile to continue",
       businessTitle: "Business Profile",
       businessSubtitle: "Best for shops, companies and registered businesses",
       personalTitle: "Personal and Family",
@@ -62,6 +64,8 @@ const en = {
       categoryNoResult: "No matching category found.",
       validationProfileName: "Profile name must be at least 2 characters.",
       validationBusinessCategory: "Please select a business category.",
+      validationExistingProfile: "Please select a profile to continue.",
+      noProfilesFound: "No profiles found for this account.",
     },
   },
   settings: {

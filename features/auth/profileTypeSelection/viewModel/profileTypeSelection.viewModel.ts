@@ -8,6 +8,7 @@ export interface ProfileTypeSelectionViewModel {
   onBusinessCategoryDropdownPress(): void;
   onBusinessCategorySearchChange(value: string): void;
   onBusinessCategoryPress(categoryId: string): void;
+  onExistingProfilePress(profileId: string): void;
   onContinuePress(): Promise<void>;
   onClosePress(): void;
 }

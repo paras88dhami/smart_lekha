@@ -4,13 +4,17 @@ import { createProfileTypeSelectionScreenFactory } from "@/features/auth/profile
 import { database } from "@/src/database/database";
 
 export default function SelectProfileRoute(): React.JSX.Element {
-  const routeParams = useLocalSearchParams<{ accountId?: string }>();
+  const routeParams = useLocalSearchParams<{
+    accountId?: string;
+    selectionMode?: string;
+  }>();
 
   const Screen = React.useMemo(
     () =>
       createProfileTypeSelectionScreenFactory({
         database,
         accountId: routeParams.accountId,
+        selectionMode: routeParams.selectionMode,
         onContinue: () => {
           router.replace("/(tabs)/home");
         },
@@ -19,7 +23,7 @@ export default function SelectProfileRoute(): React.JSX.Element {
         },
         onInvalidAccess: () => <Redirect href="/(auth)/phone-auth" />,
       }),
-    [routeParams.accountId],
+    [routeParams.accountId, routeParams.selectionMode],
   );
 
   return <Screen />;

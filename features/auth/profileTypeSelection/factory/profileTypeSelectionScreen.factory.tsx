@@ -6,15 +6,19 @@ import { createGetActiveBusinessCategoriesUseCase } from "../../businessCategory
 import { createLocalProfileDataSource } from "../../profile/data/dataSource/profile.datasource.impl";
 import { createProfileRepository } from "../../profile/data/repository/profile.repository.impl";
 import { createCreateProfileUseCase } from "../../profile/useCase/createProfile.useCase.impl";
+import { createGetProfilesByAccountIdUseCase } from "../../profile/useCase/getProfilesByAccountId.useCase.impl";
+import { createSetActiveProfileUseCase } from "../../profile/useCase/setActiveProfile.useCase.impl";
 import { createLocalAuthSessionDataSource } from "../../session/data/dataSource/localAuthSession.datasource.impl";
 import { createAuthSessionRepository } from "../../session/data/repository/authSession.repository.impl";
 import { createGetCurrentAuthSessionUseCase } from "../../session/useCase/getCurrentAuthSession.useCase.impl";
+import type { ProfileTypeSelectionMode } from "../types/types";
 import ProfileTypeSelectionScreen from "../ui/ProfileTypeSelectionScreen";
 import { useProfileTypeSelectionViewModel } from "../viewModel/profileTypeSelection.viewModel.impl";
 
 type Params = {
   database: Database;
   accountId: string | string[] | undefined;
+  selectionMode?: string | string[];
   onContinue: () => void;
   onClose: () => void;
   onInvalidAccess?: () => React.JSX.Element;
@@ -23,6 +27,7 @@ type Params = {
 type CreateProfileTypeSelectionScreenParams = {
   database: Database;
   accountId: string;
+  selectionMode: ProfileTypeSelectionMode;
   onContinue: () => void;
   onClose: () => void;
 };
@@ -35,9 +40,18 @@ const readStringParam = (value: string | string[] | undefined): string => {
   return typeof value === "string" ? value : "";
 };
 
+const parseSelectionMode = (
+  value: string | string[] | undefined,
+): ProfileTypeSelectionMode => {
+  const normalizedValue = readStringParam(value).trim().toLowerCase();
+
+  return normalizedValue === "select-existing" ? "select-existing" : "create";
+};
+
 const createProfileTypeSelectionScreen = ({
   database,
   accountId,
+  selectionMode,
   onContinue,
   onClose,
 }: CreateProfileTypeSelectionScreenParams): React.ComponentType => {
@@ -45,16 +59,26 @@ const createProfileTypeSelectionScreen = ({
     const profileRepository = React.useMemo(() => {
       const profileDataSource = createLocalProfileDataSource(database);
       return createProfileRepository(profileDataSource);
-    }, []);
+    }, [database]);
 
     const businessCategoryRepository = React.useMemo(() => {
       const businessCategoryDataSource =
         createLocalBusinessCategoryDataSource(database);
       return createBusinessCategoryRepository(businessCategoryDataSource);
-    }, []);
+    }, [database]);
 
     const createProfileUseCase = React.useMemo(
       () => createCreateProfileUseCase(profileRepository),
+      [profileRepository],
+    );
+
+    const getProfilesByAccountIdUseCase = React.useMemo(
+      () => createGetProfilesByAccountIdUseCase(profileRepository),
+      [profileRepository],
+    );
+
+    const setActiveProfileUseCase = React.useMemo(
+      () => createSetActiveProfileUseCase(profileRepository),
       [profileRepository],
     );
 
@@ -65,8 +89,11 @@ const createProfileTypeSelectionScreen = ({
 
     const viewModel = useProfileTypeSelectionViewModel({
       accountId,
+      mode: selectionMode,
       createProfileUseCase,
       getActiveBusinessCategoriesUseCase,
+      getProfilesByAccountIdUseCase,
+      setActiveProfileUseCase,
       onContinue,
       onClose,
     });
@@ -78,12 +105,14 @@ const createProfileTypeSelectionScreen = ({
 export const createProfileTypeSelectionScreenFactory = ({
   database,
   accountId,
+  selectionMode,
   onContinue,
   onClose,
   onInvalidAccess,
 }: Params) => {
   return function SelectProfileRouteScreenFactory(): React.JSX.Element {
     const resolvedAccountId = readStringParam(accountId).trim();
+    const resolvedSelectionMode = parseSelectionMode(selectionMode);
     const [isGuardReady, setIsGuardReady] = React.useState(!onInvalidAccess);
     const [isGuardAllowed, setIsGuardAllowed] = React.useState(!onInvalidAccess);
 
@@ -139,10 +168,11 @@ export const createProfileTypeSelectionScreenFactory = ({
         createProfileTypeSelectionScreen({
           database,
           accountId: resolvedAccountId,
+          selectionMode: resolvedSelectionMode,
           onContinue,
           onClose,
         }),
-      [database, onClose, onContinue, resolvedAccountId],
+      [database, onClose, onContinue, resolvedAccountId, resolvedSelectionMode],
     );
 
     if (onInvalidAccess) {

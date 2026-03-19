@@ -11,6 +11,8 @@ const MAX_VERIFY_ATTEMPTS = 5;
 const PRIMARY_EXISTING_NUMBER = "9868569297";
 const ALLOW_NEW_USERS =
   String(process.env.MOCK_ALLOW_NEW_USERS ?? "").trim().toLowerCase() === "true";
+const FORCE_NEW_USER =
+  String(process.env.MOCK_FORCE_NEW_USER ?? "").trim().toLowerCase() === "true";
 const LOG_SENSITIVE =
   String(process.env.MOCK_LOG_SENSITIVE ?? "").trim().toLowerCase() === "true";
 const EXTRA_EXISTING_NUMBERS = (process.env.MOCK_EXISTING_NUMBERS ?? "")
@@ -162,9 +164,11 @@ const handleOtpRequest = async (request, response) => {
   }
 
   const normalized = normalizedPhoneResult.value;
-  const isExistingUser = existingNumbers.has(normalized.localDigits);
+  const isExistingUser = FORCE_NEW_USER
+    ? false
+    : existingNumbers.has(normalized.localDigits);
 
-  if (!isExistingUser && !ALLOW_NEW_USERS) {
+  if (!isExistingUser && !ALLOW_NEW_USERS && !FORCE_NEW_USER) {
     sendError(
       response,
       400,
@@ -267,7 +271,7 @@ const handleOtpVerify = async (request, response) => {
 
   otpRecord.isConsumed = true;
 
-  if (!otpRecord.isExistingUser) {
+  if (!otpRecord.isExistingUser && !FORCE_NEW_USER) {
     existingNumbers.add(otpRecord.localDigits);
   }
 
@@ -395,6 +399,12 @@ server.listen(PORT, "0.0.0.0", () => {
   if (ALLOW_NEW_USERS) {
     console.log(
       "[mock-auth] new-user onboarding mode enabled (valid NP/IN numbers are accepted).",
+    );
+  }
+
+  if (FORCE_NEW_USER) {
+    console.log(
+      "[mock-auth] force-new-user mode enabled (all OTP verifications return isExistingUser=false).",
     );
   }
 });
