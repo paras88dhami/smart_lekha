@@ -1,16 +1,8 @@
-import { AuthSessionModel } from "./authSession.model";
+import type { Result } from "@/shared/types/result.types";
+import type { AuthSessionModel } from "./authSession.model";
 
 export interface AuthSessionDataSource {
-  getCurrentSession(): Promise<AuthSessionModel | null>;
-  upsertSession(input: {
-    accountId: string | null;
-    phoneNumber: string;
-    countryCode: string;
-    countryIso: string;
-    isVerified: boolean;
-    isLoggedIn: boolean;
-    accessToken?: string | null;
-    refreshToken?: string | null;
-  }): Promise<AuthSessionModel>;
-  clearSession(): Promise<void>;
+  getCurrentSession(): Promise<Result<AuthSessionModel | null>>;
+  upsertSession(payload: AuthSessionModel): Promise<Result<AuthSessionModel>>;
+  clearSession(): Promise<Result<void>>;
 }

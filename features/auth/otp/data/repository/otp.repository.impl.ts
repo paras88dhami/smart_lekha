@@ -11,6 +11,7 @@ import {
 } from "@/features/auth/shared/authError.types";
 import type { OtpAuthRemoteDataSource } from "../dataSource/otpAuthRemote.dataSource";
 import type { OtpRequestDataSource } from "../dataSource/otpRequest.dataSource";
+import type { OtpRequestModel } from "../dataSource/otpRequest.model";
 import type { OtpRepository } from "./otp.repository";
 import type {
   RequestOtpInput,
@@ -59,16 +60,24 @@ export const createOtpRepository = (
       };
     }
 
-    const localPersistResult = await localDataSource.upsertOtpRequest({
+    const mappedOtpRequestPayload: OtpRequestModel = {
       phoneNumber: input.phoneNumber.trim(),
       countryCode: input.countryCode.trim(),
       countryIso: input.countryIso,
       otpReferenceId: remoteResult.value.otpReferenceId,
       expiresAt: remoteResult.value.expiresAt,
-    });
+      isConsumed: false,
+    } as OtpRequestModel;
+
+    const localPersistResult = await localDataSource.upsertOtpRequest(
+      mappedOtpRequestPayload,
+    );
 
     if (!localPersistResult.success) {
-      console.error("Failed to persist otp request locally", localPersistResult.error);
+      console.error(
+        "Failed to persist otp request locally",
+        localPersistResult.error,
+      );
     }
 
     const value: RequestOtpResult = {
@@ -126,7 +135,10 @@ export const createOtpRepository = (
       await localDataSource.markOtpRequestConsumed(otpReferenceId);
 
     if (!markConsumedResult.success) {
-      console.error("Failed to mark otp request as consumed", markConsumedResult.error);
+      console.error(
+        "Failed to mark otp request as consumed",
+        markConsumedResult.error,
+      );
     }
 
     const value: VerifyOtpResult = {

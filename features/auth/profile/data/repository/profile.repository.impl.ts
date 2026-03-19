@@ -2,23 +2,29 @@ import {
   AuthDatabaseError,
   ProfileNotFoundError,
 } from "@/features/auth/shared/authError.types";
+import type { ProfileModel } from "../dataSource/profile.model";
 import type { ProfileDataSource } from "../dataSource/profile.datasource";
 import type { ProfileRepository } from "./profile.repository";
 import { CreateProfileRepositoryInput } from "../../types/types";
 
 export const createProfileRepository = (
-  local: ProfileDataSource,
+  localDataSource: ProfileDataSource,
 ): ProfileRepository => ({
   async getProfilesByAccountId(accountId: string) {
-    const result = await local.getProfilesByAccountId(accountId.trim());
+    const result = await localDataSource.getProfilesByAccountId(accountId.trim());
 
-    return result.success
-      ? { success: true, value: result.value }
-      : { success: false, error: AuthDatabaseError };
+    if (!result.success) {
+      return { success: false, error: AuthDatabaseError };
+    }
+
+    return {
+      success: true,
+      value: result.value,
+    };
   },
 
   async getProfileById(profileId: string) {
-    const result = await local.getProfileById(profileId.trim());
+    const result = await localDataSource.getProfileById(profileId.trim());
 
     if (!result.success) {
       return { success: false, error: AuthDatabaseError };
@@ -28,11 +34,14 @@ export const createProfileRepository = (
       return { success: false, error: ProfileNotFoundError };
     }
 
-    return { success: true, value: result.value };
+    return {
+      success: true,
+      value: result.value,
+    };
   },
 
   async createProfile(input: CreateProfileRepositoryInput) {
-    const result = await local.createProfile({
+    const mappedPayload: ProfileModel = {
       accountId: input.accountId.trim(),
       profileType: input.profileType,
       profileName: input.profileName.trim(),
@@ -41,18 +50,30 @@ export const createProfileRepository = (
       businessCategoryId: input.businessCategoryId?.trim() ?? null,
       businessCategoryName: input.businessCategoryName?.trim() ?? null,
       isActive: input.isActive,
-    });
+    } as ProfileModel;
 
-    return result.success
-      ? { success: true, value: result.value }
-      : { success: false, error: AuthDatabaseError };
+    const result = await localDataSource.createProfile(mappedPayload);
+
+    if (!result.success) {
+      return { success: false, error: AuthDatabaseError };
+    }
+
+    return {
+      success: true,
+      value: result.value,
+    };
   },
 
   async setActiveProfile(profileId: string) {
-    const result = await local.setActiveProfile(profileId.trim());
+    const result = await localDataSource.setActiveProfile(profileId.trim());
 
-    return result.success
-      ? { success: true, value: undefined }
-      : { success: false, error: AuthDatabaseError };
+    if (!result.success) {
+      return { success: false, error: AuthDatabaseError };
+    }
+
+    return {
+      success: true,
+      value: undefined,
+    };
   },
 });

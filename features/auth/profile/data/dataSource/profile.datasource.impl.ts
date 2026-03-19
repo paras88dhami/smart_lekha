@@ -1,14 +1,15 @@
 import type { Result } from "@/shared/types/result.types";
 import type { Database } from "@nozbe/watermelondb";
 import { Q } from "@nozbe/watermelondb";
-import type {
-  CreateProfileDataSourceInput,
-  ProfileDataSource,
-} from "./profile.datasource";
+import type { ProfileDataSource } from "./profile.datasource";
 import type { ProfileModel } from "./profile.model";
 
 const getCollection = (database: Database) => {
   return database.get<ProfileModel>("profiles");
+};
+
+const mapUnknownError = (error: unknown, message: string): Error => {
+  return error instanceof Error ? error : new Error(message);
 };
 
 export const createLocalProfileDataSource = (
@@ -29,10 +30,7 @@ export const createLocalProfileDataSource = (
     } catch (error) {
       return {
         success: false,
-        error:
-          error instanceof Error
-            ? error
-            : new Error("Failed to load profiles by account id"),
+        error: mapUnknownError(error, "Failed to load profiles by account id."),
       };
     }
   },
@@ -55,23 +53,21 @@ export const createLocalProfileDataSource = (
     }
   },
 
-  async createProfile(
-    input: CreateProfileDataSourceInput,
-  ): Promise<Result<ProfileModel>> {
+  async createProfile(payload: ProfileModel): Promise<Result<ProfileModel>> {
     try {
       const collection = getCollection(database);
       const timestamp = Date.now();
 
       const record = await database.write(async () => {
         return collection.create((currentRecord: ProfileModel) => {
-          currentRecord.accountId = input.accountId;
-          currentRecord.profileType = input.profileType;
-          currentRecord.profileName = input.profileName;
-          currentRecord.displayName = input.displayName;
-          currentRecord.roleName = input.roleName;
-          currentRecord.businessCategoryId = input.businessCategoryId;
-          currentRecord.businessCategoryName = input.businessCategoryName;
-          currentRecord.isActive = input.isActive;
+          currentRecord.accountId = payload.accountId ?? "";
+          currentRecord.profileType = payload.profileType;
+          currentRecord.profileName = payload.profileName ?? "";
+          currentRecord.displayName = payload.displayName ?? null;
+          currentRecord.roleName = payload.roleName ?? null;
+          currentRecord.businessCategoryId = payload.businessCategoryId ?? null;
+          currentRecord.businessCategoryName = payload.businessCategoryName ?? null;
+          currentRecord.isActive = payload.isActive ?? false;
           currentRecord.createdAt = timestamp;
           currentRecord.updatedAt = timestamp;
         });
@@ -84,10 +80,7 @@ export const createLocalProfileDataSource = (
     } catch (error) {
       return {
         success: false,
-        error:
-          error instanceof Error
-            ? error
-            : new Error("Failed to create profile"),
+        error: mapUnknownError(error, "Failed to create profile."),
       };
     }
   },
@@ -114,10 +107,7 @@ export const createLocalProfileDataSource = (
     } catch (error) {
       return {
         success: false,
-        error:
-          error instanceof Error
-            ? error
-            : new Error("Failed to set active profile"),
+        error: mapUnknownError(error, "Failed to set active profile."),
       };
     }
   },

@@ -1,10 +1,7 @@
 import type { Result } from "@/shared/types/result.types";
 import type { Database } from "@nozbe/watermelondb";
 import { Q } from "@nozbe/watermelondb";
-import type {
-  OtpRequestDataSource,
-  UpsertOtpRequestInput,
-} from "./otpRequest.dataSource";
+import type { OtpRequestDataSource } from "./otpRequest.dataSource";
 import type { OtpRequestModel } from "./otpRequest.model";
 
 const getCollection = (database: Database) => {
@@ -31,23 +28,19 @@ const getRequestByReferenceId = async (
 export const createLocalOtpRequestDataSource = (
   database: Database,
 ): OtpRequestDataSource => ({
-  async upsertOtpRequest(
-    input: UpsertOtpRequestInput,
-  ): Promise<Result<OtpRequestModel>> {
+  async upsertOtpRequest(payload: OtpRequestModel): Promise<Result<OtpRequestModel>> {
     try {
-      const existingRecord = await getRequestByReferenceId(
-        database,
-        input.otpReferenceId,
-      );
+      const otpReferenceId = payload.otpReferenceId ?? "";
+      const existingRecord = await getRequestByReferenceId(database, otpReferenceId);
       const timestamp = Date.now();
 
       if (existingRecord) {
         await database.write(async () => {
           await existingRecord.update((record: OtpRequestModel) => {
-            record.phoneNumber = input.phoneNumber;
-            record.countryCode = input.countryCode;
-            record.countryIso = input.countryIso;
-            record.expiresAt = input.expiresAt;
+            record.phoneNumber = payload.phoneNumber ?? "";
+            record.countryCode = payload.countryCode ?? "";
+            record.countryIso = payload.countryIso ?? "NP";
+            record.expiresAt = payload.expiresAt ?? 0;
             record.isConsumed = false;
             record.updatedAt = timestamp;
           });
@@ -61,11 +54,11 @@ export const createLocalOtpRequestDataSource = (
 
       const createdRecord = await database.write(async () => {
         return getCollection(database).create((record: OtpRequestModel) => {
-          record.phoneNumber = input.phoneNumber;
-          record.countryCode = input.countryCode;
-          record.countryIso = input.countryIso;
-          record.otpReferenceId = input.otpReferenceId;
-          record.expiresAt = input.expiresAt;
+          record.phoneNumber = payload.phoneNumber ?? "";
+          record.countryCode = payload.countryCode ?? "";
+          record.countryIso = payload.countryIso ?? "NP";
+          record.otpReferenceId = payload.otpReferenceId ?? "";
+          record.expiresAt = payload.expiresAt ?? 0;
           record.isConsumed = false;
           record.createdAt = timestamp;
           record.updatedAt = timestamp;
