@@ -12,7 +12,7 @@ export default function SelectProfileRoute(): React.JSX.Element {
         database,
         accountId: routeParams.accountId,
         onContinue: () => {
-          router.push("/(tabs)/home");
+          router.replace("/(tabs)/home");
         },
         onClose: () => {
           router.back();

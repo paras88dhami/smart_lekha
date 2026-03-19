@@ -9,6 +9,8 @@ const REQUEST_WINDOW_MS = 10 * 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = 5;
 const MAX_VERIFY_ATTEMPTS = 5;
 const PRIMARY_EXISTING_NUMBER = "9868569297";
+const ALLOW_NEW_USERS =
+  String(process.env.MOCK_ALLOW_NEW_USERS ?? "").trim().toLowerCase() === "true";
 const LOG_SENSITIVE =
   String(process.env.MOCK_LOG_SENSITIVE ?? "").trim().toLowerCase() === "true";
 const EXTRA_EXISTING_NUMBERS = (process.env.MOCK_EXISTING_NUMBERS ?? "")
@@ -162,7 +164,7 @@ const handleOtpRequest = async (request, response) => {
   const normalized = normalizedPhoneResult.value;
   const isExistingUser = existingNumbers.has(normalized.localDigits);
 
-  if (!isExistingUser) {
+  if (!isExistingUser && !ALLOW_NEW_USERS) {
     sendError(
       response,
       400,
@@ -386,7 +388,13 @@ server.listen(PORT, "0.0.0.0", () => {
     );
   } else {
     console.log(
-      `[mock-auth] existing-user test number: ${PRIMARY_EXISTING_NUMBER} (set MOCK_LOG_SENSITIVE=true to print OTP)`
+      `[mock-auth] existing-user test number: ${PRIMARY_EXISTING_NUMBER} (set MOCK_LOG_SENSITIVE=true to print OTP)`,
+    );
+  }
+
+  if (ALLOW_NEW_USERS) {
+    console.log(
+      "[mock-auth] new-user onboarding mode enabled (valid NP/IN numbers are accepted).",
     );
   }
 });
