@@ -14,6 +14,7 @@ export type UpsertAuthSessionRepositoryInput = {
 
 export interface AuthSessionRepository {
   getCurrentSession(): Promise<AuthResult<AuthSessionModel | null>>;
+  validateCurrentSession(): Promise<AuthResult<AuthSessionModel | null>>;
   upsertSession(
     input: UpsertAuthSessionRepositoryInput,
   ): Promise<AuthResult<AuthSessionModel>>;

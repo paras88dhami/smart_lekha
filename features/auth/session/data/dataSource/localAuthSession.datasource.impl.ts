@@ -96,7 +96,7 @@ export const createLocalAuthSessionDataSource = (
 
       await database.write(async () => {
         for (const session of sessions) {
-          await session.markAsDeleted();
+          await session.destroyPermanently();
         }
       });
 

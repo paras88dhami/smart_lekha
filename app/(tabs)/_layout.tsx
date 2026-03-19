@@ -2,7 +2,7 @@ import React from "react";
 import { Redirect, Tabs } from "expo-router";
 import { createLocalAuthSessionDataSource } from "@/features/auth/session/data/dataSource/localAuthSession.datasource.impl";
 import { createAuthSessionRepository } from "@/features/auth/session/data/repository/authSession.repository.impl";
-import { createGetCurrentAuthSessionUseCase } from "@/features/auth/session/useCase/getCurrentAuthSession.useCase.impl";
+import { createValidateCurrentAuthSessionUseCase } from "@/features/auth/session/useCase/validateCurrentAuthSession.useCase.impl";
 import KhataBottomTabBar from "@/shared/components/ui/KhataBottomTabBar";
 import { database } from "@/src/database/database";
 
@@ -10,17 +10,20 @@ export default function TabsLayout(): React.JSX.Element {
   const [isReady, setIsReady] = React.useState(false);
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
 
+  const validateCurrentAuthSessionUseCase = React.useMemo(() => {
+    const localAuthSessionDataSource = createLocalAuthSessionDataSource(database);
+    const authSessionRepository = createAuthSessionRepository(
+      localAuthSessionDataSource,
+    );
+
+    return createValidateCurrentAuthSessionUseCase(authSessionRepository);
+  }, []);
+
   React.useEffect(() => {
     let isMounted = true;
 
     const loadAuthState = async (): Promise<void> => {
-      const localAuthSessionDataSource = createLocalAuthSessionDataSource(database);
-      const authSessionRepository = createAuthSessionRepository(
-        localAuthSessionDataSource,
-      );
-      const getCurrentAuthSessionUseCase =
-        createGetCurrentAuthSessionUseCase(authSessionRepository);
-      const sessionResult = await getCurrentAuthSessionUseCase.execute();
+      const sessionResult = await validateCurrentAuthSessionUseCase.execute();
       const hasVerifiedSession = Boolean(
         sessionResult.success &&
           sessionResult.value?.isLoggedIn &&
@@ -41,7 +44,7 @@ export default function TabsLayout(): React.JSX.Element {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [validateCurrentAuthSessionUseCase]);
 
   if (!isReady) {
     return <React.Fragment />;

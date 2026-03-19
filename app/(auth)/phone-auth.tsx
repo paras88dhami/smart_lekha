@@ -1,11 +1,9 @@
 import React from "react";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 import { createPhoneEntryScreen } from "@/features/auth/phoneEntry/factory/phoneEntryScreen.factory";
 import { database } from "@/src/database/database";
 
 export default function PhoneAuthRoute(): React.JSX.Element {
-  const router = useRouter();
-
   const Screen = React.useMemo(
     () =>
       createPhoneEntryScreen({
@@ -29,9 +27,11 @@ export default function PhoneAuthRoute(): React.JSX.Element {
         onContinueOffline: () => {
           router.replace("/(tabs)/home");
         },
-        onClose: () => router.back(),
+        onClose: () => {
+          router.back();
+        },
       }),
-    [router],
+    [],
   );
 
   return <Screen />;

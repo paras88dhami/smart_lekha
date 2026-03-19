@@ -22,7 +22,7 @@ import {
 import type { LanguageCodeType } from "../../languageSelection/types/types";
 import type { PersistSelectedLanguageUseCase } from "../../languageSelection/useCase/persistSelectedLanguage.useCase";
 import type { RequestOtpUseCase } from "../../otp/useCase/requestOtp.useCase";
-import type { GetCurrentAuthSessionUseCase } from "../../session/useCase/getCurrentAuthSession.useCase";
+import type { ValidateCurrentAuthSessionUseCase } from "../../session/useCase/validateCurrentAuthSession.useCase";
 import type { CountryOption, PhoneEntrySubmitInput, PhoneEntryState } from "../types/types";
 import type { PhoneEntryViewModel } from "./phoneEntry.viewModel";
 
@@ -57,7 +57,7 @@ type Params = {
   persistSelectedLanguageUseCase: PersistSelectedLanguageUseCase;
   updateLastSelectedCountryIsoUseCase: UpdateLastSelectedCountryIsoUseCase;
   requestOtpUseCase: RequestOtpUseCase;
-  getCurrentAuthSessionUseCase: GetCurrentAuthSessionUseCase;
+  validateCurrentAuthSessionUseCase: ValidateCurrentAuthSessionUseCase;
   onContinue: (input: PhoneEntrySubmitInput) => void;
   onContinueOffline: () => void;
   onClose: () => void;
@@ -70,7 +70,7 @@ export function usePhoneEntryViewModel(params: Params): PhoneEntryViewModel {
     persistSelectedLanguageUseCase,
     updateLastSelectedCountryIsoUseCase,
     requestOtpUseCase,
-    getCurrentAuthSessionUseCase,
+    validateCurrentAuthSessionUseCase,
     onContinue,
     onContinueOffline,
     onClose,
@@ -257,7 +257,7 @@ export function usePhoneEntryViewModel(params: Params): PhoneEntryViewModel {
         let canContinueOffline = false;
 
         if (hasOfflineFallbackCandidate) {
-          const sessionResult = await getCurrentAuthSessionUseCase.execute();
+          const sessionResult = await validateCurrentAuthSessionUseCase.execute();
           canContinueOffline = Boolean(
             sessionResult.success &&
               sessionResult.value?.isLoggedIn &&
@@ -295,7 +295,7 @@ export function usePhoneEntryViewModel(params: Params): PhoneEntryViewModel {
       isSubmitting.current = false;
     }
   }, [
-    getCurrentAuthSessionUseCase,
+    validateCurrentAuthSessionUseCase,
     onContinue,
     persistSelectedLanguageUseCase,
     requestOtpUseCase,
@@ -331,3 +331,4 @@ export function usePhoneEntryViewModel(params: Params): PhoneEntryViewModel {
     closeFlow,
   };
 }
+

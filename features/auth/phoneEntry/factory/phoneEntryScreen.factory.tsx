@@ -11,7 +11,7 @@ import { createOtpRepository } from "../../otp/data/repository/otp.repository.im
 import { createRequestOtpUseCase } from "../../otp/useCase/requestOtp.useCase.impl";
 import { createLocalAuthSessionDataSource } from "../../session/data/dataSource/localAuthSession.datasource.impl";
 import { createAuthSessionRepository } from "../../session/data/repository/authSession.repository.impl";
-import { createGetCurrentAuthSessionUseCase } from "../../session/useCase/getCurrentAuthSession.useCase.impl";
+import { createValidateCurrentAuthSessionUseCase } from "../../session/useCase/validateCurrentAuthSession.useCase.impl";
 import type { PhoneEntrySubmitInput } from "../types/types";
 import PhoneEntryScreen from "../ui/PhoneEntryScreen";
 import { usePhoneEntryViewModel } from "../viewModel/phoneEntry.viewModel.impl";
@@ -65,12 +65,12 @@ export function createPhoneEntryScreen(params: Params): React.ComponentType {
       return createRequestOtpUseCase(otpRepository);
     }, []);
 
-    const getCurrentAuthSessionUseCase = React.useMemo(() => {
+    const validateCurrentAuthSessionUseCase = React.useMemo(() => {
       const localAuthSessionDataSource = createLocalAuthSessionDataSource(database);
       const authSessionRepository = createAuthSessionRepository(
         localAuthSessionDataSource,
       );
-      return createGetCurrentAuthSessionUseCase(authSessionRepository);
+      return createValidateCurrentAuthSessionUseCase(authSessionRepository);
     }, []);
 
     const onContinue = React.useCallback(
@@ -94,7 +94,7 @@ export function createPhoneEntryScreen(params: Params): React.ComponentType {
       persistSelectedLanguageUseCase,
       updateLastSelectedCountryIsoUseCase,
       requestOtpUseCase,
-      getCurrentAuthSessionUseCase,
+      validateCurrentAuthSessionUseCase,
       onContinue,
       onContinueOffline,
       onClose,

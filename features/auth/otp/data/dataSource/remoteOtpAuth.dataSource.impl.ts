@@ -125,9 +125,25 @@ const getAuthApiBaseUrl = (): string => {
   const processObject = (
     globalThis as { process?: { env?: Record<string, string | undefined> } }
   ).process;
-  const baseUrl = processObject?.env?.EXPO_PUBLIC_AUTH_API_BASE_URL;
+  const rawBaseUrl = processObject?.env?.EXPO_PUBLIC_AUTH_API_BASE_URL?.trim() ?? "";
 
-  return baseUrl?.trim() ?? "";
+  if (!rawBaseUrl) {
+    return "";
+  }
+
+  try {
+    const url = new URL(rawBaseUrl);
+    const isHttps = url.protocol === "https:";
+    const isDevHttpAllowed = __DEV__ && url.protocol === "http:";
+
+    if (!isHttps && !isDevHttpAllowed) {
+      return "";
+    }
+
+    return rawBaseUrl.replace(/\/+$/, "");
+  } catch {
+    return "";
+  }
 };
 
 const toRemoteError = (
@@ -212,7 +228,7 @@ const postJson = async (
       success: false,
       error: toRemoteError(
         "SERVICE_NOT_CONFIGURED",
-        "EXPO_PUBLIC_AUTH_API_BASE_URL is not configured.",
+        "EXPO_PUBLIC_AUTH_API_BASE_URL is missing or insecure for this build.",
       ),
     };
   }

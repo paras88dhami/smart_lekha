@@ -7,7 +7,10 @@ const RESEND_AFTER_SECONDS = Number(process.env.MOCK_RESEND_AFTER_SECONDS ?? 30)
 const DEFAULT_OTP_CODE = process.env.MOCK_DEFAULT_OTP_CODE?.trim() || "123456";
 const REQUEST_WINDOW_MS = 10 * 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = 5;
+const MAX_VERIFY_ATTEMPTS = 5;
 const PRIMARY_EXISTING_NUMBER = "9868569297";
+const LOG_SENSITIVE =
+  String(process.env.MOCK_LOG_SENSITIVE ?? "").trim().toLowerCase() === "true";
 const EXTRA_EXISTING_NUMBERS = (process.env.MOCK_EXISTING_NUMBERS ?? "")
   .split(",")
   .map((value) => value.trim())
@@ -20,6 +23,7 @@ const existingNumbers = new Set([
 
 const otpRequestsByReferenceId = new Map();
 const otpRequestTimestampsByPhone = new Map();
+const sessionsByRefreshToken = new Map();
 
 const parseJsonBody = (request) =>
   new Promise((resolve, reject) => {
@@ -191,11 +195,18 @@ const handleOtpRequest = async (request, response) => {
     countryCode: normalized.countryCode,
     localDigits: normalized.localDigits,
     e164PhoneNumber: normalized.e164PhoneNumber,
+    failedAttempts: 0,
   });
 
-  console.log(
-    `[mock-auth] OTP requested for ${normalized.e164PhoneNumber}. otpReferenceId=${otpReferenceId}, otp=${DEFAULT_OTP_CODE}, existing=${isExistingUser}`,
-  );
+  if (LOG_SENSITIVE) {
+    console.log(
+      `[mock-auth] OTP requested for ${normalized.e164PhoneNumber}. otpReferenceId=${otpReferenceId}, otp=${DEFAULT_OTP_CODE}, existing=${isExistingUser}`,
+    );
+  } else {
+    console.log(
+      `[mock-auth] OTP requested for ${normalized.e164PhoneNumber}. otpReferenceId=${otpReferenceId}, existing=${isExistingUser}`,
+    );
+  }
 
   sendJson(response, 200, {
     success: true,
@@ -236,6 +247,18 @@ const handleOtpVerify = async (request, response) => {
   }
 
   if (otpCode !== otpRecord.otpCode) {
+    otpRecord.failedAttempts += 1;
+
+    if (otpRecord.failedAttempts >= MAX_VERIFY_ATTEMPTS) {
+      sendError(
+        response,
+        429,
+        "RATE_LIMITED",
+        "Too many invalid OTP attempts. Request a new code.",
+      );
+      return;
+    }
+
     sendError(response, 400, "INVALID_OTP", "Invalid OTP code.");
     return;
   }
@@ -250,6 +273,12 @@ const handleOtpVerify = async (request, response) => {
   const accessToken = `mock_access_${randomUUID()}`;
   const refreshToken = `mock_refresh_${randomUUID()}`;
 
+  sessionsByRefreshToken.set(refreshToken, {
+    accountId,
+    e164PhoneNumber: otpRecord.e164PhoneNumber,
+    isExistingUser: otpRecord.isExistingUser,
+  });
+
   console.log(
     `[mock-auth] OTP verified for ${otpRecord.e164PhoneNumber}. otpReferenceId=${otpReferenceId}, accountId=${accountId}, existing=${otpRecord.isExistingUser}`,
   );
@@ -261,6 +290,43 @@ const handleOtpVerify = async (request, response) => {
       accessToken,
       refreshToken,
       isExistingUser: otpRecord.isExistingUser,
+    },
+  });
+};
+
+const handleSessionRefresh = async (request, response) => {
+  const payload = await parseJsonBody(request);
+  const refreshToken = String(payload.refreshToken ?? "").trim();
+
+  if (!refreshToken) {
+    sendError(response, 401, "UNAUTHORIZED", "Refresh token is required.");
+    return;
+  }
+
+  const sessionRecord = sessionsByRefreshToken.get(refreshToken);
+
+  if (!sessionRecord) {
+    sendError(response, 401, "UNAUTHORIZED", "Refresh token is invalid.");
+    return;
+  }
+
+  sessionsByRefreshToken.delete(refreshToken);
+
+  const accessToken = `mock_access_${randomUUID()}`;
+  const nextRefreshToken = `mock_refresh_${randomUUID()}`;
+
+  sessionsByRefreshToken.set(nextRefreshToken, sessionRecord);
+
+  console.log(
+    `[mock-auth] Session refreshed for ${sessionRecord.e164PhoneNumber}. accountId=${sessionRecord.accountId}`,
+  );
+
+  sendJson(response, 200, {
+    success: true,
+    data: {
+      accountId: sessionRecord.accountId,
+      accessToken,
+      refreshToken: nextRefreshToken,
     },
   });
 };
@@ -294,6 +360,11 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    if (method === "POST" && path === "/auth/session/refresh") {
+      await handleSessionRefresh(request, response);
+      return;
+    }
+
     sendError(response, 404, "NOT_FOUND", "Route not found.");
   } catch (error) {
     if (error instanceof Error && error.message === "INVALID_JSON") {
@@ -308,7 +379,14 @@ const server = createServer(async (request, response) => {
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`[mock-auth] running on http://0.0.0.0:${PORT}`);
-  console.log(
-    `[mock-auth] existing-user test number: ${PRIMARY_EXISTING_NUMBER}, otp code: ${DEFAULT_OTP_CODE}`,
-  );
+
+  if (LOG_SENSITIVE) {
+    console.log(
+      `[mock-auth] existing-user test number: ${PRIMARY_EXISTING_NUMBER}, otp code: ${DEFAULT_OTP_CODE}`,
+    );
+  } else {
+    console.log(
+      `[mock-auth] existing-user test number: ${PRIMARY_EXISTING_NUMBER} (set MOCK_LOG_SENSITIVE=true to print OTP)`
+    );
+  }
 });
