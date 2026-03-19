@@ -4,8 +4,13 @@ import type { HomeShortcutModel } from "./homeShortcut.model";
 
 export interface HomeShortcutDataSource {
   getShortcutsByProfileId(profileId: string): Promise<Result<HomeShortcutModel[]>>;
+  getAllShortcutsByProfileId(profileId: string): Promise<Result<HomeShortcutModel[]>>;
   createDefaultShortcuts(
     profileId: string,
     defaults: HomeShortcutSeed[],
+  ): Promise<Result<void>>;
+  saveShortcuts(
+    profileId: string,
+    shortcuts: HomeShortcutModel[],
   ): Promise<Result<void>>;
 }

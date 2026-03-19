@@ -1,13 +1,15 @@
 import React from "react";
-import { Text, View } from "react-native";
-import { useTranslation } from "@/shared/i18n/resources";
+import { createDownloadDataScreenFactory } from "@/features/profile/downloadData/factory/downloadDataScreen.factory";
+import { database } from "@/src/database/database";
 
 export default function DownloadDataRoute(): React.JSX.Element {
-  const { t } = useTranslation();
-
-  return (
-    <View>
-      <Text>{t("auth.downloadData.title")}</Text>
-    </View>
+  const Screen = React.useMemo(
+    () =>
+      createDownloadDataScreenFactory({
+        database,
+      }),
+    [],
   );
+
+  return <Screen />;
 }

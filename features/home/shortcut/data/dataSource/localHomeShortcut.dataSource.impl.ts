@@ -40,6 +40,29 @@ export const createLocalHomeShortcutDataSource = (
     }
   },
 
+  async getAllShortcutsByProfileId(
+    profileId: string,
+  ): Promise<Result<HomeShortcutModel[]>> {
+    try {
+      const records = await getCollection(database)
+        .query(
+          Q.where("profile_id", profileId),
+          Q.sortBy("sort_order", Q.asc),
+        )
+        .fetch();
+
+      return {
+        success: true,
+        value: records,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: mapUnknownError(error),
+      };
+    }
+  },
+
   async createDefaultShortcuts(
     profileId: string,
     defaults: HomeShortcutSeed[],
@@ -67,6 +90,51 @@ export const createLocalHomeShortcutDataSource = (
             record.sortOrder = item.sortOrder;
             record.isEnabled = true;
             record.createdAt = timestamp;
+            record.updatedAt = timestamp;
+          });
+        }
+      });
+
+      return {
+        success: true,
+        value: undefined,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: mapUnknownError(error),
+      };
+    }
+  },
+
+  async saveShortcuts(
+    profileId: string,
+    shortcuts: HomeShortcutModel[],
+  ): Promise<Result<void>> {
+    try {
+      const collection = getCollection(database);
+      const existingRecords = await collection
+        .query(Q.where("profile_id", profileId))
+        .fetch();
+
+      const existingById = new Map<string, HomeShortcutModel>();
+      for (const record of existingRecords) {
+        existingById.set(record.id, record);
+      }
+
+      const timestamp = Date.now();
+
+      await database.write(async () => {
+        for (const shortcut of shortcuts) {
+          const existingRecord = existingById.get(shortcut.id);
+
+          if (!existingRecord) {
+            continue;
+          }
+
+          await existingRecord.update((record: HomeShortcutModel) => {
+            record.sortOrder = shortcut.sortOrder ?? 0;
+            record.isEnabled = Boolean(shortcut.isEnabled);
             record.updatedAt = timestamp;
           });
         }

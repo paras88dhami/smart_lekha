@@ -9,16 +9,16 @@ export default function HomeRoute(): React.JSX.Element {
       createHomeDashboardScreenFactory({
         database,
         onMyProfilePress: () => {
-          router.push("/(tabs)/more");
+          router.push("/profile-selection");
         },
         onMyAccountsPress: () => {
-          router.push("/(tabs)/transactions");
+          router.push("/cash-bank");
         },
         onStatementPress: () => {
-          router.push("/(tabs)/transactions");
+          router.push("/reports");
         },
         onEsewaPress: () => {
-          router.push("/(tabs)/transactions");
+          router.push("/quick-entry");
         },
         onQuickPosPress: () => {
           router.push("/(tabs)/quick-pos" as never);
@@ -30,7 +30,7 @@ export default function HomeRoute(): React.JSX.Element {
           router.push("/(tabs)/transactions");
         },
         onNotificationsPress: () => {
-          router.push("/(tabs)/more");
+          router.push("/notifications");
         },
       }),
     [],
@@ -38,6 +38,3 @@ export default function HomeRoute(): React.JSX.Element {
 
   return <Screen />;
 }
-
-
-

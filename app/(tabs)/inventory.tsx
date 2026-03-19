@@ -9,7 +9,7 @@ export default function InventoryRoute(): React.JSX.Element {
       createInventoryScreenFactory({
         database,
         onViewAllSavedPress: () => {
-          router.push("/(tabs)/transactions");
+          router.push("/reports");
         },
       }),
     [],
