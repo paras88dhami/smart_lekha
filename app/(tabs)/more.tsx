@@ -1,13 +1,21 @@
 import React from "react";
-import { Text, View } from "react-native";
-import { useTranslation } from "@/shared/i18n/resources";
+import { useRouter } from "expo-router";
+import { createMoreScreenFactory } from "@/features/more/overview/factory/moreScreen.factory";
+import { database } from "@/src/database/database";
 
 export default function MoreRoute(): React.JSX.Element {
-  const { t } = useTranslation();
+  const router = useRouter();
 
-  return (
-    <View>
-      <Text>{t("tabs.more")}</Text>
-    </View>
+  const Screen = React.useMemo(
+    () =>
+      createMoreScreenFactory({
+        database,
+        onLoggedOut: () => {
+          router.replace("/(auth)/language");
+        },
+      }),
+    [router],
   );
+
+  return <Screen />;
 }

@@ -7,6 +7,9 @@ const RESEND_AFTER_SECONDS = Number(process.env.MOCK_RESEND_AFTER_SECONDS ?? 30)
 const DEFAULT_OTP_CODE = process.env.MOCK_DEFAULT_OTP_CODE?.trim() || "123456";
 const REQUEST_WINDOW_MS = 10 * 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = 5;
+const ALLOW_NEW_NUMBERS = (process.env.MOCK_ALLOW_NEW_NUMBERS ?? "false")
+  .trim()
+  .toLowerCase() === "true";
 const PRIMARY_EXISTING_NUMBER = "9868569297";
 const EXTRA_EXISTING_NUMBERS = (process.env.MOCK_EXISTING_NUMBERS ?? "")
   .split(",")
@@ -156,6 +159,17 @@ const handleOtpRequest = async (request, response) => {
   }
 
   const normalized = normalizedPhoneResult.value;
+  const isExistingUser = existingNumbers.has(normalized.localDigits);
+
+  if (!ALLOW_NEW_NUMBERS && !isExistingUser) {
+    sendError(
+      response,
+      400,
+      "INVALID_PHONE",
+      "Mock mode allows OTP only for configured test numbers.",
+    );
+    return;
+  }
 
   if (!canRequestOtpForPhone(normalized.localDigits)) {
     sendError(
@@ -167,7 +181,6 @@ const handleOtpRequest = async (request, response) => {
     return;
   }
 
-  const isExistingUser = existingNumbers.has(normalized.localDigits);
   const otpReferenceId = `otp_${randomUUID()}`;
   const expiresAt = Date.now() + OTP_EXPIRES_IN_MS;
 
@@ -299,6 +312,6 @@ const server = createServer(async (request, response) => {
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`[mock-auth] running on http://0.0.0.0:${PORT}`);
   console.log(
-    `[mock-auth] existing-user test number: ${PRIMARY_EXISTING_NUMBER}, otp code: ${DEFAULT_OTP_CODE}`,
+    `[mock-auth] existing-user test number: ${PRIMARY_EXISTING_NUMBER}, otp code: ${DEFAULT_OTP_CODE}, allowNewNumbers=${ALLOW_NEW_NUMBERS}`,
   );
 });

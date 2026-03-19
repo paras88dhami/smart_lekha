@@ -7,6 +7,7 @@ const en = {
     delete: "Delete",
     edit: "Edit",
     loading: "Loading...",
+    logout: "Log Out",
   },
   auth: {
     languageSelection: {
