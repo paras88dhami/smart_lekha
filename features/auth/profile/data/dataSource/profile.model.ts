@@ -1,6 +1,5 @@
-import { Model, Query } from "@nozbe/watermelondb";
-import { children, field } from "@nozbe/watermelondb/decorators";
-import { BusinessProfileModel } from "@/features/auth/businessProfile/data/dataSource/businessProfile.model";
+import { Model } from "@nozbe/watermelondb";
+import { field } from "@nozbe/watermelondb/decorators";
 
 export type ProfileType = "personal" | "business";
 
@@ -18,6 +17,4 @@ export class ProfileModel extends Model {
   @field("is_active") isActive!: boolean;
   @field("created_at") createdAt!: number;
   @field("updated_at") updatedAt!: number;
-
-  @children("business_profiles") businessProfiles!: Query<BusinessProfileModel>;
 }
