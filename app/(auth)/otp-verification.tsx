@@ -37,7 +37,10 @@ const parseLanguageCode = (value: string | undefined): LanguageCodeType => {
   return "en";
 };
 
-const parseBoolean = (value: string | undefined, fallbackValue: boolean): boolean => {
+const parseBoolean = (
+  value: string | undefined,
+  fallbackValue: boolean,
+): boolean => {
   if (!value) {
     return fallbackValue;
   }
