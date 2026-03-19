@@ -63,6 +63,8 @@ export default function TabsLayout(): React.JSX.Element {
       <Tabs.Screen name="transactions" />
       <Tabs.Screen name="inventory" />
       <Tabs.Screen name="more" />
+      <Tabs.Screen name="quick-pos" options={{ href: null }} />
     </Tabs>
   );
 }
+

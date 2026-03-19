@@ -1,13 +1,19 @@
 import React from "react";
-import { Text, View } from "react-native";
-import { useTranslation } from "@/shared/i18n/resources";
+import { router } from "expo-router";
+import { createInventoryScreenFactory } from "@/features/inventory/overview/factory/inventoryScreen.factory";
+import { database } from "@/src/database/database";
 
 export default function InventoryRoute(): React.JSX.Element {
-  const { t } = useTranslation();
-
-  return (
-    <View>
-      <Text>{t("tabs.inventory")}</Text>
-    </View>
+  const Screen = React.useMemo(
+    () =>
+      createInventoryScreenFactory({
+        database,
+        onViewAllSavedPress: () => {
+          router.push("/(tabs)/transactions");
+        },
+      }),
+    [],
   );
+
+  return <Screen />;
 }

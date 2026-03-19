@@ -1,13 +1,22 @@
 import React from "react";
-import { Text, View } from "react-native";
-import { useTranslation } from "@/shared/i18n/resources";
+import { router } from "expo-router";
+import { createTransactionsScreenFactory } from "@/features/transactions/overview/factory/transactionsScreen.factory";
+import { database } from "@/src/database/database";
 
 export default function TransactionsRoute(): React.JSX.Element {
-  const { t } = useTranslation();
-
-  return (
-    <View>
-      <Text>{t("tabs.transactions")}</Text>
-    </View>
+  const Screen = React.useMemo(
+    () =>
+      createTransactionsScreenFactory({
+        database,
+        onQuickPosPress: () => {
+          router.push("/(tabs)/quick-pos" as never);
+        },
+      }),
+    [],
   );
+
+  return <Screen />;
 }
+
+
+

@@ -9,14 +9,20 @@ const tabMap: Record<string, { labelKey: string; iconName: string }> = {
   transactions: { labelKey: "tabs.transactions", iconName: "cash-outline" },
   parties: { labelKey: "tabs.parties", iconName: "people-outline" },
   home: { labelKey: "tabs.home", iconName: "home-outline" },
-  inventory: { labelKey: "tabs.inventory", iconName: "archive-outline" },
+  inventory: { labelKey: "tabs.inventory", iconName: "paper-plane-outline" },
   more: { labelKey: "tabs.more", iconName: "grid-outline" },
 };
 
 export default function KhataBottomTabBar(
   props: BottomTabBarProps,
-): React.JSX.Element {
+): React.JSX.Element | null {
   const { t } = useTranslation();
+
+  const focusedRoute = props.state.routes[props.state.index];
+
+  if (focusedRoute?.name === "quick-pos") {
+    return null;
+  }
 
   return (
     <View style={styles.wrapper}>
@@ -28,6 +34,7 @@ export default function KhataBottomTabBar(
         }
 
         const isFocused = props.state.index === index;
+
         return (
           <Pressable
             key={route.key}
@@ -36,16 +43,17 @@ export default function KhataBottomTabBar(
           >
             <View
               style={[
-                styles.indicator,
-                isFocused ? styles.activeIndicator : null,
+                styles.iconBubble,
+                isFocused ? styles.iconBubbleActive : null,
               ]}
-            />
-            <AppIcon
-              family="ion"
-              name={config.iconName}
-              size={24}
-              color={isFocused ? KhataColors.primary : KhataColors.mutedText}
-            />
+            >
+              <AppIcon
+                family="ion"
+                name={config.iconName}
+                size={22}
+                color={isFocused ? KhataColors.primaryDark : KhataColors.mutedText}
+              />
+            </View>
             <Text style={[styles.label, isFocused ? styles.activeLabel : null]}>
               {t(config.labelKey)}
             </Text>
@@ -62,18 +70,28 @@ const styles = StyleSheet.create({
     backgroundColor: KhataColors.surface,
     borderTopWidth: 1,
     borderTopColor: KhataColors.border,
-    height: 86,
+    minHeight: 84,
+    paddingTop: 8,
+    paddingBottom: 10,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
   },
-  tab: { flex: 1, alignItems: "center", justifyContent: "center", gap: 3 },
-  indicator: {
-    position: "absolute",
-    top: 0,
-    width: "56%",
-    height: 4,
-    borderBottomLeftRadius: 6,
-    borderBottomRightRadius: 6,
+  tab: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
   },
-  activeIndicator: { backgroundColor: KhataColors.primary },
-  label: { fontSize: 13, fontWeight: "600", color: KhataColors.mutedText },
-  activeLabel: { color: KhataColors.primary },
+  iconBubble: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconBubbleActive: {
+    backgroundColor: KhataColors.softGreen,
+  },
+  label: { fontSize: 12, fontWeight: "600", color: KhataColors.mutedText },
+  activeLabel: { color: KhataColors.primaryDark },
 });

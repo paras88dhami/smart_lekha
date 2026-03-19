@@ -1,13 +1,43 @@
 import React from "react";
-import { Text, View } from "react-native";
-import { useTranslation } from "@/shared/i18n/resources";
+import { router } from "expo-router";
+import { createHomeDashboardScreenFactory } from "@/features/home/dashboard/factory/homeDashboardScreen.factory";
+import { database } from "@/src/database/database";
 
 export default function HomeRoute(): React.JSX.Element {
-  const { t } = useTranslation();
-
-  return (
-    <View>
-      <Text>{t("tabs.home")}</Text>
-    </View>
+  const Screen = React.useMemo(
+    () =>
+      createHomeDashboardScreenFactory({
+        database,
+        onMyProfilePress: () => {
+          router.push("/(tabs)/more");
+        },
+        onMyAccountsPress: () => {
+          router.push("/(tabs)/transactions");
+        },
+        onStatementPress: () => {
+          router.push("/(tabs)/transactions");
+        },
+        onEsewaPress: () => {
+          router.push("/(tabs)/transactions");
+        },
+        onQuickPosPress: () => {
+          router.push("/(tabs)/quick-pos" as never);
+        },
+        onSendMoneyPress: () => {
+          router.push("/(tabs)/inventory");
+        },
+        onViewAllTransactionsPress: () => {
+          router.push("/(tabs)/transactions");
+        },
+        onNotificationsPress: () => {
+          router.push("/(tabs)/more");
+        },
+      }),
+    [],
   );
+
+  return <Screen />;
 }
+
+
+

@@ -4,19 +4,33 @@ import { authSessionDbConfig } from "@/features/auth/session/data/dataSource/db/
 import { profileDbConfig } from "@/features/auth/profile/data/dataSource/db/profileDbConfig";
 import { businessCategoryDbConfig } from "@/features/auth/businessCategory/data/dataSource/db/businessCategoryDbConfig";
 import { otpRequestDbConfig } from "@/features/auth/otp/data/dataSource/db/otpRequestDbConfig";
+import { financeAccountDbConfig } from "@/features/finance/account/data/dataSource/db/financeAccountDbConfig";
+import { financeTransactionDbConfig } from "@/features/finance/transaction/data/dataSource/db/financeTransactionDbConfig";
+import { homeShortcutDbConfig } from "@/features/home/shortcut/data/dataSource/db/homeShortcutDbConfig";
+import { transferBeneficiaryDbConfig } from "@/features/transfers/beneficiary/data/dataSource/db/transferBeneficiaryDbConfig";
+import { transferRecordDbConfig } from "@/features/transfers/record/data/dataSource/db/transferRecordDbConfig";
+import { posItemDbConfig } from "@/features/pos/item/data/dataSource/db/posItemDbConfig";
+import { posSaleDbConfig } from "@/features/pos/sale/data/dataSource/db/posSaleDbConfig";
 import { createDatabase } from "@/shared/database/createDatabase";
 import { migrations } from "./migration";
 import { seedDefaultAppSettings } from "./seed/seedDefaultAppSettings";
 import { seedBusinessCategories } from "./seed/seedBusinessCategories";
 
 const schema = appSchema({
-  version: 3,
+  version: 4,
   tables: [
     ...appSettingsDbConfig.tables,
     ...authSessionDbConfig.tables,
     ...profileDbConfig.tables,
     ...businessCategoryDbConfig.tables,
     ...otpRequestDbConfig.tables,
+    ...financeAccountDbConfig.tables,
+    ...financeTransactionDbConfig.tables,
+    ...homeShortcutDbConfig.tables,
+    ...transferBeneficiaryDbConfig.tables,
+    ...transferRecordDbConfig.tables,
+    ...posItemDbConfig.tables,
+    ...posSaleDbConfig.tables,
   ],
 });
 
@@ -28,6 +42,13 @@ export const database = createDatabase({
     ...profileDbConfig.models,
     ...businessCategoryDbConfig.models,
     ...otpRequestDbConfig.models,
+    ...financeAccountDbConfig.models,
+    ...financeTransactionDbConfig.models,
+    ...homeShortcutDbConfig.models,
+    ...transferBeneficiaryDbConfig.models,
+    ...transferRecordDbConfig.models,
+    ...posItemDbConfig.models,
+    ...posSaleDbConfig.models,
   ],
   migrations,
 });
