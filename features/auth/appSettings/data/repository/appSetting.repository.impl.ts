@@ -3,6 +3,7 @@ import {
   type AuthResult,
 } from "@/features/auth/shared/authError.types";
 import type { LanguageCodeType } from "@/features/auth/languageSelection/types/types";
+import type { CountryIsoType } from "@/features/auth/shared/country.types";
 import type { AppSettingDataSource } from "../dataSource/appSetting.dataSource";
 import type { AppSettingModel } from "../dataSource/appSetting.model";
 import type { AppSettingRepository } from "./appSetting.repository";
@@ -38,6 +39,18 @@ export const createAppSettingRepository = (
     languageCode: LanguageCodeType,
   ): Promise<AuthResult<void>> {
     const result = await localDataSource.updateSelectedLanguage(languageCode);
+
+    if (!result.success) {
+      return createFailureResult<void>();
+    }
+
+    return { success: true, value: undefined };
+  },
+
+  async updateLastSelectedCountryIso(
+    countryIso: CountryIsoType,
+  ): Promise<AuthResult<void>> {
+    const result = await localDataSource.updateLastSelectedCountryIso(countryIso);
 
     if (!result.success) {
       return createFailureResult<void>();

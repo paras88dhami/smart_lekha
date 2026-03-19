@@ -1,23 +1,238 @@
+import { changeLanguage, isSupportedLanguageCode } from "@/shared/i18n/resources";
+import { Status } from "@/shared/types/status.types";
 import React from "react";
-import { PhoneEntryViewModel } from "./phoneEntry.viewModel";
+import type { GetAppSettingUseCase } from "../../appSettings/useCase/getAppSetting.useCase";
+import type { UpdateLastSelectedCountryIsoUseCase } from "../../appSettings/useCase/updateLastSelectedCountryIso.useCase";
+import { getAuthErrorMessage } from "../../shared/authErrorMessage";
+import {
+  CountryIso,
+  isCountryIso,
+  type CountryIsoType,
+} from "../../shared/country.types";
+import type { LanguageCodeType } from "../../languageSelection/types/types";
+import type { PersistSelectedLanguageUseCase } from "../../languageSelection/useCase/persistSelectedLanguage.useCase";
+import type { CountryOption, PhoneEntrySubmitInput, PhoneEntryState } from "../types/types";
+import type { PhoneEntryViewModel } from "./phoneEntry.viewModel";
+
+const COUNTRY_OPTIONS: CountryOption[] = [
+  {
+    iso: CountryIso.Nepal,
+    name: "Nepal",
+    callingCode: "+977",
+    flag: "🇳🇵",
+  },
+  {
+    iso: CountryIso.India,
+    name: "India",
+    callingCode: "+91",
+    flag: "🇮🇳",
+  },
+];
+
+const DEFAULT_COUNTRY_ISO: CountryIsoType = CountryIso.Nepal;
+const DEFAULT_LANGUAGE_CODE: LanguageCodeType = "en";
+
+const getCountryByIso = (countryIso: CountryIsoType): CountryOption => {
+  return (
+    COUNTRY_OPTIONS.find((country) => country.iso === countryIso) ??
+    COUNTRY_OPTIONS[0]
+  );
+};
 
 type Params = {
   initialPhoneNumber: string;
-  onContinue: (phoneNumber: string) => void;
+  getAppSettingUseCase: GetAppSettingUseCase;
+  persistSelectedLanguageUseCase: PersistSelectedLanguageUseCase;
+  updateLastSelectedCountryIsoUseCase: UpdateLastSelectedCountryIsoUseCase;
+  onContinue: (input: PhoneEntrySubmitInput) => void;
   onClose: () => void;
 };
+
 export function usePhoneEntryViewModel(params: Params): PhoneEntryViewModel {
-  const [phoneNumber, setPhoneNumber] = React.useState(
-    params.initialPhoneNumber,
-  );
-  const changePhoneNumber = React.useCallback((value: string) => {
-    setPhoneNumber(value.replace(/\D/g, "").slice(0, 10));
+  const {
+    initialPhoneNumber,
+    getAppSettingUseCase,
+    persistSelectedLanguageUseCase,
+    updateLastSelectedCountryIsoUseCase,
+    onContinue,
+    onClose,
+  } = params;
+
+  const hasUserSelectedLanguage = React.useRef(false);
+  const hasUserSelectedCountry = React.useRef(false);
+  const isSubmitting = React.useRef(false);
+
+  const [state, setState] = React.useState<PhoneEntryState>({
+    status: Status.Idle,
+    phoneNumber: initialPhoneNumber.replace(/\D/g, "").slice(0, 10),
+    selectedCountryIso: DEFAULT_COUNTRY_ISO,
+    selectedLanguageCode: DEFAULT_LANGUAGE_CODE,
+    countries: COUNTRY_OPTIONS,
+    errorMessage: "",
+  });
+
+  const loadPreferences = React.useCallback(async (): Promise<void> => {
+    setState((currentState) => ({
+      ...currentState,
+      status: Status.Loading,
+      errorMessage: "",
+    }));
+
+    const result = await getAppSettingUseCase.execute();
+
+    if (!result.success) {
+      setState((currentState) => ({
+        ...currentState,
+        status: Status.Failure,
+        errorMessage: getAuthErrorMessage(result.error),
+      }));
+      return;
+    }
+
+    const savedLanguage = result.value?.selectedLanguage;
+    const savedCountryIso = result.value?.lastSelectedCountryIso;
+
+    const languageCode =
+      savedLanguage && isSupportedLanguageCode(savedLanguage)
+        ? savedLanguage
+        : DEFAULT_LANGUAGE_CODE;
+    const countryIso =
+      savedCountryIso && isCountryIso(savedCountryIso)
+        ? savedCountryIso
+        : DEFAULT_COUNTRY_ISO;
+
+    if (!hasUserSelectedLanguage.current) {
+      changeLanguage(languageCode);
+    }
+
+    setState((currentState) => ({
+      ...currentState,
+      status: Status.Success,
+      selectedLanguageCode: hasUserSelectedLanguage.current
+        ? currentState.selectedLanguageCode
+        : languageCode,
+      selectedCountryIso: hasUserSelectedCountry.current
+        ? currentState.selectedCountryIso
+        : countryIso,
+      errorMessage: "",
+    }));
+  }, [getAppSettingUseCase]);
+
+  const changePhoneNumber = React.useCallback((value: string): void => {
+    setState((currentState) => ({
+      ...currentState,
+      phoneNumber: value.replace(/\D/g, "").slice(0, 10),
+      errorMessage: "",
+    }));
   }, []);
-  const continueFlow = React.useCallback(() => {
-    params.onContinue(phoneNumber);
-  }, [params, phoneNumber]);
-  const closeFlow = React.useCallback(() => {
-    params.onClose();
-  }, [params]);
-  return { phoneNumber, changePhoneNumber, continueFlow, closeFlow };
+
+  const selectCountry = React.useCallback((countryIso: CountryIsoType): void => {
+    hasUserSelectedCountry.current = true;
+
+    setState((currentState) => ({
+      ...currentState,
+      selectedCountryIso: countryIso,
+      errorMessage: "",
+    }));
+  }, []);
+
+  const selectLanguage = React.useCallback(
+    (languageCode: LanguageCodeType): void => {
+      hasUserSelectedLanguage.current = true;
+      changeLanguage(languageCode);
+
+      setState((currentState) => ({
+        ...currentState,
+        selectedLanguageCode: languageCode,
+        errorMessage: "",
+      }));
+    },
+    [],
+  );
+
+  const continueFlow = React.useCallback(async (): Promise<void> => {
+    if (isSubmitting.current || state.phoneNumber.length < 10) {
+      return;
+    }
+
+    isSubmitting.current = true;
+
+    setState((currentState) => ({
+      ...currentState,
+      status: Status.Loading,
+      errorMessage: "",
+    }));
+
+    try {
+      const languageResult = await persistSelectedLanguageUseCase.execute({
+        languageCode: state.selectedLanguageCode,
+      });
+
+      if (!languageResult.success) {
+        setState((currentState) => ({
+          ...currentState,
+          status: Status.Failure,
+          errorMessage: getAuthErrorMessage(languageResult.error),
+        }));
+        return;
+      }
+
+      const countryResult =
+        await updateLastSelectedCountryIsoUseCase.execute({
+          countryIso: state.selectedCountryIso,
+        });
+
+      if (!countryResult.success) {
+        setState((currentState) => ({
+          ...currentState,
+          status: Status.Failure,
+          errorMessage: getAuthErrorMessage(countryResult.error),
+        }));
+        return;
+      }
+
+      const selectedCountry = getCountryByIso(state.selectedCountryIso);
+      const accountId = `${selectedCountry.callingCode.replace("+", "")}${state.phoneNumber}`;
+
+      setState((currentState) => ({
+        ...currentState,
+        status: Status.Success,
+        errorMessage: "",
+      }));
+
+      onContinue({
+        accountId,
+        phoneNumber: state.phoneNumber,
+        countryIso: selectedCountry.iso,
+        countryCode: selectedCountry.callingCode,
+        languageCode: state.selectedLanguageCode,
+      });
+    } finally {
+      isSubmitting.current = false;
+    }
+  }, [
+    onContinue,
+    persistSelectedLanguageUseCase,
+    state.phoneNumber,
+    state.selectedCountryIso,
+    state.selectedLanguageCode,
+    updateLastSelectedCountryIsoUseCase,
+  ]);
+
+  const closeFlow = React.useCallback((): void => {
+    onClose();
+  }, [onClose]);
+
+  React.useEffect(() => {
+    void loadPreferences();
+  }, [loadPreferences]);
+
+  return {
+    state,
+    changePhoneNumber,
+    selectCountry,
+    selectLanguage,
+    continueFlow,
+    closeFlow,
+  };
 }

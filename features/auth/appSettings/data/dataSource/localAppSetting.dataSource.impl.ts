@@ -111,4 +111,27 @@ export const createLocalAppSettingDataSource = (
       };
     }
   },
+
+  async updateLastSelectedCountryIso(countryIso: string): Promise<Result<void>> {
+    try {
+      const appSetting = await getOrCreateAppSettingRecord(database);
+
+      await database.write(async (): Promise<void> => {
+        await appSetting.update((record: AppSettingModel) => {
+          record.lastSelectedCountryIso = countryIso;
+          record.updatedAt = Date.now();
+        });
+      });
+
+      return { success: true, value: undefined };
+    } catch (error) {
+      return {
+        success: false,
+        error: mapUnknownError(
+          error,
+          "Failed to update last selected country.",
+        ),
+      };
+    }
+  },
 });

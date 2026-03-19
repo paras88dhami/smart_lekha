@@ -1,13 +1,28 @@
 import React from "react";
-import { Text, View } from "react-native";
-import { useTranslation } from "@/shared/i18n/resources";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { createProfileTypeSelectionScreenFactory } from "@/features/auth/profileTypeSelection/factory/profileTypeSelectionScreen.factory";
+import { database } from "@/src/database/database";
 
 export default function SelectProfileRoute(): React.JSX.Element {
-  const { t } = useTranslation();
+  const router = useRouter();
+  const params = useLocalSearchParams<{ accountId?: string }>();
+  const accountId =
+    typeof params.accountId === "string" && params.accountId.trim().length > 0
+      ? params.accountId.trim()
+      : "local-account";
 
-  return (
-    <View>
-      <Text>{t("auth.selectProfile.title")}</Text>
-    </View>
+  const Screen = React.useMemo(
+    () =>
+      createProfileTypeSelectionScreenFactory({
+        database,
+        accountId,
+        onContinue: () => {
+          router.push("/(tabs)/home");
+        },
+        onClose: () => router.back(),
+      }),
+    [accountId, router],
   );
+
+  return <Screen />;
 }

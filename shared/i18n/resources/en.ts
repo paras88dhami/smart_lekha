@@ -24,6 +24,8 @@ const en = {
     phoneEntry: {
       title: "Let's Get Started",
       subtitle: "Please enter phone number to continue",
+      countryLabel: "Select Country",
+      languageLabel: "Select Language",
       placeholder: "9XXXXXXXXX",
       footer: "By continuing, you agree to our Terms of Use & Privacy Policy.",
     },
@@ -31,7 +33,17 @@ const en = {
       title: "Download Data",
     },
     selectProfile: {
-      title: "Select Profile",
+      title: "Create Profile",
+      subtitle: "Choose profile type and add a profile name",
+      businessTitle: "Business Profile",
+      businessSubtitle: "Best for shops, companies and registered businesses",
+      personalTitle: "Personal and Family",
+      personalSubtitle: "Best for individual bookkeeping",
+      nameLabel: "Profile Name",
+      namePlaceholder: "Enter profile name",
+      categoryLabel: "Business Category",
+      validationProfileName: "Profile name must be at least 2 characters.",
+      validationBusinessCategory: "Please select a business category.",
     },
   },
   settings: {

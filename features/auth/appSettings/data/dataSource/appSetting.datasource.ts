@@ -5,4 +5,5 @@ export interface AppSettingDataSource {
   getAppSetting(): Promise<Result<AppSettingModel | null>>;
   createDefaultAppSetting(): Promise<Result<AppSettingModel>>;
   updateSelectedLanguage(languageCode: string): Promise<Result<void>>;
+  updateLastSelectedCountryIso(countryIso: string): Promise<Result<void>>;
 }
