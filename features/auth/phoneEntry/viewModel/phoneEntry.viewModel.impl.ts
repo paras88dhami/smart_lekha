@@ -3,14 +3,26 @@ import { Status } from "@/shared/types/status.types";
 import React from "react";
 import type { GetAppSettingUseCase } from "../../appSettings/useCase/getAppSetting.useCase";
 import type { UpdateLastSelectedCountryIsoUseCase } from "../../appSettings/useCase/updateLastSelectedCountryIso.useCase";
+import {
+  AuthErrorType,
+  InvalidPhoneNumberError,
+} from "../../shared/authError.types";
 import { getAuthErrorMessage } from "../../shared/authErrorMessage";
 import {
   CountryIso,
   isCountryIso,
   type CountryIsoType,
 } from "../../shared/country.types";
+import {
+  buildE164PhoneNumber,
+  getPhoneLengthForCountry,
+  isValidPhoneForCountry,
+  sanitizePhoneDigits,
+} from "../../shared/phoneNumber";
 import type { LanguageCodeType } from "../../languageSelection/types/types";
 import type { PersistSelectedLanguageUseCase } from "../../languageSelection/useCase/persistSelectedLanguage.useCase";
+import type { RequestOtpUseCase } from "../../otp/useCase/requestOtp.useCase";
+import type { GetCurrentAuthSessionUseCase } from "../../session/useCase/getCurrentAuthSession.useCase";
 import type { CountryOption, PhoneEntrySubmitInput, PhoneEntryState } from "../types/types";
 import type { PhoneEntryViewModel } from "./phoneEntry.viewModel";
 
@@ -44,7 +56,10 @@ type Params = {
   getAppSettingUseCase: GetAppSettingUseCase;
   persistSelectedLanguageUseCase: PersistSelectedLanguageUseCase;
   updateLastSelectedCountryIsoUseCase: UpdateLastSelectedCountryIsoUseCase;
+  requestOtpUseCase: RequestOtpUseCase;
+  getCurrentAuthSessionUseCase: GetCurrentAuthSessionUseCase;
   onContinue: (input: PhoneEntrySubmitInput) => void;
+  onContinueOffline: () => void;
   onClose: () => void;
 };
 
@@ -54,7 +69,10 @@ export function usePhoneEntryViewModel(params: Params): PhoneEntryViewModel {
     getAppSettingUseCase,
     persistSelectedLanguageUseCase,
     updateLastSelectedCountryIsoUseCase,
+    requestOtpUseCase,
+    getCurrentAuthSessionUseCase,
     onContinue,
+    onContinueOffline,
     onClose,
   } = params;
 
@@ -64,10 +82,15 @@ export function usePhoneEntryViewModel(params: Params): PhoneEntryViewModel {
 
   const [state, setState] = React.useState<PhoneEntryState>({
     status: Status.Idle,
-    phoneNumber: initialPhoneNumber.replace(/\D/g, "").slice(0, 10),
+    phoneNumber: sanitizePhoneDigits(initialPhoneNumber).slice(
+      0,
+      getPhoneLengthForCountry(DEFAULT_COUNTRY_ISO),
+    ),
     selectedCountryIso: DEFAULT_COUNTRY_ISO,
     selectedLanguageCode: DEFAULT_LANGUAGE_CODE,
     countries: COUNTRY_OPTIONS,
+    canContinueOffline: false,
+    showOfflineHint: false,
     errorMessage: "",
   });
 
@@ -119,19 +142,27 @@ export function usePhoneEntryViewModel(params: Params): PhoneEntryViewModel {
   }, [getAppSettingUseCase]);
 
   const changePhoneNumber = React.useCallback((value: string): void => {
+    const maxLength = getPhoneLengthForCountry(state.selectedCountryIso);
+
     setState((currentState) => ({
       ...currentState,
-      phoneNumber: value.replace(/\D/g, "").slice(0, 10),
+      phoneNumber: sanitizePhoneDigits(value).slice(0, maxLength),
+      canContinueOffline: false,
+      showOfflineHint: false,
       errorMessage: "",
     }));
-  }, []);
+  }, [state.selectedCountryIso]);
 
   const selectCountry = React.useCallback((countryIso: CountryIsoType): void => {
     hasUserSelectedCountry.current = true;
+    const maxLength = getPhoneLengthForCountry(countryIso);
 
     setState((currentState) => ({
       ...currentState,
       selectedCountryIso: countryIso,
+      phoneNumber: currentState.phoneNumber.slice(0, maxLength),
+      canContinueOffline: false,
+      showOfflineHint: false,
       errorMessage: "",
     }));
   }, []);
@@ -144,6 +175,8 @@ export function usePhoneEntryViewModel(params: Params): PhoneEntryViewModel {
       setState((currentState) => ({
         ...currentState,
         selectedLanguageCode: languageCode,
+        canContinueOffline: false,
+        showOfflineHint: false,
         errorMessage: "",
       }));
     },
@@ -151,7 +184,23 @@ export function usePhoneEntryViewModel(params: Params): PhoneEntryViewModel {
   );
 
   const continueFlow = React.useCallback(async (): Promise<void> => {
-    if (isSubmitting.current || state.phoneNumber.length < 10) {
+    if (isSubmitting.current) {
+      return;
+    }
+
+    const selectedCountry = getCountryByIso(state.selectedCountryIso);
+    const normalizedPhone = sanitizePhoneDigits(state.phoneNumber);
+    const isValidPhone = isValidPhoneForCountry(
+      normalizedPhone,
+      state.selectedCountryIso,
+    );
+
+    if (!isValidPhone) {
+      setState((currentState) => ({
+        ...currentState,
+        status: Status.Failure,
+        errorMessage: getAuthErrorMessage(InvalidPhoneNumberError),
+      }));
       return;
     }
 
@@ -191,8 +240,40 @@ export function usePhoneEntryViewModel(params: Params): PhoneEntryViewModel {
         return;
       }
 
-      const selectedCountry = getCountryByIso(state.selectedCountryIso);
-      const accountId = `${selectedCountry.callingCode.replace("+", "")}${state.phoneNumber}`;
+      const requestOtpResult = await requestOtpUseCase.execute({
+        phoneNumber: buildE164PhoneNumber(
+          selectedCountry.callingCode,
+          normalizedPhone,
+        ),
+        countryIso: state.selectedCountryIso,
+        countryCode: selectedCountry.callingCode,
+        languageCode: state.selectedLanguageCode,
+      });
+
+      if (!requestOtpResult.success) {
+        const hasOfflineFallbackCandidate =
+          requestOtpResult.error.type === AuthErrorType.AuthServiceUnavailable ||
+          requestOtpResult.error.type === AuthErrorType.AuthServiceNotConfigured;
+        let canContinueOffline = false;
+
+        if (hasOfflineFallbackCandidate) {
+          const sessionResult = await getCurrentAuthSessionUseCase.execute();
+          canContinueOffline = Boolean(
+            sessionResult.success &&
+              sessionResult.value?.isLoggedIn &&
+              sessionResult.value?.isVerified,
+          );
+        }
+
+        setState((currentState) => ({
+          ...currentState,
+          status: Status.Failure,
+          canContinueOffline,
+          showOfflineHint: hasOfflineFallbackCandidate,
+          errorMessage: getAuthErrorMessage(requestOtpResult.error),
+        }));
+        return;
+      }
 
       setState((currentState) => ({
         ...currentState,
@@ -201,23 +282,36 @@ export function usePhoneEntryViewModel(params: Params): PhoneEntryViewModel {
       }));
 
       onContinue({
-        accountId,
-        phoneNumber: state.phoneNumber,
+        phoneNumber: normalizedPhone,
         countryIso: selectedCountry.iso,
         countryCode: selectedCountry.callingCode,
         languageCode: state.selectedLanguageCode,
+        otpReferenceId: requestOtpResult.value.otpReferenceId,
+        otpExpiresAt: requestOtpResult.value.expiresAt,
+        resendAfterSeconds: requestOtpResult.value.resendAfterSeconds,
+        isExistingUser: requestOtpResult.value.isExistingUser,
       });
     } finally {
       isSubmitting.current = false;
     }
   }, [
+    getCurrentAuthSessionUseCase,
     onContinue,
     persistSelectedLanguageUseCase,
+    requestOtpUseCase,
     state.phoneNumber,
     state.selectedCountryIso,
     state.selectedLanguageCode,
     updateLastSelectedCountryIsoUseCase,
   ]);
+
+  const continueOfflineFlow = React.useCallback((): void => {
+    if (!state.canContinueOffline) {
+      return;
+    }
+
+    onContinueOffline();
+  }, [onContinueOffline, state.canContinueOffline]);
 
   const closeFlow = React.useCallback((): void => {
     onClose();
@@ -233,6 +327,7 @@ export function usePhoneEntryViewModel(params: Params): PhoneEntryViewModel {
     selectCountry,
     selectLanguage,
     continueFlow,
+    continueOfflineFlow,
     closeFlow,
   };
 }

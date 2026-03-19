@@ -16,6 +16,19 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npx expo start
    ```
 
+3. Start mock OTP auth server (for local testing)
+
+   ```bash
+   npm run mock:auth
+   ```
+
+   The mock server exposes:
+   - `POST /auth/otp/request`
+   - `POST /auth/otp/verify`
+
+   Default existing-user test number: `9868569297`
+   Default OTP code: `123456`
+
 In the output, you'll find options to open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)

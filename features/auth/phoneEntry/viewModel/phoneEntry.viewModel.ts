@@ -8,5 +8,6 @@ export type PhoneEntryViewModel = {
   selectCountry: (countryIso: CountryIsoType) => void;
   selectLanguage: (languageCode: LanguageCodeType) => void;
   continueFlow: () => Promise<void>;
+  continueOfflineFlow: () => void;
   closeFlow: () => void;
 };

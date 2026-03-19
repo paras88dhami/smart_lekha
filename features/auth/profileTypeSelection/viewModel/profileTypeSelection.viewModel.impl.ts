@@ -189,12 +189,24 @@ export const useProfileTypeSelectionViewModel = (
     }));
 
     try {
+      const selectedBusinessCategory = state.businessCategories.find(
+        (category) => category.id === state.selectedBusinessCategoryId,
+      );
+
       const result = await createProfileUseCase.execute({
         accountId,
         profileType: state.selectedProfileType,
         profileName: trimmedProfileName,
         displayName: trimmedProfileName,
         roleName: state.selectedProfileType === "business" ? "Owner" : null,
+        businessCategoryId:
+          state.selectedProfileType === "business"
+            ? selectedBusinessCategory?.id ?? state.selectedBusinessCategoryId
+            : null,
+        businessCategoryName:
+          state.selectedProfileType === "business"
+            ? selectedBusinessCategory?.name ?? null
+            : null,
         isActive: true,
       });
 
@@ -222,6 +234,7 @@ export const useProfileTypeSelectionViewModel = (
     createProfileUseCase,
     onContinue,
     state.profileName,
+    state.businessCategories,
     state.selectedBusinessCategoryId,
     state.selectedProfileType,
   ]);

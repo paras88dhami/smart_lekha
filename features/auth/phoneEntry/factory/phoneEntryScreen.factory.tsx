@@ -5,6 +5,13 @@ import { createAppSettingRepository } from "../../appSettings/data/repository/ap
 import { createGetAppSettingUseCase } from "../../appSettings/useCase/getAppSetting.useCase.impl";
 import { createUpdateLastSelectedCountryIsoUseCase } from "../../appSettings/useCase/updateLastSelectedCountryIso.useCase.impl";
 import { createPersistSelectedLanguageUseCase } from "../../languageSelection/useCase/persistSelectedLanguage.useCase.impl";
+import { createLocalOtpRequestDataSource } from "../../otp/data/dataSource/localOtpRequest.dataSource.impl";
+import { createRemoteOtpAuthDataSource } from "../../otp/data/dataSource/remoteOtpAuth.dataSource.impl";
+import { createOtpRepository } from "../../otp/data/repository/otp.repository.impl";
+import { createRequestOtpUseCase } from "../../otp/useCase/requestOtp.useCase.impl";
+import { createLocalAuthSessionDataSource } from "../../session/data/dataSource/localAuthSession.datasource.impl";
+import { createAuthSessionRepository } from "../../session/data/repository/authSession.repository.impl";
+import { createGetCurrentAuthSessionUseCase } from "../../session/useCase/getCurrentAuthSession.useCase.impl";
 import type { PhoneEntrySubmitInput } from "../types/types";
 import PhoneEntryScreen from "../ui/PhoneEntryScreen";
 import { usePhoneEntryViewModel } from "../viewModel/phoneEntry.viewModel.impl";
@@ -13,6 +20,7 @@ type Params = {
   database: Database;
   initialPhoneNumber: string;
   onContinue: (input: PhoneEntrySubmitInput) => void;
+  onContinueOffline: () => void;
   onClose: () => void;
 };
 
@@ -21,6 +29,7 @@ export function createPhoneEntryScreen(params: Params): React.ComponentType {
     database,
     initialPhoneNumber,
     onContinue: onContinueParam,
+    onContinueOffline: onContinueOfflineParam,
     onClose: onCloseParam,
   } = params;
 
@@ -45,12 +54,35 @@ export function createPhoneEntryScreen(params: Params): React.ComponentType {
       [appSettingRepository],
     );
 
+    const requestOtpUseCase = React.useMemo(() => {
+      const remoteOtpAuthDataSource = createRemoteOtpAuthDataSource();
+      const localOtpRequestDataSource = createLocalOtpRequestDataSource(database);
+      const otpRepository = createOtpRepository(
+        remoteOtpAuthDataSource,
+        localOtpRequestDataSource,
+      );
+
+      return createRequestOtpUseCase(otpRepository);
+    }, []);
+
+    const getCurrentAuthSessionUseCase = React.useMemo(() => {
+      const localAuthSessionDataSource = createLocalAuthSessionDataSource(database);
+      const authSessionRepository = createAuthSessionRepository(
+        localAuthSessionDataSource,
+      );
+      return createGetCurrentAuthSessionUseCase(authSessionRepository);
+    }, []);
+
     const onContinue = React.useCallback(
       (input: PhoneEntrySubmitInput): void => {
         onContinueParam(input);
       },
       [onContinueParam],
     );
+
+    const onContinueOffline = React.useCallback((): void => {
+      onContinueOfflineParam();
+    }, [onContinueOfflineParam]);
 
     const onClose = React.useCallback((): void => {
       onCloseParam();
@@ -61,7 +93,10 @@ export function createPhoneEntryScreen(params: Params): React.ComponentType {
       getAppSettingUseCase,
       persistSelectedLanguageUseCase,
       updateLastSelectedCountryIsoUseCase,
+      requestOtpUseCase,
+      getCurrentAuthSessionUseCase,
       onContinue,
+      onContinueOffline,
       onClose,
     });
 

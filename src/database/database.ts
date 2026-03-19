@@ -10,7 +10,7 @@ import { seedDefaultAppSettings } from "./seed/seedDefaultAppSettings";
 import { seedBusinessCategories } from "./seed/seedBusinessCategories";
 
 const schema = appSchema({
-  version: 2,
+  version: 3,
   tables: [
     ...appSettingsDbConfig.tables,
     ...authSessionDbConfig.tables,

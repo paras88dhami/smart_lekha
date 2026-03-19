@@ -27,7 +27,21 @@ const en = {
       countryLabel: "Select Country",
       languageLabel: "Select Language",
       placeholder: "9XXXXXXXXX",
+      offlineTitle: "Internet connection required",
+      offlineDescription:
+        "We could not reach the OTP service. Connect to the internet to verify your phone number.",
+      continueOfflineButton: "Continue Offline",
       footer: "By continuing, you agree to our Terms of Use & Privacy Policy.",
+    },
+    otpVerification: {
+      title: "Verify Phone Number",
+      subtitle: "Enter the 6-digit code sent to",
+      codeLabel: "OTP Code",
+      codePlaceholder: "000000",
+      verifyButton: "Verify and Continue",
+      resend: "Resend code",
+      resendInPrefix: "Resend code in",
+      validationCode: "Please enter the 6-digit OTP code.",
     },
     downloadData: {
       title: "Download Data",
@@ -66,6 +80,15 @@ const en = {
       appSettingNotFound: "App setting was not found.",
       invalidLanguageCode: "The selected language code is invalid.",
       profileNotFound: "The requested profile was not found.",
+      invalidPhoneNumber:
+        "Please enter a valid phone number for the selected country.",
+      otpRequestNotFound: "OTP request not found. Please request a new code.",
+      otpInvalidCode: "Invalid OTP code. Please try again.",
+      otpExpired: "OTP expired. Please request a new code.",
+      otpRateLimited: "Too many attempts. Please wait and retry.",
+      authServiceUnavailable: "Auth service is unavailable. Please try again.",
+      authServiceNotConfigured:
+        "Auth service is not configured. Contact support.",
       fallback: "Something went wrong. Please try again.",
     },
   },

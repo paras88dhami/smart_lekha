@@ -14,6 +14,8 @@ export class ProfileModel extends Model {
   @field("profile_name") profileName?: string;
   @field("display_name") displayName?: string | null;
   @field("role_name") roleName?: string | null;
+  @field("business_category_id") businessCategoryId?: string | null;
+  @field("business_category_name") businessCategoryName?: string | null;
   @field("is_active") isActive?: boolean;
   @field("created_at") createdAt?: number;
   @field("updated_at") updatedAt?: number;

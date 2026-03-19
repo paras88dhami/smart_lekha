@@ -1,4 +1,5 @@
 import {
+  addColumns,
   createTable,
   schemaMigrations,
 } from "@nozbe/watermelondb/Schema/migrations";
@@ -88,6 +89,23 @@ export const migrations = schemaMigrations({
             { name: "is_consumed", type: "boolean" },
             { name: "created_at", type: "number" },
             { name: "updated_at", type: "number" },
+          ],
+        }),
+      ],
+    },
+    {
+      toVersion: 3,
+      steps: [
+        addColumns({
+          table: "profiles",
+          columns: [
+            {
+              name: "business_category_id",
+              type: "string",
+              isOptional: true,
+              isIndexed: true,
+            },
+            { name: "business_category_name", type: "string", isOptional: true },
           ],
         }),
       ],

@@ -6,6 +6,7 @@ import KhataCard from "@/shared/components/ui/KhataCard";
 import ScreenContainer from "@/shared/components/ui/ScreenContainer";
 import { LANGUAGE_OPTIONS } from "@/features/auth/languageSelection/viewModel/languageOptions";
 import { PhoneEntryViewModel } from "@/features/auth/phoneEntry/viewModel/phoneEntry.viewModel";
+import { getPhoneLengthForCountry } from "@/features/auth/shared/phoneNumber";
 import { useTranslation } from "@/shared/i18n/resources";
 import { KhataColors } from "@/shared/theme/colors";
 import { Status } from "@/shared/types/status.types";
@@ -17,6 +18,9 @@ export default function PhoneEntryScreen(props: Props): React.JSX.Element {
 
   const selectedCountry = props.viewModel.state.countries.find(
     (country) => country.iso === props.viewModel.state.selectedCountryIso,
+  );
+  const minPhoneLength = getPhoneLengthForCountry(
+    props.viewModel.state.selectedCountryIso,
   );
 
   return (
@@ -95,17 +99,38 @@ export default function PhoneEntryScreen(props: Props): React.JSX.Element {
           <Text style={styles.errorText}>{props.viewModel.state.errorMessage}</Text>
         ) : null}
 
+        {props.viewModel.state.showOfflineHint ? (
+          <KhataCard style={styles.offlineHintCard}>
+            <Text style={styles.offlineHintTitle}>
+              {t("auth.phoneEntry.offlineTitle")}
+            </Text>
+            <Text style={styles.offlineHintDescription}>
+              {t("auth.phoneEntry.offlineDescription")}
+            </Text>
+          </KhataCard>
+        ) : null}
+
         <KhataButton
           title={t("common.continue")}
           disabled={
             props.viewModel.state.status === Status.Loading ||
-            props.viewModel.state.phoneNumber.length < 10
+            props.viewModel.state.phoneNumber.length < minPhoneLength
           }
           onPress={(): void => {
             void props.viewModel.continueFlow();
           }}
           style={styles.button}
         />
+
+        {props.viewModel.state.canContinueOffline ? (
+          <KhataButton
+            title={t("auth.phoneEntry.continueOfflineButton")}
+            variant="secondary"
+            disabled={props.viewModel.state.status === Status.Loading}
+            onPress={props.viewModel.continueOfflineFlow}
+            style={styles.offlineButton}
+          />
+        ) : null}
       </View>
 
       <Text style={styles.footer}>{t("auth.phoneEntry.footer")}</Text>
@@ -180,7 +205,26 @@ const styles = StyleSheet.create({
     color: KhataColors.error,
     fontSize: 14,
   },
+  offlineHintCard: {
+    marginTop: 12,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderColor: KhataColors.primary,
+  },
+  offlineHintTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: KhataColors.text,
+  },
+  offlineHintDescription: {
+    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 19,
+    color: KhataColors.mutedText,
+  },
   button: { marginTop: 20 },
+  offlineButton: { marginTop: 10 },
   footer: {
     textAlign: "center",
     fontSize: 16,

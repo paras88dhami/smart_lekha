@@ -13,11 +13,21 @@ export default function PhoneAuthRoute(): React.JSX.Element {
         initialPhoneNumber: "",
         onContinue: (input) => {
           router.push({
-            pathname: "/(auth)/select-profile",
+            pathname: "/(auth)/otp-verification",
             params: {
-              accountId: input.accountId,
+              phoneNumber: input.phoneNumber,
+              countryIso: input.countryIso,
+              countryCode: input.countryCode,
+              languageCode: input.languageCode,
+              otpReferenceId: input.otpReferenceId,
+              otpExpiresAt: String(input.otpExpiresAt),
+              resendAfterSeconds: String(input.resendAfterSeconds),
+              isExistingUser: String(input.isExistingUser),
             },
           });
+        },
+        onContinueOffline: () => {
+          router.replace("/(tabs)/home");
         },
         onClose: () => router.back(),
       }),

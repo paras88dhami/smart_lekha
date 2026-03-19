@@ -38,6 +38,8 @@ export const createProfileRepository = (
       profileName: input.profileName.trim(),
       displayName: input.displayName?.trim() ?? null,
       roleName: input.roleName?.trim() ?? null,
+      businessCategoryId: input.businessCategoryId?.trim() ?? null,
+      businessCategoryName: input.businessCategoryName?.trim() ?? null,
       isActive: input.isActive,
     });
 

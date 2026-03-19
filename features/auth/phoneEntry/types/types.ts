@@ -10,11 +10,14 @@ export type CountryOption = {
 };
 
 export type PhoneEntrySubmitInput = {
-  accountId: string;
   phoneNumber: string;
   countryIso: CountryIsoType;
   countryCode: string;
   languageCode: LanguageCodeType;
+  otpReferenceId: string;
+  otpExpiresAt: number;
+  resendAfterSeconds: number;
+  isExistingUser: boolean;
 };
 
 export type PhoneEntryState = {
@@ -23,5 +26,7 @@ export type PhoneEntryState = {
   selectedCountryIso: CountryIsoType;
   selectedLanguageCode: LanguageCodeType;
   countries: CountryOption[];
+  canContinueOffline: boolean;
+  showOfflineHint: boolean;
   errorMessage: string;
 };
