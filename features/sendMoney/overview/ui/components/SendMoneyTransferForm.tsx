@@ -1,6 +1,11 @@
 import KhataButton from "@/shared/components/ui/KhataButton";
 import KhataCard from "@/shared/components/ui/KhataCard";
 import AppIcon from "@/shared/components/icons/AppIcon";
+import {
+  getTransferMethodInputConfig,
+  type TransferMethodInputConfig,
+} from "@/features/transfers/shared/config/transferMethodCatalog";
+import type { TransferMethod } from "@/features/transfers/shared/types/transferMethod.types";
 import { KhataColors } from "@/shared/theme/colors";
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
@@ -14,6 +19,7 @@ type Props = {
   amountPlaceholder: string;
   notePlaceholder: string;
   scheduleLabel: string;
+  selectedMethod: TransferMethod;
   beneficiaryNameInput: string;
   accountNumberInput: string;
   mobileNumberInput: string;
@@ -30,7 +36,44 @@ type Props = {
   onSubmitTransferPress: () => void;
 };
 
+const renderTransferDetailInputs = (
+  inputConfig: TransferMethodInputConfig,
+  props: Props,
+): React.JSX.Element[] => {
+  const inputElements: React.JSX.Element[] = [];
+
+  if (inputConfig.showsAccountNumberInput) {
+    inputElements.push(
+      <TextInput
+        key="account-number"
+        style={styles.input}
+        value={props.accountNumberInput}
+        onChangeText={props.onAccountNumberChange}
+        placeholder={props.accountNumberPlaceholder}
+        keyboardType="number-pad"
+      />,
+    );
+  }
+
+  if (inputConfig.showsMobileNumberInput) {
+    inputElements.push(
+      <TextInput
+        key="mobile-number"
+        style={styles.input}
+        value={props.mobileNumberInput}
+        onChangeText={props.onMobileNumberChange}
+        placeholder={props.mobileNumberPlaceholder}
+        keyboardType="phone-pad"
+      />,
+    );
+  }
+
+  return inputElements;
+};
+
 export default function SendMoneyTransferForm(props: Props): React.JSX.Element {
+  const inputConfig = getTransferMethodInputConfig(props.selectedMethod);
+
   return (
     <KhataCard style={styles.card}>
       <Text style={styles.title}>{props.title}</Text>
@@ -42,21 +85,7 @@ export default function SendMoneyTransferForm(props: Props): React.JSX.Element {
         placeholder={props.beneficiaryNamePlaceholder}
       />
 
-      <TextInput
-        style={styles.input}
-        value={props.accountNumberInput}
-        onChangeText={props.onAccountNumberChange}
-        placeholder={props.accountNumberPlaceholder}
-        keyboardType="number-pad"
-      />
-
-      <TextInput
-        style={styles.input}
-        value={props.mobileNumberInput}
-        onChangeText={props.onMobileNumberChange}
-        placeholder={props.mobileNumberPlaceholder}
-        keyboardType="phone-pad"
-      />
+      {renderTransferDetailInputs(inputConfig, props)}
 
       <TextInput
         style={styles.input}

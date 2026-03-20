@@ -1,5 +1,8 @@
-import type { TransferMethod } from "@/features/transfers/beneficiary/data/dataSource/transferBeneficiary.model";
-import { TRANSFER_METHOD_OPTIONS } from "@/features/transfers/shared/config/transferMethodCatalog";
+import type { TransferMethod } from "@/features/transfers/shared/types/transferMethod.types";
+import {
+  TRANSFER_METHOD_OPTIONS,
+  getTransferMethodInputConfig,
+} from "@/features/transfers/shared/config/transferMethodCatalog";
 import type { SendMoneyState } from "../types/types";
 
 const hasMethodOption = (method: TransferMethod): boolean => {
@@ -14,7 +17,22 @@ export const selectSendMoneyMethod = (
     return state;
   }
 
-  return { ...state, selectedMethod: method, errorMessage: "" };
+  const inputConfig = getTransferMethodInputConfig(method);
+
+  return {
+    ...state,
+    selectedMethod: method,
+    form: {
+      ...state.form,
+      accountNumberInput: inputConfig.showsAccountNumberInput
+        ? state.form.accountNumberInput
+        : "",
+      mobileNumberInput: inputConfig.showsMobileNumberInput
+        ? state.form.mobileNumberInput
+        : "",
+    },
+    errorMessage: "",
+  };
 };
 
 export const toggleSendMoneyForm = (state: SendMoneyState): SendMoneyState => {

@@ -1,4 +1,4 @@
-import type { TransferMethod } from "@/features/transfers/beneficiary/data/dataSource/transferBeneficiary.model";
+import type { TransferMethod } from "@/features/transfers/shared/types/transferMethod.types";
 import type { Result } from "@/shared/types/result.types";
 
 export type CreatePartyRecordCommand = {

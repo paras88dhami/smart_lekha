@@ -5,32 +5,38 @@ export type ReportEntryTypeTotalItem = {
   amount: number;
 };
 
-export type ReportsOverviewData = {
-  profileName: string;
+export type ReportFinancialSummary = {
   totalInflow: number;
   totalOutflow: number;
   currentNet: number;
   todayInflow: number;
   todayOutflow: number;
-  posSalesCount: number;
-  posSalesAmount: number;
+};
+
+export type ReportTransferSummary = {
   savedTransfersCount: number;
   scheduledTransfersCount: number;
+};
+
+export type ReportPosSalesSummary = {
+  posSalesCount: number;
+  posSalesAmount: number;
+};
+
+export type ReportsOverviewData = {
+  profileName: string;
+  financialSummary: ReportFinancialSummary;
+  transferSummary: ReportTransferSummary;
+  posSalesSummary: ReportPosSalesSummary;
   entryTypeTotals: ReportEntryTypeTotalItem[];
 };
 
 export type ReportsState = {
   status: StatusType;
   profileName: string;
-  totalInflow: number;
-  totalOutflow: number;
-  currentNet: number;
-  todayInflow: number;
-  todayOutflow: number;
-  posSalesCount: number;
-  posSalesAmount: number;
-  savedTransfersCount: number;
-  scheduledTransfersCount: number;
+  financialSummary: ReportFinancialSummary;
+  transferSummary: ReportTransferSummary;
+  posSalesSummary: ReportPosSalesSummary;
   entryTypeTotals: ReportEntryTypeTotalItem[];
   errorMessage: string;
 };

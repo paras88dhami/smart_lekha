@@ -1,4 +1,5 @@
 import { Status } from "@/shared/types/status.types";
+import { DEFAULT_TRANSFER_METHOD } from "@/features/transfers/shared/types/transferMethod.types";
 import type { SendMoneyFormState, SendMoneyOverviewData, SendMoneyState } from "../types/types";
 
 export const createSendMoneyFormState = (): SendMoneyFormState => {
@@ -15,7 +16,7 @@ export const createSendMoneyFormState = (): SendMoneyFormState => {
 export const createInitialSendMoneyState = (): SendMoneyState => {
   return {
     status: Status.Idle,
-    selectedMethod: "same_bank",
+    selectedMethod: DEFAULT_TRANSFER_METHOD,
     beneficiaries: [],
     favorites: [],
     savedTransfers: [],

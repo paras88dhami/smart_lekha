@@ -1,15 +1,13 @@
-import { createAuthSessionRepository } from "@/features/auth/session/data/repository/authSession.repository.impl";
-import { createLocalAuthSessionDataSource } from "@/features/auth/session/data/dataSource/localAuthSession.datasource.impl";
-import { createClearAuthSessionUseCase } from "@/features/auth/session/useCase/clearAuthSession.useCase.impl";
 import type { Database } from "@nozbe/watermelondb";
 import React, { useMemo } from "react";
-import type { MoreFeatureItem } from "../viewModel/more.viewModel";
+import type { FeatureHubItem } from "../types/types";
 import MoreScreen from "../ui/MoreScreen";
+import { createMoreDependencies } from "./createMoreDependencies";
 import { useMoreViewModel } from "../viewModel/more.viewModel.impl";
 
 type Params = {
   database: Database;
-  features: MoreFeatureItem[];
+  features: FeatureHubItem[];
   onOpenFeature: (route: string) => void;
   onLoggedOut: () => void;
 };
@@ -21,18 +19,10 @@ export const createMoreScreenFactory = ({
   onLoggedOut,
 }: Params) => {
   return function MoreScreenFactory(): React.JSX.Element {
-    const clearAuthSessionUseCase = useMemo(() => {
-      const localAuthSessionDataSource = createLocalAuthSessionDataSource(database);
-      const authSessionRepository = createAuthSessionRepository(
-        localAuthSessionDataSource,
-      );
-
-      return createClearAuthSessionUseCase(authSessionRepository);
-    }, [database]);
+    const dependencies = useMemo(() => createMoreDependencies({ database, features }), []);
 
     const viewModel = useMoreViewModel({
-      clearAuthSessionUseCase,
-      features,
+      ...dependencies,
       onOpenFeature,
       onLoggedOut,
     });

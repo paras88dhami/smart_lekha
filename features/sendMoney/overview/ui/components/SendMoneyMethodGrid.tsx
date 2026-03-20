@@ -1,4 +1,4 @@
-import type { TransferMethod } from "@/features/transfers/beneficiary/data/dataSource/transferBeneficiary.model";
+import type { TransferMethod } from "@/features/transfers/shared/types/transferMethod.types";
 import {
   TRANSFER_METHOD_ICONS,
   TRANSFER_METHOD_LABEL_KEYS,
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 20, color: KhataColors.text, fontWeight: "800" },
   grid: { flexDirection: "row", flexWrap: "wrap", marginHorizontal: -4 },
   card: {
-    width: "50%",
+    width: "33.3333%",
     minHeight: 80,
     borderRadius: 12,
     borderWidth: 1,

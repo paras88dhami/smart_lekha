@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { TransferMethod } from "@/features/transfers/beneficiary/data/dataSource/transferBeneficiary.model";
+import type { TransferMethod } from "@/features/transfers/shared/types/transferMethod.types";
 import type { PartiesViewModel } from "./parties.viewModel";
 import type { CreatePartyRecordUseCase } from "../useCase/createPartyRecord.useCase";
 import type { LoadPartiesOverviewUseCase } from "../useCase/loadPartiesOverview.useCase";

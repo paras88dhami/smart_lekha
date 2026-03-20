@@ -1,8 +1,6 @@
 import type { Result } from "@/shared/types/result.types";
-import type {
-  TransferBeneficiaryModel,
-  TransferMethod,
-} from "./transferBeneficiary.model";
+import type { TransferMethod } from "@/features/transfers/shared/types/transferMethod.types";
+import type { TransferBeneficiaryModel } from "./transferBeneficiary.model";
 
 export type CreateTransferBeneficiaryRecord = {
   profileId: string;

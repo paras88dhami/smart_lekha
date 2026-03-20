@@ -1,31 +1,33 @@
-import { getAuthErrorMessage } from "@/features/auth/shared/authErrorMessage";
-import type { ClearAuthSessionUseCase } from "@/features/auth/session/useCase/clearAuthSession.useCase";
-import { Status } from "@/shared/types/status.types";
-import { useCallback, useRef, useState } from "react";
-import type { MoreFeatureItem, MoreState, MoreViewModel } from "./more.viewModel";
+import { useCallback, useMemo, useRef, useState } from "react";
+import type { LoadFeatureHubUseCase } from "../useCase/loadFeatureHub.useCase";
+import type { LogoutFromFeatureHubUseCase } from "../useCase/logoutFromFeatureHub.useCase";
+import { getMoreErrorMessage } from "./moreErrorMessage";
+import {
+  createFailureMoreState,
+  createInitialMoreState,
+  createLoadingMoreState,
+  createSuccessMoreState,
+} from "./moreState";
+import type { MoreViewModel } from "./more.viewModel";
 
 type Params = {
-  clearAuthSessionUseCase: ClearAuthSessionUseCase;
-  features: MoreFeatureItem[];
+  loadFeatureHubUseCase: LoadFeatureHubUseCase;
+  logoutFromFeatureHubUseCase: LogoutFromFeatureHubUseCase;
   onOpenFeature: (route: string) => void;
   onLoggedOut: () => void;
 };
 
 export const useMoreViewModel = (params: Params): MoreViewModel => {
-  const { clearAuthSessionUseCase, features, onOpenFeature, onLoggedOut } = params;
-
-  const isLoggingOutRef = useRef(false);
-  const [state, setState] = useState<MoreState>({
-    status: Status.Idle,
-    errorMessage: "",
-    features,
-  });
+  const { loadFeatureHubUseCase, logoutFromFeatureHubUseCase, onOpenFeature, onLoggedOut } =
+    params;
+  const featureHubData = useMemo(() => loadFeatureHubUseCase.execute(), [loadFeatureHubUseCase]);
+  const isLoggingOutReference = useRef<boolean>(false);
+  const [state, setState] = useState(() => createInitialMoreState(featureHubData));
 
   const onFeaturePress = useCallback(
     (featureId: string): void => {
       const feature = state.features.find((item) => item.id === featureId);
-
-      if (!feature || feature.status !== "implemented" || !feature.route) {
+      if (!feature) {
         return;
       }
 
@@ -35,45 +37,30 @@ export const useMoreViewModel = (params: Params): MoreViewModel => {
   );
 
   const onLogoutPress = useCallback(async (): Promise<void> => {
-    if (isLoggingOutRef.current) {
+    if (isLoggingOutReference.current) {
       return;
     }
 
-    isLoggingOutRef.current = true;
-
-    setState((currentState) => ({
-      ...currentState,
-      status: Status.Loading,
-      errorMessage: "",
-    }));
+    isLoggingOutReference.current = true;
+    setState(createLoadingMoreState);
 
     try {
-      const result = await clearAuthSessionUseCase.execute();
-
+      const result = await logoutFromFeatureHubUseCase.execute();
       if (!result.success) {
-        setState((currentState) => ({
-          ...currentState,
-          status: Status.Failure,
-          errorMessage: getAuthErrorMessage(result.error),
-        }));
+        setState((currentState) =>
+          createFailureMoreState(currentState, getMoreErrorMessage(result.error)),
+        );
         return;
       }
 
-      setState((currentState) => ({
-        ...currentState,
-        status: Status.Success,
-        errorMessage: "",
-      }));
-
+      setState(createSuccessMoreState);
       onLoggedOut();
     } finally {
-      isLoggingOutRef.current = false;
+      isLoggingOutReference.current = false;
     }
-  }, [clearAuthSessionUseCase, onLoggedOut]);
+  }, [logoutFromFeatureHubUseCase, onLoggedOut]);
 
-  return {
-    state,
-    onFeaturePress,
-    onLogoutPress,
-  };
+  return useMemo<MoreViewModel>(() => {
+    return { state, onFeaturePress, onLogoutPress };
+  }, [onFeaturePress, onLogoutPress, state]);
 };

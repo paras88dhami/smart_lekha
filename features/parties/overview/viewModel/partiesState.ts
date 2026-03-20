@@ -1,4 +1,5 @@
 import { Status } from "@/shared/types/status.types";
+import { DEFAULT_TRANSFER_METHOD } from "@/features/transfers/shared/types/transferMethod.types";
 import type { PartiesOverviewData, PartiesState, PartyFormState } from "../types/types";
 
 export const createPartyFormState = (): PartyFormState => {
@@ -7,7 +8,7 @@ export const createPartyFormState = (): PartyFormState => {
     bankNameInput: "",
     accountNumberInput: "",
     mobileNumberInput: "",
-    selectedTransferMethod: "other_bank",
+    selectedTransferMethod: DEFAULT_TRANSFER_METHOD,
     markAsFavorite: true,
   };
 };

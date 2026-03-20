@@ -1,4 +1,5 @@
 import type { Result } from "@/shared/types/result.types";
+import { normalizeTransferMethod } from "@/features/transfers/shared/config/transferMethodCatalog";
 import type {
   CreateTransferBeneficiaryInput,
   TransferBeneficiary,
@@ -19,7 +20,7 @@ const mapBeneficiary = (
   bankName: record.bankName?.trim() ?? null,
   accountNumber: record.accountNumber?.trim() ?? null,
   mobileNumber: record.mobileNumber?.trim() ?? null,
-  transferMethod: record.transferMethod,
+  transferMethod: normalizeTransferMethod(record.transferMethod),
   isFavorite: record.isFavorite,
 });
 

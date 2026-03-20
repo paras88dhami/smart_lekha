@@ -4,7 +4,10 @@ import type { GetPrimaryFinanceAccountUseCase } from "@/features/finance/account
 import type { CreateFinanceTransactionUseCase } from "@/features/finance/transaction/useCase/createFinanceTransaction.useCase";
 import type { CreateTransferBeneficiaryUseCase } from "@/features/transfers/beneficiary/useCase/createTransferBeneficiary.useCase";
 import type { CreateTransferRecordUseCase } from "@/features/transfers/record/useCase/createTransferRecord.useCase";
-import { TRANSFER_METHOD_BANK_NAMES } from "@/features/transfers/shared/config/transferMethodCatalog";
+import {
+  hasRequiredTransferMethodInputs,
+  sanitizeTransferMethodInputs,
+} from "@/features/transfers/shared/config/transferMethodCatalog";
 import type { GetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase";
 import { createSendMoneyError } from "./sendMoneyError";
 import type {
@@ -21,7 +24,7 @@ type Dependencies = {
   adjustFinanceAccountBalanceUseCase: AdjustFinanceAccountBalanceUseCase;
 };
 
-const parseAmount = (amountInput: string): number => {
+const parseTransferAmount = (amountInput: string): number => {
   return Number(amountInput);
 };
 
@@ -34,11 +37,17 @@ export const createSubmitSendMoneyTransferUseCase = (
 ): SubmitSendMoneyTransferUseCase => ({
   async execute(input: SubmitSendMoneyTransferCommand): Promise<Result<void>> {
     const beneficiaryName = input.beneficiaryNameInput.trim();
-    const accountNumber = input.accountNumberInput.trim();
-    const mobileNumber = input.mobileNumberInput.trim();
-    const parsedAmount = parseAmount(input.amountInput);
+    const transferContactFields = sanitizeTransferMethodInputs(input.selectedMethod, {
+      bankNameInput: "",
+      accountNumberInput: input.accountNumberInput,
+      mobileNumberInput: input.mobileNumberInput,
+    });
+    const parsedAmount = parseTransferAmount(input.amountInput);
 
-    if (!beneficiaryName || (!accountNumber && !mobileNumber)) {
+    if (
+      !beneficiaryName ||
+      !hasRequiredTransferMethodInputs(input.selectedMethod, transferContactFields)
+    ) {
       return createFailure(createSendMoneyError("invalid_beneficiary"));
     }
 
@@ -61,9 +70,9 @@ export const createSubmitSendMoneyTransferUseCase = (
     const beneficiaryResult = await dependencies.createTransferBeneficiaryUseCase.execute({
       profileId: activeProfileResult.value.profileId,
       beneficiaryName,
-      bankName: TRANSFER_METHOD_BANK_NAMES[input.selectedMethod],
-      accountNumber: accountNumber || null,
-      mobileNumber: mobileNumber || null,
+      bankName: transferContactFields.bankName,
+      accountNumber: transferContactFields.accountNumber,
+      mobileNumber: transferContactFields.mobileNumber,
       transferMethod: input.selectedMethod,
       isFavorite: true,
     });
@@ -93,7 +102,7 @@ export const createSubmitSendMoneyTransferUseCase = (
       profileId: activeProfileResult.value.profileId,
       accountId: primaryAccountResult.value.id,
       entryType: "transfer_out",
-      categoryName: "Send Money",
+      categoryName: "Transfers",
       counterpartyName: beneficiaryName,
       note: input.noteInput.trim() || null,
       status: "success",

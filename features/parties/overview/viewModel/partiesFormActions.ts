@@ -1,5 +1,8 @@
-import type { TransferMethod } from "@/features/transfers/beneficiary/data/dataSource/transferBeneficiary.model";
-import { TRANSFER_METHOD_OPTIONS } from "@/features/transfers/shared/config/transferMethodCatalog";
+import type { TransferMethod } from "@/features/transfers/shared/types/transferMethod.types";
+import {
+  TRANSFER_METHOD_OPTIONS,
+  getTransferMethodInputConfig,
+} from "@/features/transfers/shared/config/transferMethodCatalog";
 import type { PartiesState } from "../types/types";
 
 const hasTransferMethod = (method: TransferMethod): boolean => {
@@ -40,9 +43,21 @@ export const changePartyTransferMethod = (
     return state;
   }
 
+  const inputConfig = getTransferMethodInputConfig(method);
+
   return {
     ...state,
-    form: { ...state.form, selectedTransferMethod: method },
+    form: {
+      ...state.form,
+      selectedTransferMethod: method,
+      bankNameInput: inputConfig.showsBankNameInput ? state.form.bankNameInput : "",
+      accountNumberInput: inputConfig.showsAccountNumberInput
+        ? state.form.accountNumberInput
+        : "",
+      mobileNumberInput: inputConfig.showsMobileNumberInput
+        ? state.form.mobileNumberInput
+        : "",
+    },
     errorMessage: "",
   };
 };

@@ -46,6 +46,7 @@ export default function SendMoneyScreen({ viewModel }: Props): React.JSX.Element
           amountPlaceholder={t("sendMoney.form.amount")}
           notePlaceholder={t("sendMoney.form.note")}
           scheduleLabel={t("sendMoney.form.scheduleForTomorrow")}
+          selectedMethod={viewModel.state.selectedMethod}
           beneficiaryNameInput={viewModel.state.form.beneficiaryNameInput}
           accountNumberInput={viewModel.state.form.accountNumberInput}
           mobileNumberInput={viewModel.state.form.mobileNumberInput}

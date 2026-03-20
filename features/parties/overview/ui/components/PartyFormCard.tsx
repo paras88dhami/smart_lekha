@@ -1,4 +1,8 @@
-import type { TransferMethod } from "@/features/transfers/beneficiary/data/dataSource/transferBeneficiary.model";
+import {
+  getTransferMethodInputConfig,
+  type TransferMethodInputConfig,
+} from "@/features/transfers/shared/config/transferMethodCatalog";
+import type { TransferMethod } from "@/features/transfers/shared/types/transferMethod.types";
 import KhataButton from "@/shared/components/ui/KhataButton";
 import KhataCard from "@/shared/components/ui/KhataCard";
 import { KhataColors } from "@/shared/theme/colors";
@@ -31,15 +35,68 @@ type Props = {
   onSavePartyPress: () => void;
 };
 
+const renderContactDetailInputs = (
+  inputConfig: TransferMethodInputConfig,
+  props: Props,
+): React.JSX.Element[] => {
+  const inputElements: React.JSX.Element[] = [];
+
+  if (inputConfig.showsBankNameInput) {
+    inputElements.push(
+      <TextInput
+        key="bank-name"
+        style={styles.input}
+        value={props.bankNameInput}
+        onChangeText={props.onBankNameChange}
+        placeholder={props.bankNamePlaceholder}
+      />,
+    );
+  }
+
+  if (inputConfig.showsAccountNumberInput) {
+    inputElements.push(
+      <TextInput
+        key="account-number"
+        style={styles.input}
+        value={props.accountNumberInput}
+        onChangeText={props.onAccountNumberChange}
+        placeholder={props.accountNumberPlaceholder}
+        keyboardType="number-pad"
+      />,
+    );
+  }
+
+  if (inputConfig.showsMobileNumberInput) {
+    inputElements.push(
+      <TextInput
+        key="mobile-number"
+        style={styles.input}
+        value={props.mobileNumberInput}
+        onChangeText={props.onMobileNumberChange}
+        placeholder={props.mobileNumberPlaceholder}
+        keyboardType="phone-pad"
+      />,
+    );
+  }
+
+  return inputElements;
+};
+
 export default function PartyFormCard(props: Props): React.JSX.Element {
+  const inputConfig = getTransferMethodInputConfig(props.selectedTransferMethod);
+
   return (
     <KhataCard style={styles.card}>
       <Text style={styles.title}>{props.title}</Text>
 
-      <TextInput style={styles.input} value={props.partyNameInput} onChangeText={props.onPartyNameChange} placeholder={props.namePlaceholder} />
-      <TextInput style={styles.input} value={props.bankNameInput} onChangeText={props.onBankNameChange} placeholder={props.bankNamePlaceholder} />
-      <TextInput style={styles.input} value={props.accountNumberInput} onChangeText={props.onAccountNumberChange} placeholder={props.accountNumberPlaceholder} keyboardType="number-pad" />
-      <TextInput style={styles.input} value={props.mobileNumberInput} onChangeText={props.onMobileNumberChange} placeholder={props.mobileNumberPlaceholder} keyboardType="phone-pad" />
+      <TextInput
+        style={styles.input}
+        value={props.partyNameInput}
+        onChangeText={props.onPartyNameChange}
+        placeholder={props.namePlaceholder}
+      />
+
+      {renderContactDetailInputs(inputConfig, props)}
 
       <PartyTransferMethodSelector
         selectedMethod={props.selectedTransferMethod}

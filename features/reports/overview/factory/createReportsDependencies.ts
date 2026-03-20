@@ -14,6 +14,10 @@ import { createLocalActiveProfileDataSource } from "@/features/workspace/activeP
 import { createActiveProfileRepository } from "@/features/workspace/activeProfile/data/repository/activeProfile.repository.impl";
 import { createGetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase.impl";
 import { createLoadReportsOverviewUseCase } from "../useCase/loadReportsOverview.useCase.impl";
+import { createLoadReportEntryTypeTotalsUseCase } from "../useCase/sections/loadReportEntryTypeTotals.useCase.impl";
+import { createLoadReportsFinancialSummaryUseCase } from "../useCase/sections/loadReportsFinancialSummary.useCase.impl";
+import { createLoadReportsPosSalesSummaryUseCase } from "../useCase/sections/loadReportsPosSalesSummary.useCase.impl";
+import { createLoadReportsTransferSummaryUseCase } from "../useCase/sections/loadReportsTransferSummary.useCase.impl";
 import type { LoadReportsOverviewUseCase } from "../useCase/loadReportsOverview.useCase";
 
 type Params = {
@@ -39,15 +43,23 @@ export const createReportsDependencies = ({ database }: Params): ReportsDependen
   return {
     loadReportsOverviewUseCase: createLoadReportsOverviewUseCase({
       getActiveProfileUseCase: createGetActiveProfileUseCase(activeProfileRepository),
-      getFinanceSummaryUseCase: createGetFinanceSummaryUseCase(financeTransactionRepository),
-      getFinanceTransactionsUseCase: createGetFinanceTransactionsUseCase(
-        financeTransactionRepository,
-      ),
-      getRecentPosSalesUseCase: createGetRecentPosSalesUseCase(posSaleRepository),
-      getSavedTransfersUseCase: createGetSavedTransfersUseCase(transferRecordRepository),
-      getScheduledTransfersUseCase: createGetScheduledTransfersUseCase(
-        transferRecordRepository,
-      ),
+      loadReportsFinancialSummaryUseCase: createLoadReportsFinancialSummaryUseCase({
+        getFinanceSummaryUseCase: createGetFinanceSummaryUseCase(financeTransactionRepository),
+      }),
+      loadReportsTransferSummaryUseCase: createLoadReportsTransferSummaryUseCase({
+        getSavedTransfersUseCase: createGetSavedTransfersUseCase(transferRecordRepository),
+        getScheduledTransfersUseCase: createGetScheduledTransfersUseCase(
+          transferRecordRepository,
+        ),
+      }),
+      loadReportsPosSalesSummaryUseCase: createLoadReportsPosSalesSummaryUseCase({
+        getRecentPosSalesUseCase: createGetRecentPosSalesUseCase(posSaleRepository),
+      }),
+      loadReportEntryTypeTotalsUseCase: createLoadReportEntryTypeTotalsUseCase({
+        getFinanceTransactionsUseCase: createGetFinanceTransactionsUseCase(
+          financeTransactionRepository,
+        ),
+      }),
     }),
   };
 };

@@ -1,4 +1,4 @@
-import type { TransferMethod } from "@/features/transfers/beneficiary/data/dataSource/transferBeneficiary.model";
+import type { TransferMethod } from "@/features/transfers/shared/types/transferMethod.types";
 import { TRANSFER_METHOD_LABEL_KEYS, TRANSFER_METHOD_OPTIONS } from "@/features/transfers/shared/config/transferMethodCatalog";
 import { KhataColors } from "@/shared/theme/colors";
 import React from "react";
@@ -36,7 +36,7 @@ export default function PartyTransferMethodSelector(props: Props): React.JSX.Ele
 
 const styles = StyleSheet.create({
   grid: { flexDirection: "row", flexWrap: "wrap", marginHorizontal: -4 },
-  button: { width: "50%", paddingHorizontal: 4, marginBottom: 8 },
+  button: { width: "33.3333%", paddingHorizontal: 4, marginBottom: 8 },
   buttonText: {
     minHeight: 38,
     borderRadius: 9,

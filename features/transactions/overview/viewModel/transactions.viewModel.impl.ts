@@ -1,172 +1,83 @@
-import { translate } from "@/shared/i18n/resources";
-import { Status } from "@/shared/types/status.types";
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { EnsureDefaultFinanceAccountsUseCase } from "@/features/finance/account/useCase/ensureDefaultFinanceAccounts.useCase";
-import type { GetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/getPrimaryFinanceAccount.useCase";
-import type { AdjustFinanceAccountBalanceUseCase } from "@/features/finance/account/useCase/adjustFinanceAccountBalance.useCase";
-import type { CreateFinanceTransactionUseCase } from "@/features/finance/transaction/useCase/createFinanceTransaction.useCase";
-import type { GetFinanceTransactionsUseCase } from "@/features/finance/transaction/useCase/getFinanceTransactions.useCase";
-import type { GetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase";
-import type {
-  TransactionsListItem,
-  TransactionsState,
-  TransactionsViewModel,
-} from "./transactions.viewModel";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { PaymentRecordDirection } from "@/features/transactions/paymentRecord/data/dataSource/paymentRecord.model";
+import type { TransactionsViewModel } from "../types/types";
+import type { CreateTransactionsPaymentRecordUseCase } from "../useCase/createTransactionsPaymentRecord.useCase";
+import type { LoadTransactionsOverviewUseCase } from "../useCase/loadTransactionsOverview.useCase";
+import type { SettleTransactionsPaymentRecordUseCase } from "../useCase/settleTransactionsPaymentRecord.useCase";
+import { getTransactionsErrorMessage } from "./transactionsErrorMessage";
+import {
+  createFailureTransactionsState,
+  createInitialTransactionsState,
+  createLoadingTransactionsState,
+  createSuccessTransactionsState,
+  createTransactionsFormState,
+} from "./transactionsState";
 
-const mapTransaction = (transaction: {
-  id: string;
-  categoryName: string | null;
-  counterpartyName: string | null;
-  note: string | null;
-  occurredAt: number;
-  amount: number;
-  entryType:
-    | "income"
-    | "expense"
-    | "payment_in"
-    | "payment_out"
-    | "transfer_out"
-    | "transfer_in"
-    | "pos_sale";
-  status: "success" | "pending" | "failed";
-}): TransactionsListItem => {
-  const title =
-    transaction.counterpartyName ||
-    transaction.categoryName ||
-    transaction.note ||
-    translate("transactions.defaultTitle");
-
-  return {
-    id: transaction.id,
-    title,
-    subtitle: new Date(transaction.occurredAt).toLocaleString(),
-    occurredAt: transaction.occurredAt,
-    amount: transaction.amount,
-    entryType: transaction.entryType,
-    statusLabel: transaction.status.toUpperCase(),
-  };
-};
-
-type Params = {
-  getActiveProfileUseCase: GetActiveProfileUseCase;
-  ensureDefaultFinanceAccountsUseCase: EnsureDefaultFinanceAccountsUseCase;
-  getPrimaryFinanceAccountUseCase: GetPrimaryFinanceAccountUseCase;
-  getFinanceTransactionsUseCase: GetFinanceTransactionsUseCase;
-  createFinanceTransactionUseCase: CreateFinanceTransactionUseCase;
-  adjustFinanceAccountBalanceUseCase: AdjustFinanceAccountBalanceUseCase;
+type Dependencies = {
+  loadTransactionsOverviewUseCase: LoadTransactionsOverviewUseCase;
+  createTransactionsPaymentRecordUseCase: CreateTransactionsPaymentRecordUseCase;
+  settleTransactionsPaymentRecordUseCase: SettleTransactionsPaymentRecordUseCase;
   onQuickPosPress: () => void;
 };
 
 export const useTransactionsViewModel = (
-  params: Params,
+  dependencies: Dependencies,
 ): TransactionsViewModel => {
-  const {
-    getActiveProfileUseCase,
-    ensureDefaultFinanceAccountsUseCase,
-    getPrimaryFinanceAccountUseCase,
-    getFinanceTransactionsUseCase,
-    createFinanceTransactionUseCase,
-    adjustFinanceAccountBalanceUseCase,
-    onQuickPosPress,
-  } = params;
+  const [state, setState] = useState(createInitialTransactionsState);
+  const isLoadingReference = useRef<boolean>(false);
+  const isSubmittingReference = useRef<boolean>(false);
+  const isSettlingReference = useRef<boolean>(false);
 
-  const isLoadingRef = useRef(false);
-  const isSubmittingRef = useRef(false);
-
-  const [state, setState] = useState<TransactionsState>({
-    status: Status.Idle,
-    transactions: [],
-    selectedEntryType: "payment_in",
-    amountInput: "",
-    noteInput: "",
-    errorMessage: "",
-  });
-
-  const loadTransactions = useCallback(async (): Promise<void> => {
-    if (isLoadingRef.current) {
+  const loadOverview = useCallback(async (): Promise<void> => {
+    if (isLoadingReference.current) {
       return;
     }
 
-    isLoadingRef.current = true;
-
-    setState((currentState) => ({
-      ...currentState,
-      status: Status.Loading,
-      errorMessage: "",
-    }));
+    isLoadingReference.current = true;
+    setState(createLoadingTransactionsState);
 
     try {
-      const activeProfileResult = await getActiveProfileUseCase.execute();
+      const result = await dependencies.loadTransactionsOverviewUseCase.execute();
 
-      if (!activeProfileResult.success || !activeProfileResult.value) {
-        setState((currentState) => ({
-          ...currentState,
-          status: Status.Failure,
-          errorMessage: translate("transactions.errors.noActiveProfile"),
-        }));
+      if (!result.success) {
+        setState((currentState) =>
+          createFailureTransactionsState(
+            currentState,
+            getTransactionsErrorMessage(result.error),
+          ),
+        );
         return;
       }
 
-      const profileId = activeProfileResult.value.profileId;
-
-      const ensureAccountsResult = await ensureDefaultFinanceAccountsUseCase.execute(
-        profileId,
-      );
-
-      if (!ensureAccountsResult.success) {
-        setState((currentState) => ({
-          ...currentState,
-          status: Status.Failure,
-          errorMessage: translate("transactions.errors.loadFailed"),
-        }));
-        return;
-      }
-
-      const transactionsResult = await getFinanceTransactionsUseCase.execute(
-        profileId,
-        50,
-      );
-
-      if (!transactionsResult.success) {
-        setState((currentState) => ({
-          ...currentState,
-          status: Status.Failure,
-          errorMessage: translate("transactions.errors.loadFailed"),
-        }));
-        return;
-      }
-
-      setState((currentState) => ({
-        ...currentState,
-        status: Status.Success,
-        transactions: transactionsResult.value.map((transaction) =>
-          mapTransaction(transaction),
-        ),
-        errorMessage: "",
-      }));
+      setState((currentState) => createSuccessTransactionsState(currentState, result.value));
     } finally {
-      isLoadingRef.current = false;
+      isLoadingReference.current = false;
     }
-  }, [
-    ensureDefaultFinanceAccountsUseCase,
-    getActiveProfileUseCase,
-    getFinanceTransactionsUseCase,
-  ]);
+  }, [dependencies.loadTransactionsOverviewUseCase]);
 
-  const onEntryTypePress = useCallback((entryType: "payment_in" | "payment_out"): void => {
+  const onDirectionPress = useCallback((direction: PaymentRecordDirection): void => {
     setState((currentState) => ({
       ...currentState,
-      selectedEntryType: entryType,
+      selectedDirection: direction,
+      errorMessage: "",
+    }));
+  }, []);
+
+  const onPartyNameChange = useCallback((value: string): void => {
+    setState((currentState) => ({
+      ...currentState,
+      form: { ...currentState.form, partyNameInput: value },
       errorMessage: "",
     }));
   }, []);
 
   const onAmountChange = useCallback((value: string): void => {
-    const sanitizedValue = value.replace(/[^0-9.]/g, "");
-
     setState((currentState) => ({
       ...currentState,
-      amountInput: sanitizedValue,
+      form: {
+        ...currentState.form,
+        amountInput: value.replace(/[^0-9.]/g, ""),
+      },
       errorMessage: "",
     }));
   }, []);
@@ -174,130 +85,123 @@ export const useTransactionsViewModel = (
   const onNoteChange = useCallback((value: string): void => {
     setState((currentState) => ({
       ...currentState,
-      noteInput: value,
+      form: { ...currentState.form, noteInput: value },
       errorMessage: "",
     }));
   }, []);
 
-  const onAddEntryPress = useCallback(async (): Promise<void> => {
-    if (isSubmittingRef.current) {
+  const onCreatePaymentPress = useCallback(async (): Promise<void> => {
+    if (isSubmittingReference.current) {
       return;
     }
 
-    const parsedAmount = Number(state.amountInput);
-
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setState((currentState) => ({
-        ...currentState,
-        status: Status.Failure,
-        errorMessage: translate("transactions.errors.invalidAmount"),
-      }));
-      return;
-    }
-
-    isSubmittingRef.current = true;
-
+    isSubmittingReference.current = true;
     setState((currentState) => ({
       ...currentState,
-      status: Status.Loading,
+      isSubmitting: true,
       errorMessage: "",
     }));
 
     try {
-      const activeProfileResult = await getActiveProfileUseCase.execute();
+      const result =
+        await dependencies.createTransactionsPaymentRecordUseCase.execute({
+          direction: state.selectedDirection,
+          partyNameInput: state.form.partyNameInput,
+          amountInput: state.form.amountInput,
+          noteInput: state.form.noteInput,
+        });
 
-      if (!activeProfileResult.success || !activeProfileResult.value) {
-        setState((currentState) => ({
-          ...currentState,
-          status: Status.Failure,
-          errorMessage: translate("transactions.errors.noActiveProfile"),
-        }));
-        return;
-      }
-
-      const profileId = activeProfileResult.value.profileId;
-      const accountResult = await getPrimaryFinanceAccountUseCase.execute(profileId);
-
-      if (!accountResult.success || !accountResult.value) {
-        setState((currentState) => ({
-          ...currentState,
-          status: Status.Failure,
-          errorMessage: translate("transactions.errors.noPrimaryAccount"),
-        }));
-        return;
-      }
-
-      const createResult = await createFinanceTransactionUseCase.execute({
-        profileId,
-        accountId: accountResult.value.id,
-        entryType: state.selectedEntryType,
-        categoryName: "Payment",
-        counterpartyName: null,
-        note: state.noteInput.trim() || null,
-        status: "success",
-        amount: parsedAmount,
-        occurredAt: Date.now(),
-        referenceId: null,
-      });
-
-      if (!createResult.success) {
-        setState((currentState) => ({
-          ...currentState,
-          status: Status.Failure,
-          errorMessage: translate("transactions.errors.saveFailed"),
-        }));
-        return;
-      }
-
-      const balanceDelta =
-        state.selectedEntryType === "payment_in" ? parsedAmount : -parsedAmount;
-
-      const balanceUpdateResult = await adjustFinanceAccountBalanceUseCase.execute({
-        accountId: accountResult.value.id,
-        deltaAmount: balanceDelta,
-      });
-
-      if (!balanceUpdateResult.success) {
-        setState((currentState) => ({
-          ...currentState,
-          status: Status.Failure,
-          errorMessage: translate("transactions.errors.saveFailed"),
-        }));
+      if (!result.success) {
+        setState((currentState) =>
+          createFailureTransactionsState(
+            currentState,
+            getTransactionsErrorMessage(result.error),
+          ),
+        );
         return;
       }
 
       setState((currentState) => ({
         ...currentState,
-        amountInput: "",
-        noteInput: "",
+        isSubmitting: false,
+        form: createTransactionsFormState(),
       }));
-
-      await loadTransactions();
+      await loadOverview();
     } finally {
-      isSubmittingRef.current = false;
+      isSubmittingReference.current = false;
     }
   }, [
-    adjustFinanceAccountBalanceUseCase,
-    createFinanceTransactionUseCase,
-    getActiveProfileUseCase,
-    getPrimaryFinanceAccountUseCase,
-    loadTransactions,
-    state.amountInput,
-    state.noteInput,
-    state.selectedEntryType,
+    dependencies.createTransactionsPaymentRecordUseCase,
+    loadOverview,
+    state.form.amountInput,
+    state.form.noteInput,
+    state.form.partyNameInput,
+    state.selectedDirection,
   ]);
 
-  useEffect(() => {
-    void loadTransactions();
-  }, [loadTransactions]);
+  const onSettlePaymentPress = useCallback(
+    async (recordId: string): Promise<void> => {
+      if (isSettlingReference.current) {
+        return;
+      }
 
-  return {
-    state,
-    onRefreshPress: loadTransactions,
-    onEntryTypePress,
-    onAmountChange,
-    onNoteChange,
-    onAddEntryPress,
-    onQuickPosPress,
-  };
+      isSettlingReference.current = true;
+      setState((currentState) => ({
+        ...currentState,
+        settlingRecordId: recordId,
+        errorMessage: "",
+      }));
+
+      try {
+        const result =
+          await dependencies.settleTransactionsPaymentRecordUseCase.execute({
+            recordId,
+          });
+
+        if (!result.success) {
+          setState((currentState) =>
+            createFailureTransactionsState(
+              currentState,
+              getTransactionsErrorMessage(result.error),
+            ),
+          );
+          return;
+        }
+
+        await loadOverview();
+      } finally {
+        isSettlingReference.current = false;
+      }
+    },
+    [dependencies.settleTransactionsPaymentRecordUseCase, loadOverview],
+  );
+
+  useEffect((): void => {
+    void loadOverview();
+  }, [loadOverview]);
+
+  return useMemo<TransactionsViewModel>(
+    () => ({
+      state,
+      onRefreshPress: loadOverview,
+      onDirectionPress,
+      onPartyNameChange,
+      onAmountChange,
+      onNoteChange,
+      onCreatePaymentPress,
+      onSettlePaymentPress,
+      onQuickPosPress: dependencies.onQuickPosPress,
+    }),
+    [
+      dependencies.onQuickPosPress,
+      loadOverview,
+      onAmountChange,
+      onCreatePaymentPress,
+      onDirectionPress,
+      onNoteChange,
+      onPartyNameChange,
+      onSettlePaymentPress,
+      state,
+    ],
+  );
 };

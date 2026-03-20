@@ -5,12 +5,26 @@ import AppIcon from "@/shared/components/icons/AppIcon";
 import { useTranslation } from "@/shared/i18n/resources";
 import { KhataColors } from "@/shared/theme/colors";
 
-const tabMap: Record<string, { labelKey: string; iconName: string }> = {
-  transactions: { labelKey: "tabs.transactions", iconName: "cash-outline" },
-  parties: { labelKey: "tabs.parties", iconName: "people-outline" },
+type TabRouteName = "home" | "transactions" | "inventory" | "more";
+
+type TabConfig = {
+  labelKey: string;
+  iconName: string;
+};
+
+const TAB_CONFIG_MAP: Record<TabRouteName, TabConfig> = {
   home: { labelKey: "tabs.home", iconName: "home-outline" },
+  transactions: { labelKey: "tabs.transactions", iconName: "receipt-outline" },
   inventory: { labelKey: "tabs.inventory", iconName: "paper-plane-outline" },
-  more: { labelKey: "tabs.more", iconName: "grid-outline" },
+  more: { labelKey: "tabs.more", iconName: "menu-outline" },
+};
+
+const getTabConfig = (routeName: string): TabConfig | null => {
+  if (!(routeName in TAB_CONFIG_MAP)) {
+    return null;
+  }
+
+  return TAB_CONFIG_MAP[routeName as TabRouteName];
 };
 
 export default function KhataBottomTabBar(
@@ -27,7 +41,7 @@ export default function KhataBottomTabBar(
   return (
     <View style={styles.wrapper}>
       {props.state.routes.map((route, index) => {
-        const config = tabMap[route.name];
+        const config = getTabConfig(route.name);
 
         if (!config) {
           return null;

@@ -1,4 +1,4 @@
-import type { TransferMethod } from "../data/dataSource/transferBeneficiary.model";
+import type { TransferMethod } from "@/features/transfers/shared/types/transferMethod.types";
 
 export type TransferBeneficiary = {
   id: string;

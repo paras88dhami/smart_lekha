@@ -1,5 +1,9 @@
 import type { Result } from "@/shared/types/result.types";
 import type { CreateTransferBeneficiaryUseCase } from "@/features/transfers/beneficiary/useCase/createTransferBeneficiary.useCase";
+import {
+  hasRequiredTransferMethodInputs,
+  sanitizeTransferMethodInputs,
+} from "@/features/transfers/shared/config/transferMethodCatalog";
 import type { GetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase";
 import { createPartiesError } from "./partiesError";
 import type { CreatePartyRecordUseCase, CreatePartyRecordCommand } from "./createPartyRecord.useCase";
@@ -18,11 +22,16 @@ export const createCreatePartyRecordUseCase = (
 ): CreatePartyRecordUseCase => ({
   async execute(input: CreatePartyRecordCommand): Promise<Result<void>> {
     const beneficiaryName = input.partyNameInput.trim();
-    const bankName = input.bankNameInput.trim();
-    const accountNumber = input.accountNumberInput.trim();
-    const mobileNumber = input.mobileNumberInput.trim();
+    const transferContactFields = sanitizeTransferMethodInputs(input.selectedTransferMethod, {
+      bankNameInput: input.bankNameInput,
+      accountNumberInput: input.accountNumberInput,
+      mobileNumberInput: input.mobileNumberInput,
+    });
 
-    if (!beneficiaryName || (!accountNumber && !mobileNumber)) {
+    if (
+      !beneficiaryName ||
+      !hasRequiredTransferMethodInputs(input.selectedTransferMethod, transferContactFields)
+    ) {
       return createFailure(createPartiesError("invalid_party"));
     }
 
@@ -34,9 +43,9 @@ export const createCreatePartyRecordUseCase = (
     const result = await dependencies.createTransferBeneficiaryUseCase.execute({
       profileId: activeProfileResult.value.profileId,
       beneficiaryName,
-      bankName: bankName || null,
-      accountNumber: accountNumber || null,
-      mobileNumber: mobileNumber || null,
+      bankName: transferContactFields.bankName,
+      accountNumber: transferContactFields.accountNumber,
+      mobileNumber: transferContactFields.mobileNumber,
       transferMethod: input.selectedTransferMethod,
       isFavorite: input.markAsFavorite,
     });

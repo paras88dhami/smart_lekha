@@ -10,6 +10,13 @@ export type DownloadDataSummary = {
   posSalesCount: number;
 };
 
+export type DownloadDataSnapshot = {
+  profileName: string;
+  generatedAt: number;
+  summary: DownloadDataSummary;
+  jsonPreview: string;
+};
+
 export type DownloadDataState = {
   status: StatusType;
   profileName: string;
