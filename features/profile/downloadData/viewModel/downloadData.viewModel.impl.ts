@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { GetFinanceAccountsByProfileUseCase } from "@/features/finance/account/useCase/getFinanceAccountsByProfile.useCase";
 import type { GetFinanceTransactionsUseCase } from "@/features/finance/transaction/useCase/getFinanceTransactions.useCase";
 import type { GetPosItemsUseCase } from "@/features/pos/item/useCase/getPosItems.useCase";
-import type { GetRecentPosSalesUseCase } from "@/features/pos/sale/useCase/types";
+import type { GetRecentPosSalesUseCase } from "@/features/pos/sale/useCase/getRecentPosSales.useCase";
 import type { GetTransferBeneficiariesUseCase } from "@/features/transfers/beneficiary/useCase/getTransferBeneficiaries.useCase";
 import type { GetSavedTransfersUseCase } from "@/features/transfers/record/useCase/getSavedTransfers.useCase";
 import type { GetScheduledTransfersUseCase } from "@/features/transfers/record/useCase/getScheduledTransfers.useCase";

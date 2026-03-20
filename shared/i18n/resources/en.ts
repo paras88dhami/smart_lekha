@@ -339,6 +339,11 @@ const en = {
     subtitle: "Financial and operational overview",
     entryTotalsTitle: "Entry Type Totals",
     empty: "No report data yet.",
+    sections: {
+      financial: "Financial Summary",
+      transfers: "Transfer Summary",
+      posSales: "POS Sales Summary",
+    },
     summary: {
       totalInflow: "Total Inflow",
       totalOutflow: "Total Outflow",

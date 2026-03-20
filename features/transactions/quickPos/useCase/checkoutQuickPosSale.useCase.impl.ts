@@ -3,7 +3,7 @@ import type { GetPrimaryFinanceAccountUseCase } from "@/features/finance/account
 import type { CreateFinanceTransactionUseCase } from "@/features/finance/transaction/useCase/createFinanceTransaction.useCase";
 import type { PosItem, PosCartLine } from "@/features/pos/item/types/types";
 import type { UpdatePosItemStockUseCase } from "@/features/pos/item/useCase/updatePosItemStock.useCase";
-import type { CreatePosSaleUseCase } from "@/features/pos/sale/useCase/types";
+import type { CreatePosSaleUseCase } from "@/features/pos/sale/useCase/createPosSale.useCase";
 import type { CheckoutQuickPosSaleInput, CheckoutQuickPosSaleUseCase } from "./checkoutQuickPosSale.useCase";
 import { createQuickPosFailure, type QuickPosResult } from "./quickPosError";
 

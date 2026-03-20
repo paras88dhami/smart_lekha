@@ -1,13 +1,13 @@
 import type { TransferMethod } from "@/features/transfers/beneficiary/data/dataSource/transferBeneficiary.model";
+import {
+  TRANSFER_METHOD_ICONS,
+  TRANSFER_METHOD_LABEL_KEYS,
+  TRANSFER_METHOD_OPTIONS,
+} from "@/features/transfers/shared/config/transferMethodCatalog";
 import AppIcon from "@/shared/components/icons/AppIcon";
 import { KhataColors } from "@/shared/theme/colors";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import {
-  SEND_MONEY_METHOD_ICONS,
-  SEND_MONEY_METHOD_LABEL_KEYS,
-  SEND_MONEY_METHOD_OPTIONS,
-} from "../../config/transferMethodCatalog";
 
 type Props = {
   title: string;
@@ -21,7 +21,7 @@ export default function SendMoneyMethodGrid(props: Props): React.JSX.Element {
     <>
       <Text style={styles.title}>{props.title}</Text>
       <View style={styles.grid}>
-        {SEND_MONEY_METHOD_OPTIONS.map((option) => {
+        {TRANSFER_METHOD_OPTIONS.map((option) => {
           const isSelected = props.selectedMethod === option.method;
 
           return (
@@ -35,13 +35,13 @@ export default function SendMoneyMethodGrid(props: Props): React.JSX.Element {
               <View style={[styles.iconBubble, isSelected ? styles.iconBubbleSelected : null]}>
                 <AppIcon
                   family="ion"
-                  name={SEND_MONEY_METHOD_ICONS[option.method]}
+                  name={TRANSFER_METHOD_ICONS[option.method]}
                   size={18}
                   color={isSelected ? KhataColors.primaryDark : KhataColors.text}
                 />
               </View>
               <Text style={[styles.label, isSelected ? styles.labelSelected : null]}>
-                {props.getLabel(SEND_MONEY_METHOD_LABEL_KEYS[option.method])}
+                {props.getLabel(TRANSFER_METHOD_LABEL_KEYS[option.method])}
               </Text>
             </Pressable>
           );

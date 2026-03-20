@@ -15,7 +15,7 @@ import { createGetPosItemsUseCase } from "@/features/pos/item/useCase/getPosItem
 import { createUpdatePosItemStockUseCase } from "@/features/pos/item/useCase/updatePosItemStock.useCase.impl";
 import { createLocalPosSaleDataSource } from "@/features/pos/sale/data/dataSource/localPosSale.dataSource.impl";
 import { createPosSaleRepository } from "@/features/pos/sale/data/repository/posSale.repository.impl";
-import { createCreatePosSaleUseCase } from "@/features/pos/sale/useCase/useCases.impl";
+import { createCreatePosSaleUseCase } from "@/features/pos/sale/useCase/createPosSale.useCase.impl";
 import { createLocalActiveProfileDataSource } from "@/features/workspace/activeProfile/data/dataSource/localActiveProfile.dataSource.impl";
 import { createActiveProfileRepository } from "@/features/workspace/activeProfile/data/repository/activeProfile.repository.impl";
 import { createGetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase.impl";

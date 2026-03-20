@@ -1,9 +1,9 @@
 import type { TransferMethod } from "@/features/transfers/beneficiary/data/dataSource/transferBeneficiary.model";
-import { SEND_MONEY_METHOD_OPTIONS } from "../config/transferMethodCatalog";
+import { TRANSFER_METHOD_OPTIONS } from "@/features/transfers/shared/config/transferMethodCatalog";
 import type { SendMoneyState } from "../types/types";
 
 const hasMethodOption = (method: TransferMethod): boolean => {
-  return SEND_MONEY_METHOD_OPTIONS.some((option) => option.method === method);
+  return TRANSFER_METHOD_OPTIONS.some((option) => option.method === method);
 };
 
 export const selectSendMoneyMethod = (

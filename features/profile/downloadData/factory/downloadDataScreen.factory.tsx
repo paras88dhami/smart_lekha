@@ -9,7 +9,7 @@ import { createFinanceTransactionRepository } from "@/features/finance/transacti
 import { createGetPosItemsUseCase } from "@/features/pos/item/useCase/getPosItems.useCase.impl";
 import { createLocalPosItemDataSource } from "@/features/pos/item/data/dataSource/localPosItem.dataSource.impl";
 import { createPosItemRepository } from "@/features/pos/item/data/repository/posItem.repository.impl";
-import { createGetRecentPosSalesUseCase } from "@/features/pos/sale/useCase/useCases.impl";
+import { createGetRecentPosSalesUseCase } from "@/features/pos/sale/useCase/getRecentPosSales.useCase.impl";
 import { createLocalPosSaleDataSource } from "@/features/pos/sale/data/dataSource/localPosSale.dataSource.impl";
 import { createPosSaleRepository } from "@/features/pos/sale/data/repository/posSale.repository.impl";
 import { createLocalTransferBeneficiaryDataSource } from "@/features/transfers/beneficiary/data/dataSource/localTransferBeneficiary.dataSource.impl";

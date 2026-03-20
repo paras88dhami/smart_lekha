@@ -1,5 +1,5 @@
 import type { SendMoneyBeneficiaryItem } from "@/features/sendMoney/overview/types/types";
-import { SEND_MONEY_METHOD_LABEL_KEYS } from "@/features/sendMoney/overview/config/transferMethodCatalog";
+import { TRANSFER_METHOD_LABEL_KEYS } from "@/features/transfers/shared/config/transferMethodCatalog";
 import { KhataColors } from "@/shared/theme/colors";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -38,7 +38,7 @@ export default function SendMoneyBeneficiaryRow(props: Props): React.JSX.Element
       </View>
 
       <Text style={styles.methodText}>
-        {props.getLabel(SEND_MONEY_METHOD_LABEL_KEYS[props.item.transferMethod])}
+        {props.getLabel(TRANSFER_METHOD_LABEL_KEYS[props.item.transferMethod])}
       </Text>
     </View>
   );

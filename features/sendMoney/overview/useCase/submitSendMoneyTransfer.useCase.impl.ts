@@ -4,8 +4,8 @@ import type { GetPrimaryFinanceAccountUseCase } from "@/features/finance/account
 import type { CreateFinanceTransactionUseCase } from "@/features/finance/transaction/useCase/createFinanceTransaction.useCase";
 import type { CreateTransferBeneficiaryUseCase } from "@/features/transfers/beneficiary/useCase/createTransferBeneficiary.useCase";
 import type { CreateTransferRecordUseCase } from "@/features/transfers/record/useCase/createTransferRecord.useCase";
+import { TRANSFER_METHOD_BANK_NAMES } from "@/features/transfers/shared/config/transferMethodCatalog";
 import type { GetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase";
-import { SEND_MONEY_METHOD_BANK_NAMES } from "../config/transferMethodCatalog";
 import { createSendMoneyError } from "./sendMoneyError";
 import type {
   SubmitSendMoneyTransferCommand,
@@ -61,7 +61,7 @@ export const createSubmitSendMoneyTransferUseCase = (
     const beneficiaryResult = await dependencies.createTransferBeneficiaryUseCase.execute({
       profileId: activeProfileResult.value.profileId,
       beneficiaryName,
-      bankName: SEND_MONEY_METHOD_BANK_NAMES[input.selectedMethod],
+      bankName: TRANSFER_METHOD_BANK_NAMES[input.selectedMethod],
       accountNumber: accountNumber || null,
       mobileNumber: mobileNumber || null,
       transferMethod: input.selectedMethod,

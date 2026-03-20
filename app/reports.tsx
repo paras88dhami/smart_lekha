@@ -1,5 +1,5 @@
 import React from "react";
-import { createReportsScreenFactory } from "@/features/reports/list/factory/reportsScreen.factory";
+import { createReportsScreenFactory } from "@/features/reports/overview/factory/reportsScreen.factory";
 import { database } from "@/src/database/database";
 
 export default function ReportsRoute(): React.JSX.Element {
