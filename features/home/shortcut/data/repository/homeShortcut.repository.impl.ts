@@ -1,27 +1,30 @@
 import type { Result } from "@/shared/types/result.types";
 import type { HomeShortcut, HomeShortcutSeed } from "../../types/types";
 import type { HomeShortcutModel } from "../dataSource/homeShortcut.model";
-import type { HomeShortcutDataSource } from "../dataSource/homeShortcut.dataSource";
+import type {
+  HomeShortcutDataSource,
+  SaveHomeShortcutRecord,
+} from "../dataSource/homeShortcut.dataSource";
 import type { HomeShortcutRepository } from "./homeShortcut.repository";
 
 const mapShortcut = (record: HomeShortcutModel): HomeShortcut => {
   return {
     id: record.id,
-    profileId: record.profileId?.trim() ?? "",
-    shortcutKey: record.shortcutKey ?? "my_profile",
-    sortOrder: record.sortOrder ?? 0,
-    isEnabled: Boolean(record.isEnabled),
+    profileId: record.profileId.trim(),
+    shortcutKey: record.shortcutKey,
+    sortOrder: record.sortOrder,
+    isEnabled: record.isEnabled,
   };
 };
 
-const toModel = (shortcut: HomeShortcut): HomeShortcutModel => {
+const mapShortcutToPersistenceRecord = (
+  shortcut: HomeShortcut,
+): SaveHomeShortcutRecord => {
   return {
     id: shortcut.id,
-    profileId: shortcut.profileId,
-    shortcutKey: shortcut.shortcutKey,
     sortOrder: shortcut.sortOrder,
     isEnabled: shortcut.isEnabled,
-  } as HomeShortcutModel;
+  };
 };
 
 const createFailure = <T>(error: Error): Result<T> => ({
@@ -73,7 +76,7 @@ export const createHomeShortcutRepository = (
   ): Promise<Result<void>> {
     return localDataSource.saveShortcuts(
       profileId.trim(),
-      shortcuts.map(toModel),
+      shortcuts.map(mapShortcutToPersistenceRecord),
     );
   },
 });

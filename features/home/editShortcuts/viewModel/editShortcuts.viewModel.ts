@@ -1,18 +1,10 @@
-import type { HomeShortcutKey } from "@/features/home/shortcut/data/dataSource/homeShortcut.model";
 import type { StatusType } from "@/shared/types/status.types";
-
-export type EditableHomeShortcutItem = {
-  id: string;
-  shortcutKey: HomeShortcutKey;
-  labelKey: string;
-  sortOrder: number;
-  isEnabled: boolean;
-};
+import type { EditableHomeShortcut } from "../types/types";
 
 export type EditShortcutsState = {
   status: StatusType;
   profileName: string;
-  shortcuts: EditableHomeShortcutItem[];
+  shortcuts: EditableHomeShortcut[];
   hasChanges: boolean;
   errorMessage: string;
 };

@@ -11,6 +11,9 @@ export default function HomeRoute(): React.JSX.Element {
         onMyProfilePress: () => {
           router.push("/profile-selection");
         },
+        onEditShortcutsPress: () => {
+          router.push("/edit-shortcuts");
+        },
         onMyAccountsPress: () => {
           router.push("/cash-bank");
         },

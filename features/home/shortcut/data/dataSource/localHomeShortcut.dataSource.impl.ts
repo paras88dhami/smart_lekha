@@ -2,17 +2,31 @@ import type { Result } from "@/shared/types/result.types";
 import type { Database } from "@nozbe/watermelondb";
 import { Q } from "@nozbe/watermelondb";
 import type { HomeShortcutSeed } from "../../types/types";
-import type { HomeShortcutDataSource } from "./homeShortcut.dataSource";
+import type {
+  HomeShortcutDataSource,
+  SaveHomeShortcutRecord,
+} from "./homeShortcut.dataSource";
 import type { HomeShortcutModel } from "./homeShortcut.model";
+import {
+  buildHomeShortcutRecordMap,
+  createDefaultHomeShortcutRecords,
+  getHomeShortcutCollection,
+  getHomeShortcutsByProfileQuery,
+  mapHomeShortcutDataSourceError,
+  updateHomeShortcutRecords,
+} from "./localHomeShortcut.dataSource.helpers";
 
-const getCollection = (database: Database) => {
-  return database.get<HomeShortcutModel>("home_shortcuts");
-};
-
-const mapUnknownError = (error: unknown): Error => {
-  return error instanceof Error
-    ? error
-    : new Error("Failed to process home shortcuts.");
+const fetchEnabledHomeShortcutRecords = async (
+  database: Database,
+  profileId: string,
+): Promise<HomeShortcutModel[]> => {
+  return getHomeShortcutCollection(database)
+    .query(
+      Q.where("profile_id", profileId),
+      Q.where("is_enabled", true),
+      Q.sortBy("sort_order", Q.asc),
+    )
+    .fetch();
 };
 
 export const createLocalHomeShortcutDataSource = (
@@ -20,13 +34,7 @@ export const createLocalHomeShortcutDataSource = (
 ): HomeShortcutDataSource => ({
   async getShortcutsByProfileId(profileId: string): Promise<Result<HomeShortcutModel[]>> {
     try {
-      const records = await getCollection(database)
-        .query(
-          Q.where("profile_id", profileId),
-          Q.where("is_enabled", true),
-          Q.sortBy("sort_order", Q.asc),
-        )
-        .fetch();
+      const records = await fetchEnabledHomeShortcutRecords(database, profileId);
 
       return {
         success: true,
@@ -35,7 +43,7 @@ export const createLocalHomeShortcutDataSource = (
     } catch (error) {
       return {
         success: false,
-        error: mapUnknownError(error),
+        error: mapHomeShortcutDataSourceError(error),
       };
     }
   },
@@ -44,12 +52,7 @@ export const createLocalHomeShortcutDataSource = (
     profileId: string,
   ): Promise<Result<HomeShortcutModel[]>> {
     try {
-      const records = await getCollection(database)
-        .query(
-          Q.where("profile_id", profileId),
-          Q.sortBy("sort_order", Q.asc),
-        )
-        .fetch();
+      const records = await getHomeShortcutsByProfileQuery(database, profileId).fetch();
 
       return {
         success: true,
@@ -58,7 +61,7 @@ export const createLocalHomeShortcutDataSource = (
     } catch (error) {
       return {
         success: false,
-        error: mapUnknownError(error),
+        error: mapHomeShortcutDataSourceError(error),
       };
     }
   },
@@ -68,10 +71,7 @@ export const createLocalHomeShortcutDataSource = (
     defaults: HomeShortcutSeed[],
   ): Promise<Result<void>> {
     try {
-      const collection = getCollection(database);
-      const existingRecords = await collection
-        .query(Q.where("profile_id", profileId))
-        .fetch();
+      const existingRecords = await getHomeShortcutsByProfileQuery(database, profileId).fetch();
 
       if (existingRecords.length > 0) {
         return {
@@ -80,20 +80,7 @@ export const createLocalHomeShortcutDataSource = (
         };
       }
 
-      const timestamp = Date.now();
-
-      await database.write(async () => {
-        for (const item of defaults) {
-          await collection.create((record: HomeShortcutModel) => {
-            record.profileId = profileId;
-            record.shortcutKey = item.shortcutKey;
-            record.sortOrder = item.sortOrder;
-            record.isEnabled = true;
-            record.createdAt = timestamp;
-            record.updatedAt = timestamp;
-          });
-        }
-      });
+      await createDefaultHomeShortcutRecords(database, profileId, defaults);
 
       return {
         success: true,
@@ -102,43 +89,19 @@ export const createLocalHomeShortcutDataSource = (
     } catch (error) {
       return {
         success: false,
-        error: mapUnknownError(error),
+        error: mapHomeShortcutDataSourceError(error),
       };
     }
   },
 
   async saveShortcuts(
     profileId: string,
-    shortcuts: HomeShortcutModel[],
+    shortcuts: SaveHomeShortcutRecord[],
   ): Promise<Result<void>> {
     try {
-      const collection = getCollection(database);
-      const existingRecords = await collection
-        .query(Q.where("profile_id", profileId))
-        .fetch();
-
-      const existingById = new Map<string, HomeShortcutModel>();
-      for (const record of existingRecords) {
-        existingById.set(record.id, record);
-      }
-
-      const timestamp = Date.now();
-
-      await database.write(async () => {
-        for (const shortcut of shortcuts) {
-          const existingRecord = existingById.get(shortcut.id);
-
-          if (!existingRecord) {
-            continue;
-          }
-
-          await existingRecord.update((record: HomeShortcutModel) => {
-            record.sortOrder = shortcut.sortOrder ?? 0;
-            record.isEnabled = Boolean(shortcut.isEnabled);
-            record.updatedAt = timestamp;
-          });
-        }
-      });
+      const existingRecords = await getHomeShortcutsByProfileQuery(database, profileId).fetch();
+      const existingRecordMap = buildHomeShortcutRecordMap(existingRecords);
+      await updateHomeShortcutRecords(database, existingRecordMap, shortcuts);
 
       return {
         success: true,
@@ -147,7 +110,7 @@ export const createLocalHomeShortcutDataSource = (
     } catch (error) {
       return {
         success: false,
-        error: mapUnknownError(error),
+        error: mapHomeShortcutDataSourceError(error),
       };
     }
   },
