@@ -1,10 +1,12 @@
 import type { Database } from "@nozbe/watermelondb";
+import { createAppSettingUseCases } from "@/features/auth/appSettings/factory/createAppSettingUseCases";
 import { createLocalFinanceAccountDataSource } from "@/features/finance/account/data/dataSource/localFinanceAccount.dataSource.impl";
 import { createFinanceAccountRepository } from "@/features/finance/account/data/repository/financeAccount.repository.impl";
 import { createCreateFinanceAccountUseCase } from "@/features/finance/account/useCase/createFinanceAccount.useCase.impl";
 import { createEnsureDefaultFinanceAccountsUseCase } from "@/features/finance/account/useCase/ensureDefaultFinanceAccounts.useCase.impl";
 import { createGetFinanceAccountsByProfileUseCase } from "@/features/finance/account/useCase/getFinanceAccountsByProfile.useCase.impl";
 import { createSetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/setPrimaryFinanceAccount.useCase.impl";
+import { createSetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/setActiveAccount.useCase.impl";
 import { createLocalActiveProfileDataSource } from "@/features/workspace/activeProfile/data/dataSource/localActiveProfile.dataSource.impl";
 import { createActiveProfileRepository } from "@/features/workspace/activeProfile/data/repository/activeProfile.repository.impl";
 import { createGetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase.impl";
@@ -32,6 +34,14 @@ export const createCashBankDependencies = ({ database }: Params): CashBankDepend
   const financeAccountRepository = createFinanceAccountRepository(
     createLocalFinanceAccountDataSource(database),
   );
+  const appSettingUseCases = createAppSettingUseCases(database);
+  const setActiveAccountUseCase = createSetActiveAccountUseCase({
+    getActiveProfileUseCase: createGetActiveProfileUseCase(activeProfileRepository),
+    getFinanceAccountsByProfileUseCase: createGetFinanceAccountsByProfileUseCase(
+      financeAccountRepository,
+    ),
+    setActiveAccountIdUseCase: appSettingUseCases.setActiveAccountIdUseCase,
+  });
 
   return {
     loadCashBankOverviewUseCase: createLoadCashBankOverviewUseCase({
@@ -49,11 +59,13 @@ export const createCashBankDependencies = ({ database }: Params): CashBankDepend
         financeAccountRepository,
       ),
       createFinanceAccountUseCase: createCreateFinanceAccountUseCase(financeAccountRepository),
+      setActiveAccountUseCase,
     }),
     setCashBankPrimaryAccountUseCase: createSetCashBankPrimaryAccountUseCase({
       setPrimaryFinanceAccountUseCase: createSetPrimaryFinanceAccountUseCase(
         financeAccountRepository,
       ),
+      setActiveAccountUseCase,
     }),
   };
 };

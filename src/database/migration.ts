@@ -300,5 +300,16 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 7,
+      steps: [
+        addColumns({
+          table: "app_settings",
+          columns: [
+            { name: "active_account_id", type: "string", isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

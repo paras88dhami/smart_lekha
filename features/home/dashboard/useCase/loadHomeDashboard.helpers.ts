@@ -1,6 +1,5 @@
 import type { FinanceAccount } from "@/features/finance/account/types/types";
 import type { EnsureDefaultFinanceAccountsUseCase } from "@/features/finance/account/useCase/ensureDefaultFinanceAccounts.useCase";
-import type { GetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/getPrimaryFinanceAccount.useCase";
 import type {
   FinanceSummary,
   FinanceTransaction,
@@ -10,6 +9,7 @@ import type { GetRecentFinanceTransactionsUseCase } from "@/features/finance/tra
 import type { HomeShortcut } from "@/features/home/shortcut/types/types";
 import type { EnsureDefaultHomeShortcutsUseCase } from "@/features/home/shortcut/useCase/ensureDefaultHomeShortcuts.useCase";
 import type { GetHomeShortcutsUseCase } from "@/features/home/shortcut/useCase/getHomeShortcuts.useCase";
+import type { GetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase";
 import type { ActiveProfile } from "@/features/workspace/activeProfile/types/types";
 import type { GetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase";
 import type { Result } from "@/shared/types/result.types";
@@ -18,7 +18,7 @@ import type { HomeDashboardError } from "./homeDashboardError";
 export type LoadHomeDashboardParams = {
   getActiveProfileUseCase: GetActiveProfileUseCase;
   ensureDefaultFinanceAccountsUseCase: EnsureDefaultFinanceAccountsUseCase;
-  getPrimaryFinanceAccountUseCase: GetPrimaryFinanceAccountUseCase;
+  getActiveAccountUseCase: GetActiveAccountUseCase;
   ensureDefaultHomeShortcutsUseCase: EnsureDefaultHomeShortcutsUseCase;
   getHomeShortcutsUseCase: GetHomeShortcutsUseCase;
   getRecentFinanceTransactionsUseCase: GetRecentFinanceTransactionsUseCase;
@@ -26,7 +26,7 @@ export type LoadHomeDashboardParams = {
 };
 
 export type HomeDashboardSourceData = {
-  primaryAccount: FinanceAccount | null;
+  activeAccount: FinanceAccount | null;
   shortcuts: HomeShortcut[];
   recentTransactions: FinanceTransaction[];
   summary: FinanceSummary;
@@ -87,19 +87,19 @@ export const loadHomeDashboardSourceData = async (
   params: LoadHomeDashboardParams,
 ): Promise<Result<HomeDashboardSourceData, HomeDashboardError>> => {
   const [
-    primaryAccountResult,
+    activeAccountResult,
     shortcutsResult,
     recentTransactionsResult,
     financeSummaryResult,
   ] = await Promise.all([
-    params.getPrimaryFinanceAccountUseCase.execute(profileId),
+    params.getActiveAccountUseCase.execute(),
     params.getHomeShortcutsUseCase.execute(profileId),
     params.getRecentFinanceTransactionsUseCase.execute(profileId, 8),
     params.getFinanceSummaryUseCase.execute(profileId),
   ]);
 
   if (
-    !primaryAccountResult.success ||
+    !activeAccountResult.success ||
     !shortcutsResult.success ||
     !recentTransactionsResult.success ||
     !financeSummaryResult.success
@@ -112,7 +112,7 @@ export const loadHomeDashboardSourceData = async (
   return {
     success: true,
     value: {
-      primaryAccount: primaryAccountResult.value,
+      activeAccount: activeAccountResult.value,
       shortcuts: shortcutsResult.value,
       recentTransactions: recentTransactionsResult.value,
       summary: financeSummaryResult.value,

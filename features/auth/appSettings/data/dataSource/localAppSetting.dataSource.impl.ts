@@ -9,6 +9,7 @@ type DefaultAppSetting = {
   selectedLanguage: string;
   onboardingCompleted: boolean;
   activeProfileId: string | null;
+  activeAccountId: string | null;
   lastSelectedCountryIso: string;
 };
 
@@ -16,6 +17,7 @@ const createDefaultAppSettingInput = (): DefaultAppSetting => ({
   selectedLanguage: "en",
   onboardingCompleted: false,
   activeProfileId: null,
+  activeAccountId: null,
   lastSelectedCountryIso: "NP",
 });
 
@@ -41,6 +43,7 @@ const createAppSettingRecord = async (
         record.selectedLanguage = input.selectedLanguage;
         record.onboardingCompleted = input.onboardingCompleted;
         record.activeProfileId = input.activeProfileId;
+        record.activeAccountId = input.activeAccountId;
         record.lastSelectedCountryIso = input.lastSelectedCountryIso;
         record.createdAt = createdTimestamp;
         record.updatedAt = createdTimestamp;
@@ -108,6 +111,106 @@ export const createLocalAppSettingDataSource = (
       return {
         success: false,
         error: mapUnknownError(error, "Failed to update selected language."),
+      };
+    }
+  },
+
+  async completeOnboarding(): Promise<Result<void>> {
+    try {
+      const appSetting = await getOrCreateAppSettingRecord(database);
+
+      await database.write(async (): Promise<void> => {
+        await appSetting.update((record: AppSettingModel) => {
+          record.onboardingCompleted = true;
+          record.updatedAt = Date.now();
+        });
+      });
+
+      return { success: true, value: undefined };
+    } catch (error) {
+      return {
+        success: false,
+        error: mapUnknownError(error, "Failed to complete onboarding."),
+      };
+    }
+  },
+
+  async setActiveProfileId(profileId: string): Promise<Result<void>> {
+    try {
+      const appSetting = await getOrCreateAppSettingRecord(database);
+
+      await database.write(async (): Promise<void> => {
+        await appSetting.update((record: AppSettingModel) => {
+          record.activeProfileId = profileId;
+          record.updatedAt = Date.now();
+        });
+      });
+
+      return { success: true, value: undefined };
+    } catch (error) {
+      return {
+        success: false,
+        error: mapUnknownError(error, "Failed to set active profile."),
+      };
+    }
+  },
+
+  async clearActiveProfileId(): Promise<Result<void>> {
+    try {
+      const appSetting = await getOrCreateAppSettingRecord(database);
+
+      await database.write(async (): Promise<void> => {
+        await appSetting.update((record: AppSettingModel) => {
+          record.activeProfileId = null;
+          record.updatedAt = Date.now();
+        });
+      });
+
+      return { success: true, value: undefined };
+    } catch (error) {
+      return {
+        success: false,
+        error: mapUnknownError(error, "Failed to clear active profile."),
+      };
+    }
+  },
+
+  async setActiveAccountId(accountId: string): Promise<Result<void>> {
+    try {
+      const appSetting = await getOrCreateAppSettingRecord(database);
+
+      await database.write(async (): Promise<void> => {
+        await appSetting.update((record: AppSettingModel) => {
+          record.activeAccountId = accountId;
+          record.updatedAt = Date.now();
+        });
+      });
+
+      return { success: true, value: undefined };
+    } catch (error) {
+      return {
+        success: false,
+        error: mapUnknownError(error, "Failed to set active account."),
+      };
+    }
+  },
+
+  async clearActiveAccountId(): Promise<Result<void>> {
+    try {
+      const appSetting = await getOrCreateAppSettingRecord(database);
+
+      await database.write(async (): Promise<void> => {
+        await appSetting.update((record: AppSettingModel) => {
+          record.activeAccountId = null;
+          record.updatedAt = Date.now();
+        });
+      });
+
+      return { success: true, value: undefined };
+    } catch (error) {
+      return {
+        success: false,
+        error: mapUnknownError(error, "Failed to clear active account."),
       };
     }
   },

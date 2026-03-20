@@ -1,4 +1,5 @@
 import type { Database } from "@nozbe/watermelondb";
+import { createAppSettingUseCases } from "@/features/auth/appSettings/factory/createAppSettingUseCases";
 import { createLocalAuthSessionDataSource } from "@/features/auth/session/data/dataSource/localAuthSession.datasource.impl";
 import { createAuthSessionRepository } from "@/features/auth/session/data/repository/authSession.repository.impl";
 import { createClearAuthSessionUseCase } from "@/features/auth/session/useCase/clearAuthSession.useCase.impl";
@@ -22,6 +23,7 @@ export const createMoreDependencies = ({
   database,
   features,
 }: Params): MoreDependencies => {
+  const appSettingUseCases = createAppSettingUseCases(database);
   const authSessionRepository = createAuthSessionRepository(
     createLocalAuthSessionDataSource(database),
   );
@@ -30,6 +32,8 @@ export const createMoreDependencies = ({
     loadFeatureHubUseCase: createLoadFeatureHubUseCase({ features }),
     logoutFromFeatureHubUseCase: createLogoutFromFeatureHubUseCase({
       clearAuthSessionUseCase: createClearAuthSessionUseCase(authSessionRepository),
+      clearActiveProfileIdUseCase: appSettingUseCases.clearActiveProfileIdUseCase,
+      clearActiveAccountIdUseCase: appSettingUseCases.clearActiveAccountIdUseCase,
     }),
   };
 };

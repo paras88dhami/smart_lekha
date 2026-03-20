@@ -1,8 +1,8 @@
 import { DEFAULT_BUSINESS_CATEGORY_SEEDS } from "@/features/auth/businessCategory/data/defaultBusinessCategories";
 import type { GetActiveBusinessCategoriesUseCase } from "@/features/auth/businessCategory/useCase/getActiveBusinessCategories.useCase";
-import type { CreateProfileUseCase } from "@/features/auth/profile/useCase/createProfile.useCase";
 import type { GetCurrentAuthSessionUseCase } from "@/features/auth/session/useCase/getCurrentAuthSession.useCase";
 import { getAuthErrorMessage } from "@/features/auth/shared/authErrorMessage";
+import type { CreateBusinessProfileBootstrapUseCase } from "../useCase/createBusinessProfileBootstrap.useCase";
 import { translate } from "@/shared/i18n/resources";
 import { Status } from "@/shared/types/status.types";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -18,7 +18,7 @@ const FALLBACK_BUSINESS_CATEGORIES: CreateBusinessCategoryOption[] =
 type Params = {
   getCurrentAuthSessionUseCase: GetCurrentAuthSessionUseCase;
   getActiveBusinessCategoriesUseCase: GetActiveBusinessCategoriesUseCase;
-  createProfileUseCase: CreateProfileUseCase;
+  createBusinessProfileBootstrapUseCase: CreateBusinessProfileBootstrapUseCase;
   onCreated: () => void;
 };
 
@@ -28,7 +28,7 @@ export const useCreateBusinessViewModel = (
   const {
     getCurrentAuthSessionUseCase,
     getActiveBusinessCategoriesUseCase,
-    createProfileUseCase,
+    createBusinessProfileBootstrapUseCase,
     onCreated,
   } = params;
 
@@ -161,15 +161,11 @@ export const useCreateBusinessViewModel = (
         (category) => category.id === state.selectedCategoryId,
       );
 
-      const createResult = await createProfileUseCase.execute({
+      const createResult = await createBusinessProfileBootstrapUseCase.execute({
         accountId,
-        profileType: "business",
         profileName,
-        displayName: profileName,
-        roleName: "Owner",
         businessCategoryId: selectedCategory?.id ?? state.selectedCategoryId,
         businessCategoryName: selectedCategory?.name ?? null,
-        isActive: true,
       });
 
       if (!createResult.success) {
@@ -196,7 +192,7 @@ export const useCreateBusinessViewModel = (
       isSubmittingRef.current = false;
     }
   }, [
-    createProfileUseCase,
+    createBusinessProfileBootstrapUseCase,
     getCurrentAuthSessionUseCase,
     onCreated,
     state.businessNameInput,

@@ -47,6 +47,56 @@ export const createAppSettingRepository = (
     return { success: true, value: undefined };
   },
 
+  async completeOnboarding(): Promise<AuthResult<void>> {
+    const result = await localDataSource.completeOnboarding();
+
+    if (!result.success) {
+      return createFailureResult<void>();
+    }
+
+    return { success: true, value: undefined };
+  },
+
+  async setActiveProfileId(profileId: string): Promise<AuthResult<void>> {
+    const result = await localDataSource.setActiveProfileId(profileId.trim());
+
+    if (!result.success) {
+      return createFailureResult<void>();
+    }
+
+    return { success: true, value: undefined };
+  },
+
+  async clearActiveProfileId(): Promise<AuthResult<void>> {
+    const result = await localDataSource.clearActiveProfileId();
+
+    if (!result.success) {
+      return createFailureResult<void>();
+    }
+
+    return { success: true, value: undefined };
+  },
+
+  async setActiveAccountId(accountId: string): Promise<AuthResult<void>> {
+    const result = await localDataSource.setActiveAccountId(accountId.trim());
+
+    if (!result.success) {
+      return createFailureResult<void>();
+    }
+
+    return { success: true, value: undefined };
+  },
+
+  async clearActiveAccountId(): Promise<AuthResult<void>> {
+    const result = await localDataSource.clearActiveAccountId();
+
+    if (!result.success) {
+      return createFailureResult<void>();
+    }
+
+    return { success: true, value: undefined };
+  },
+
   async updateLastSelectedCountryIso(
     countryIso: CountryIsoType,
   ): Promise<AuthResult<void>> {

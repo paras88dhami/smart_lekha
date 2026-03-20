@@ -1,6 +1,8 @@
 import type { Database } from "@nozbe/watermelondb";
+import { createAppSettingUseCases } from "@/features/auth/appSettings/factory/createAppSettingUseCases";
 import { createAdjustFinanceAccountBalanceUseCase } from "@/features/finance/account/useCase/adjustFinanceAccountBalance.useCase.impl";
 import { createEnsureDefaultFinanceAccountsUseCase } from "@/features/finance/account/useCase/ensureDefaultFinanceAccounts.useCase.impl";
+import { createGetFinanceAccountsByProfileUseCase } from "@/features/finance/account/useCase/getFinanceAccountsByProfile.useCase.impl";
 import { createGetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/getPrimaryFinanceAccount.useCase.impl";
 import { createLocalFinanceAccountDataSource } from "@/features/finance/account/data/dataSource/localFinanceAccount.dataSource.impl";
 import { createFinanceAccountRepository } from "@/features/finance/account/data/repository/financeAccount.repository.impl";
@@ -14,6 +16,7 @@ import { createCreatePaymentRecordUseCase } from "@/features/transactions/paymen
 import { createGetOpenPaymentRecordsUseCase } from "@/features/transactions/paymentRecord/useCase/getOpenPaymentRecords.useCase.impl";
 import { createGetPaymentRecordByIdUseCase } from "@/features/transactions/paymentRecord/useCase/getPaymentRecordById.useCase.impl";
 import { createSettlePaymentRecordUseCase } from "@/features/transactions/paymentRecord/useCase/settlePaymentRecord.useCase.impl";
+import { createGetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase.impl";
 import { createLocalActiveProfileDataSource } from "@/features/workspace/activeProfile/data/dataSource/localActiveProfile.dataSource.impl";
 import { createActiveProfileRepository } from "@/features/workspace/activeProfile/data/repository/activeProfile.repository.impl";
 import { createGetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase.impl";
@@ -33,6 +36,7 @@ export const createTransactionsOverviewDependencies = ({
   const activeProfileDataSource = createLocalActiveProfileDataSource(database);
   const activeProfileRepository = createActiveProfileRepository(activeProfileDataSource);
   const getActiveProfileUseCase = createGetActiveProfileUseCase(activeProfileRepository);
+  const appSettingUseCases = createAppSettingUseCases(database);
 
   const financeAccountDataSource = createLocalFinanceAccountDataSource(database);
   const financeAccountRepository = createFinanceAccountRepository(
@@ -40,8 +44,17 @@ export const createTransactionsOverviewDependencies = ({
   );
   const ensureDefaultFinanceAccountsUseCase =
     createEnsureDefaultFinanceAccountsUseCase(financeAccountRepository);
-  const getPrimaryFinanceAccountUseCase =
-    createGetPrimaryFinanceAccountUseCase(financeAccountRepository);
+  const getActiveAccountUseCase = createGetActiveAccountUseCase({
+    getActiveProfileUseCase,
+    getAppSettingUseCase: appSettingUseCases.getAppSettingUseCase,
+    getFinanceAccountsByProfileUseCase: createGetFinanceAccountsByProfileUseCase(
+      financeAccountRepository,
+    ),
+    getPrimaryFinanceAccountUseCase: createGetPrimaryFinanceAccountUseCase(
+      financeAccountRepository,
+    ),
+    setActiveAccountIdUseCase: appSettingUseCases.setActiveAccountIdUseCase,
+  });
   const adjustFinanceAccountBalanceUseCase =
     createAdjustFinanceAccountBalanceUseCase(financeAccountRepository);
 
@@ -81,7 +94,7 @@ export const createTransactionsOverviewDependencies = ({
       createSettleTransactionsPaymentRecordUseCase({
         getActiveProfileUseCase,
         getPaymentRecordByIdUseCase,
-        getPrimaryFinanceAccountUseCase,
+        getActiveAccountUseCase,
         createFinanceTransactionUseCase,
         adjustFinanceAccountBalanceUseCase,
         settlePaymentRecordUseCase,

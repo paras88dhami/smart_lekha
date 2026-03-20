@@ -77,16 +77,16 @@ export function createPhoneEntryScreen(params: Params): React.ComponentType {
       (input: PhoneEntrySubmitInput): void => {
         onContinueParam(input);
       },
-      [onContinueParam],
+      [],
     );
 
     const onContinueOffline = React.useCallback((): void => {
       onContinueOfflineParam();
-    }, [onContinueOfflineParam]);
+    }, []);
 
     const onClose = React.useCallback((): void => {
       onCloseParam();
-    }, [onCloseParam]);
+    }, []);
 
     const viewModel = usePhoneEntryViewModel({
       initialPhoneNumber,

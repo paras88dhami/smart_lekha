@@ -1,5 +1,6 @@
 import type { Database } from "@nozbe/watermelondb";
 import React from "react";
+import { createAppSettingUseCases } from "@/features/auth/appSettings/factory/createAppSettingUseCases";
 import { isSupportedLanguageCode } from "@/shared/i18n/resources";
 import { createLocalProfileDataSource } from "../../profile/data/dataSource/profile.datasource.impl";
 import { createProfileRepository } from "../../profile/data/repository/profile.repository.impl";
@@ -19,7 +20,21 @@ import {
 import { createLocalAuthSessionDataSource } from "../../session/data/dataSource/localAuthSession.datasource.impl";
 import { createAuthSessionRepository } from "../../session/data/repository/authSession.repository.impl";
 import { createUpsertAuthSessionUseCase } from "../../session/useCase/upsertAuthSession.useCase.impl";
+import { createLocalFinanceAccountDataSource } from "@/features/finance/account/data/dataSource/localFinanceAccount.dataSource.impl";
+import { createFinanceAccountRepository } from "@/features/finance/account/data/repository/financeAccount.repository.impl";
+import { createEnsureDefaultFinanceAccountsUseCase } from "@/features/finance/account/useCase/ensureDefaultFinanceAccounts.useCase.impl";
+import { createGetFinanceAccountsByProfileUseCase } from "@/features/finance/account/useCase/getFinanceAccountsByProfile.useCase.impl";
+import { createGetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/getPrimaryFinanceAccount.useCase.impl";
+import { createLocalHomeShortcutDataSource } from "@/features/home/shortcut/data/dataSource/localHomeShortcut.dataSource.impl";
+import { createHomeShortcutRepository } from "@/features/home/shortcut/data/repository/homeShortcut.repository.impl";
+import { createEnsureDefaultHomeShortcutsUseCase } from "@/features/home/shortcut/useCase/ensureDefaultHomeShortcuts.useCase.impl";
+import { createGetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase.impl";
+import { createLocalActiveProfileDataSource } from "@/features/workspace/activeProfile/data/dataSource/localActiveProfile.dataSource.impl";
+import { createActiveProfileRepository } from "@/features/workspace/activeProfile/data/repository/activeProfile.repository.impl";
+import { createGetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase.impl";
+import { createActivateProfileContextUseCase } from "@/features/workspace/activeProfile/useCase/activateProfileContext.useCase.impl";
 import type { OtpVerificationResult } from "../types/types";
+import { createResolveVerifiedAccountRouteUseCase } from "../useCase/resolveVerifiedAccountRoute.useCase.impl";
 import OtpVerificationScreen from "../ui/OtpVerificationScreen";
 import { useOtpVerificationViewModel } from "../viewModel/otpVerification.viewModel.impl";
 
@@ -131,7 +146,7 @@ const createOtpVerificationScreen = ({
       const localOtpRequestDataSource = createLocalOtpRequestDataSource(database);
 
       return createOtpRepository(remoteOtpAuthDataSource, localOtpRequestDataSource);
-    }, [database]);
+    }, []);
 
     const requestOtpUseCase = React.useMemo(
       () => createRequestOtpUseCase(otpRepository),
@@ -146,7 +161,7 @@ const createOtpVerificationScreen = ({
     const authSessionRepository = React.useMemo(() => {
       const localAuthSessionDataSource = createLocalAuthSessionDataSource(database);
       return createAuthSessionRepository(localAuthSessionDataSource);
-    }, [database]);
+    }, []);
 
     const upsertAuthSessionUseCase = React.useMemo(
       () => createUpsertAuthSessionUseCase(authSessionRepository),
@@ -214,7 +229,7 @@ export const createOtpVerificationScreenFactory = ({
     const profileRepository = React.useMemo(() => {
       const profileDataSource = createLocalProfileDataSource(database);
       return createProfileRepository(profileDataSource);
-    }, [database]);
+    }, []);
 
     const getProfilesByAccountIdUseCase = React.useMemo(
       () => createGetProfilesByAccountIdUseCase(profileRepository),
@@ -225,8 +240,55 @@ export const createOtpVerificationScreenFactory = ({
       () => createSetActiveProfileUseCase(profileRepository),
       [profileRepository],
     );
+    const appSettingUseCases = React.useMemo(
+      () => createAppSettingUseCases(database),
+      [],
+    );
+    const financeAccountRepository = React.useMemo(() => {
+      return createFinanceAccountRepository(createLocalFinanceAccountDataSource(database));
+    }, []);
+    const homeShortcutRepository = React.useMemo(() => {
+      return createHomeShortcutRepository(createLocalHomeShortcutDataSource(database));
+    }, []);
+    const activeProfileRepository = React.useMemo(() => {
+      return createActiveProfileRepository(createLocalActiveProfileDataSource(database));
+    }, []);
 
     const isResolvingNextRouteRef = React.useRef(false);
+
+    const resolveVerifiedAccountRouteUseCase = React.useMemo(() => {
+      return createResolveVerifiedAccountRouteUseCase({
+        getProfilesByAccountIdUseCase,
+        activateProfileContextUseCase: createActivateProfileContextUseCase({
+          setActiveProfileUseCase,
+          setActiveProfileIdUseCase: appSettingUseCases.setActiveProfileIdUseCase,
+          clearActiveAccountIdUseCase:
+            appSettingUseCases.clearActiveAccountIdUseCase,
+          ensureDefaultFinanceAccountsUseCase:
+            createEnsureDefaultFinanceAccountsUseCase(financeAccountRepository),
+          ensureDefaultHomeShortcutsUseCase:
+            createEnsureDefaultHomeShortcutsUseCase(homeShortcutRepository),
+          getActiveAccountUseCase: createGetActiveAccountUseCase({
+            getActiveProfileUseCase:
+              createGetActiveProfileUseCase(activeProfileRepository),
+            getAppSettingUseCase: appSettingUseCases.getAppSettingUseCase,
+            getFinanceAccountsByProfileUseCase:
+              createGetFinanceAccountsByProfileUseCase(financeAccountRepository),
+            getPrimaryFinanceAccountUseCase:
+              createGetPrimaryFinanceAccountUseCase(financeAccountRepository),
+            setActiveAccountIdUseCase:
+              appSettingUseCases.setActiveAccountIdUseCase,
+          }),
+        }),
+      });
+    }, [
+      activeProfileRepository,
+      appSettingUseCases,
+      financeAccountRepository,
+      getProfilesByAccountIdUseCase,
+      homeShortcutRepository,
+      setActiveProfileUseCase,
+    ]);
 
     const handleVerified = React.useCallback(
       async (input: OtpVerificationResult): Promise<void> => {
@@ -237,11 +299,11 @@ export const createOtpVerificationScreenFactory = ({
         isResolvingNextRouteRef.current = true;
 
         try {
-          const profilesResult = await getProfilesByAccountIdUseCase.execute(
-            input.accountId,
-          );
+          const result = await resolveVerifiedAccountRouteUseCase.execute({
+            accountId: input.accountId,
+          });
 
-          if (!profilesResult.success) {
+          if (!result.success) {
             if (input.isExistingUser) {
               onNavigateHome();
               return;
@@ -251,24 +313,13 @@ export const createOtpVerificationScreenFactory = ({
             return;
           }
 
-          const profiles = profilesResult.value;
-
-          if (profiles.length <= 0) {
-            onNavigateCreateProfile(input.accountId);
+          if (result.value === "home") {
+            onNavigateHome();
             return;
           }
 
-          if (profiles.length === 1) {
-            const setActiveResult = await setActiveProfileUseCase.execute(
-              profiles[0].id,
-            );
-
-            if (!setActiveResult.success) {
-              onNavigateHome();
-              return;
-            }
-
-            onNavigateHome();
+          if (result.value === "create_business") {
+            onNavigateCreateProfile(input.accountId);
             return;
           }
 
@@ -278,11 +329,7 @@ export const createOtpVerificationScreenFactory = ({
         }
       },
       [
-        getProfilesByAccountIdUseCase,
-        onNavigateCreateProfile,
-        onNavigateHome,
-        onNavigateSelectExistingProfile,
-        setActiveProfileUseCase,
+        resolveVerifiedAccountRouteUseCase,
       ],
     );
 
@@ -306,11 +353,9 @@ export const createOtpVerificationScreenFactory = ({
       [
         countryCode,
         countryIso,
-        database,
         handleVerified,
         isExistingUser,
         languageCode,
-        onClose,
         otpExpiresAt,
         otpReferenceId,
         phoneNumber,

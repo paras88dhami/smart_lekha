@@ -1,6 +1,7 @@
 import type { Result } from "@/shared/types/result.types";
 import type { CreateFinanceAccountUseCase } from "@/features/finance/account/useCase/createFinanceAccount.useCase";
 import type { GetFinanceAccountsByProfileUseCase } from "@/features/finance/account/useCase/getFinanceAccountsByProfile.useCase";
+import type { SetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/setActiveAccount.useCase";
 import type { GetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase";
 import { createCashBankError } from "./cashBankError";
 import type {
@@ -12,6 +13,7 @@ type Dependencies = {
   getActiveProfileUseCase: GetActiveProfileUseCase;
   getFinanceAccountsByProfileUseCase: GetFinanceAccountsByProfileUseCase;
   createFinanceAccountUseCase: CreateFinanceAccountUseCase;
+  setActiveAccountUseCase: SetActiveAccountUseCase;
 };
 
 const parseOpeningBalance = (openingBalanceInput: string): number => {
@@ -61,6 +63,16 @@ export const createCreateCashBankAccountUseCase = (
     });
     if (!createAccountResult.success) {
       return createFailure(createCashBankError("create_failed"));
+    }
+
+    if (createAccountResult.value.isPrimary) {
+      const setActiveAccountResult = await dependencies.setActiveAccountUseCase.execute(
+        createAccountResult.value.id,
+      );
+
+      if (!setActiveAccountResult.success) {
+        return createFailure(createCashBankError("create_failed"));
+      }
     }
 
     return { success: true, value: undefined };

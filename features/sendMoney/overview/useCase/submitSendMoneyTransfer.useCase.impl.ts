@@ -1,6 +1,5 @@
 import type { Result } from "@/shared/types/result.types";
 import type { AdjustFinanceAccountBalanceUseCase } from "@/features/finance/account/useCase/adjustFinanceAccountBalance.useCase";
-import type { GetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/getPrimaryFinanceAccount.useCase";
 import type { CreateFinanceTransactionUseCase } from "@/features/finance/transaction/useCase/createFinanceTransaction.useCase";
 import type { CreateTransferBeneficiaryUseCase } from "@/features/transfers/beneficiary/useCase/createTransferBeneficiary.useCase";
 import type { CreateTransferRecordUseCase } from "@/features/transfers/record/useCase/createTransferRecord.useCase";
@@ -8,6 +7,7 @@ import {
   hasRequiredTransferMethodInputs,
   sanitizeTransferMethodInputs,
 } from "@/features/transfers/shared/config/transferMethodCatalog";
+import type { GetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase";
 import type { GetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase";
 import { createSendMoneyError } from "./sendMoneyError";
 import type {
@@ -17,7 +17,7 @@ import type {
 
 type Dependencies = {
   getActiveProfileUseCase: GetActiveProfileUseCase;
-  getPrimaryFinanceAccountUseCase: GetPrimaryFinanceAccountUseCase;
+  getActiveAccountUseCase: GetActiveAccountUseCase;
   createTransferBeneficiaryUseCase: CreateTransferBeneficiaryUseCase;
   createTransferRecordUseCase: CreateTransferRecordUseCase;
   createFinanceTransactionUseCase: CreateFinanceTransactionUseCase;
@@ -60,10 +60,8 @@ export const createSubmitSendMoneyTransferUseCase = (
       return createFailure(createSendMoneyError("no_active_profile"));
     }
 
-    const primaryAccountResult = await dependencies.getPrimaryFinanceAccountUseCase.execute(
-      activeProfileResult.value.profileId,
-    );
-    if (!primaryAccountResult.success || !primaryAccountResult.value) {
+    const activeAccountResult = await dependencies.getActiveAccountUseCase.execute();
+    if (!activeAccountResult.success || !activeAccountResult.value) {
       return createFailure(createSendMoneyError("no_primary_account"));
     }
 
@@ -83,7 +81,7 @@ export const createSubmitSendMoneyTransferUseCase = (
     const transferRecordResult = await dependencies.createTransferRecordUseCase.execute({
       profileId: activeProfileResult.value.profileId,
       beneficiaryId: beneficiaryResult.value.id,
-      fromAccountId: primaryAccountResult.value.id,
+      fromAccountId: activeAccountResult.value.id,
       amount: parsedAmount,
       note: input.noteInput.trim() || null,
       recordType: input.isScheduled ? "scheduled" : "saved",
@@ -100,7 +98,7 @@ export const createSubmitSendMoneyTransferUseCase = (
 
     const transactionResult = await dependencies.createFinanceTransactionUseCase.execute({
       profileId: activeProfileResult.value.profileId,
-      accountId: primaryAccountResult.value.id,
+      accountId: activeAccountResult.value.id,
       entryType: "transfer_out",
       categoryName: "Transfers",
       counterpartyName: beneficiaryName,
@@ -115,7 +113,7 @@ export const createSubmitSendMoneyTransferUseCase = (
     }
 
     const adjustBalanceResult = await dependencies.adjustFinanceAccountBalanceUseCase.execute({
-      accountId: primaryAccountResult.value.id,
+      accountId: activeAccountResult.value.id,
       deltaAmount: -parsedAmount,
     });
     if (!adjustBalanceResult.success) {

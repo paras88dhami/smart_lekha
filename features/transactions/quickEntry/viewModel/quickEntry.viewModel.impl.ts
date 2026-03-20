@@ -2,11 +2,11 @@ import { translate } from "@/shared/i18n/resources";
 import { Status } from "@/shared/types/status.types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { EnsureDefaultFinanceAccountsUseCase } from "@/features/finance/account/useCase/ensureDefaultFinanceAccounts.useCase";
-import type { GetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/getPrimaryFinanceAccount.useCase";
 import type { AdjustFinanceAccountBalanceUseCase } from "@/features/finance/account/useCase/adjustFinanceAccountBalance.useCase";
 import type { CreateFinanceTransactionUseCase } from "@/features/finance/transaction/useCase/createFinanceTransaction.useCase";
 import type { GetFinanceTransactionsUseCase } from "@/features/finance/transaction/useCase/getFinanceTransactions.useCase";
 import type { FinanceEntryType } from "@/features/finance/transaction/data/dataSource/financeTransaction.model";
+import type { GetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase";
 import type { GetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase";
 import type { QuickEntryState, QuickEntryViewModel } from "./quickEntry.viewModel";
 
@@ -31,7 +31,7 @@ const getDeltaAmount = (entryType: FinanceEntryType, amount: number): number => 
 type Params = {
   getActiveProfileUseCase: GetActiveProfileUseCase;
   ensureDefaultFinanceAccountsUseCase: EnsureDefaultFinanceAccountsUseCase;
-  getPrimaryFinanceAccountUseCase: GetPrimaryFinanceAccountUseCase;
+  getActiveAccountUseCase: GetActiveAccountUseCase;
   createFinanceTransactionUseCase: CreateFinanceTransactionUseCase;
   adjustFinanceAccountBalanceUseCase: AdjustFinanceAccountBalanceUseCase;
   getFinanceTransactionsUseCase: GetFinanceTransactionsUseCase;
@@ -41,7 +41,7 @@ export const useQuickEntryViewModel = (params: Params): QuickEntryViewModel => {
   const {
     getActiveProfileUseCase,
     ensureDefaultFinanceAccountsUseCase,
-    getPrimaryFinanceAccountUseCase,
+    getActiveAccountUseCase,
     createFinanceTransactionUseCase,
     adjustFinanceAccountBalanceUseCase,
     getFinanceTransactionsUseCase,
@@ -226,7 +226,7 @@ export const useQuickEntryViewModel = (params: Params): QuickEntryViewModel => {
 
       const profileId = activeProfileResult.value.profileId;
 
-      const accountResult = await getPrimaryFinanceAccountUseCase.execute(profileId);
+      const accountResult = await getActiveAccountUseCase.execute();
 
       if (!accountResult.success || !accountResult.value) {
         setState((currentState) => ({
@@ -290,8 +290,8 @@ export const useQuickEntryViewModel = (params: Params): QuickEntryViewModel => {
   }, [
     adjustFinanceAccountBalanceUseCase,
     createFinanceTransactionUseCase,
+    getActiveAccountUseCase,
     getActiveProfileUseCase,
-    getPrimaryFinanceAccountUseCase,
     loadEntries,
     state.amountInput,
     state.categoryInput,

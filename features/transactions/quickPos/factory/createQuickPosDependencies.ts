@@ -1,6 +1,8 @@
 import type { Database } from "@nozbe/watermelondb";
+import { createAppSettingUseCases } from "@/features/auth/appSettings/factory/createAppSettingUseCases";
 import { createAdjustFinanceAccountBalanceUseCase } from "@/features/finance/account/useCase/adjustFinanceAccountBalance.useCase.impl";
 import { createEnsureDefaultFinanceAccountsUseCase } from "@/features/finance/account/useCase/ensureDefaultFinanceAccounts.useCase.impl";
+import { createGetFinanceAccountsByProfileUseCase } from "@/features/finance/account/useCase/getFinanceAccountsByProfile.useCase.impl";
 import { createGetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/getPrimaryFinanceAccount.useCase.impl";
 import { createLocalFinanceAccountDataSource } from "@/features/finance/account/data/dataSource/localFinanceAccount.dataSource.impl";
 import { createFinanceAccountRepository } from "@/features/finance/account/data/repository/financeAccount.repository.impl";
@@ -16,6 +18,7 @@ import { createUpdatePosItemStockUseCase } from "@/features/pos/item/useCase/upd
 import { createLocalPosSaleDataSource } from "@/features/pos/sale/data/dataSource/localPosSale.dataSource.impl";
 import { createPosSaleRepository } from "@/features/pos/sale/data/repository/posSale.repository.impl";
 import { createCreatePosSaleUseCase } from "@/features/pos/sale/useCase/createPosSale.useCase.impl";
+import { createGetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase.impl";
 import { createLocalActiveProfileDataSource } from "@/features/workspace/activeProfile/data/dataSource/localActiveProfile.dataSource.impl";
 import { createActiveProfileRepository } from "@/features/workspace/activeProfile/data/repository/activeProfile.repository.impl";
 import { createGetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase.impl";
@@ -47,12 +50,21 @@ export const createQuickPosDependencies = (database: Database) => {
     createLocalQuickPosProductSlotDataSource(database),
   );
   const getActiveProfileUseCase = createGetActiveProfileUseCase(activeProfileRepository);
+  const appSettingUseCases = createAppSettingUseCases(database);
   const ensureDefaultFinanceAccountsUseCase = createEnsureDefaultFinanceAccountsUseCase(
     financeAccountRepository,
   );
-  const getPrimaryFinanceAccountUseCase = createGetPrimaryFinanceAccountUseCase(
-    financeAccountRepository,
-  );
+  const getActiveAccountUseCase = createGetActiveAccountUseCase({
+    getActiveProfileUseCase,
+    getAppSettingUseCase: appSettingUseCases.getAppSettingUseCase,
+    getFinanceAccountsByProfileUseCase: createGetFinanceAccountsByProfileUseCase(
+      financeAccountRepository,
+    ),
+    getPrimaryFinanceAccountUseCase: createGetPrimaryFinanceAccountUseCase(
+      financeAccountRepository,
+    ),
+    setActiveAccountIdUseCase: appSettingUseCases.setActiveAccountIdUseCase,
+  });
   const adjustFinanceAccountBalanceUseCase = createAdjustFinanceAccountBalanceUseCase(
     financeAccountRepository,
   );
@@ -90,7 +102,7 @@ export const createQuickPosDependencies = (database: Database) => {
     assignQuickPosProductSelectionUseCase,
   });
   const checkoutQuickPosSaleUseCase = createCheckoutQuickPosSaleUseCase({
-    getPrimaryFinanceAccountUseCase,
+    getActiveAccountUseCase,
     createPosSaleUseCase,
     createFinanceTransactionUseCase,
     adjustFinanceAccountBalanceUseCase,

@@ -8,6 +8,9 @@ export default function ProfileSelectionRoute(): React.JSX.Element {
     () =>
       createProfileSelectionScreenFactory({
         database,
+        onActivated: () => {
+          router.replace("/(tabs)/home");
+        },
         onCreateBusiness: () => {
           router.push("/create-business");
         },

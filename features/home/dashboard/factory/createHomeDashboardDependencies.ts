@@ -1,8 +1,10 @@
 import type { Database } from "@nozbe/watermelondb";
+import { createAppSettingUseCases } from "@/features/auth/appSettings/factory/createAppSettingUseCases";
 import { createEnsureDefaultFinanceAccountsUseCase } from "@/features/finance/account/useCase/ensureDefaultFinanceAccounts.useCase.impl";
-import { createGetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/getPrimaryFinanceAccount.useCase.impl";
 import { createLocalFinanceAccountDataSource } from "@/features/finance/account/data/dataSource/localFinanceAccount.dataSource.impl";
 import { createFinanceAccountRepository } from "@/features/finance/account/data/repository/financeAccount.repository.impl";
+import { createGetFinanceAccountsByProfileUseCase } from "@/features/finance/account/useCase/getFinanceAccountsByProfile.useCase.impl";
+import { createGetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/getPrimaryFinanceAccount.useCase.impl";
 import { createGetFinanceSummaryUseCase } from "@/features/finance/transaction/useCase/getFinanceSummary.useCase.impl";
 import { createGetRecentFinanceTransactionsUseCase } from "@/features/finance/transaction/useCase/getRecentFinanceTransactions.useCase.impl";
 import { createLocalFinanceTransactionDataSource } from "@/features/finance/transaction/data/dataSource/localFinanceTransaction.dataSource.impl";
@@ -11,6 +13,7 @@ import { createLocalHomeShortcutDataSource } from "@/features/home/shortcut/data
 import { createHomeShortcutRepository } from "@/features/home/shortcut/data/repository/homeShortcut.repository.impl";
 import { createEnsureDefaultHomeShortcutsUseCase } from "@/features/home/shortcut/useCase/ensureDefaultHomeShortcuts.useCase.impl";
 import { createGetHomeShortcutsUseCase } from "@/features/home/shortcut/useCase/getHomeShortcuts.useCase.impl";
+import { createGetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase.impl";
 import { createLocalActiveProfileDataSource } from "@/features/workspace/activeProfile/data/dataSource/localActiveProfile.dataSource.impl";
 import { createActiveProfileRepository } from "@/features/workspace/activeProfile/data/repository/activeProfile.repository.impl";
 import { createGetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase.impl";
@@ -40,6 +43,7 @@ export const createHomeDashboardDependencies = ({
   const homeShortcutRepository = createHomeShortcutRepository(
     createLocalHomeShortcutDataSource(database),
   );
+  const appSettingUseCases = createAppSettingUseCases(database);
 
   return {
     loadHomeDashboardUseCase: createLoadHomeDashboardUseCase({
@@ -47,9 +51,19 @@ export const createHomeDashboardDependencies = ({
       ensureDefaultFinanceAccountsUseCase: createEnsureDefaultFinanceAccountsUseCase(
         financeAccountRepository,
       ),
-      getPrimaryFinanceAccountUseCase: createGetPrimaryFinanceAccountUseCase(
-        financeAccountRepository,
-      ),
+      getActiveAccountUseCase: createGetActiveAccountUseCase({
+        getActiveProfileUseCase: createGetActiveProfileUseCase(
+          activeProfileRepository,
+        ),
+        getAppSettingUseCase: appSettingUseCases.getAppSettingUseCase,
+        getFinanceAccountsByProfileUseCase: createGetFinanceAccountsByProfileUseCase(
+          financeAccountRepository,
+        ),
+        getPrimaryFinanceAccountUseCase: createGetPrimaryFinanceAccountUseCase(
+          financeAccountRepository,
+        ),
+        setActiveAccountIdUseCase: appSettingUseCases.setActiveAccountIdUseCase,
+      }),
       ensureDefaultHomeShortcutsUseCase: createEnsureDefaultHomeShortcutsUseCase(
         homeShortcutRepository,
       ),

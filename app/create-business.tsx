@@ -9,7 +9,7 @@ export default function CreateBusinessRoute(): React.JSX.Element {
       createCreateBusinessScreenFactory({
         database,
         onCreated: () => {
-          router.replace("/profile-selection");
+          router.replace("/(tabs)/home");
         },
       }),
     [],

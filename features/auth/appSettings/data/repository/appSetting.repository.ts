@@ -9,6 +9,10 @@ export interface AppSettingRepository {
   updateSelectedLanguage(
     languageCode: LanguageCodeType,
   ): Promise<AuthResult<void>>;
-
+  completeOnboarding(): Promise<AuthResult<void>>;
+  setActiveProfileId(profileId: string): Promise<AuthResult<void>>;
+  clearActiveProfileId(): Promise<AuthResult<void>>;
+  setActiveAccountId(accountId: string): Promise<AuthResult<void>>;
+  clearActiveAccountId(): Promise<AuthResult<void>>;
   updateLastSelectedCountryIso(countryIso: CountryIsoType): Promise<AuthResult<void>>;
 }

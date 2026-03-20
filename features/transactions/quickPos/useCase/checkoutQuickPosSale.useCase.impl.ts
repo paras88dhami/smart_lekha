@@ -1,14 +1,14 @@
 import type { AdjustFinanceAccountBalanceUseCase } from "@/features/finance/account/useCase/adjustFinanceAccountBalance.useCase";
-import type { GetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/getPrimaryFinanceAccount.useCase";
 import type { CreateFinanceTransactionUseCase } from "@/features/finance/transaction/useCase/createFinanceTransaction.useCase";
 import type { PosItem, PosCartLine } from "@/features/pos/item/types/types";
 import type { UpdatePosItemStockUseCase } from "@/features/pos/item/useCase/updatePosItemStock.useCase";
 import type { CreatePosSaleUseCase } from "@/features/pos/sale/useCase/createPosSale.useCase";
+import type { GetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase";
 import type { CheckoutQuickPosSaleInput, CheckoutQuickPosSaleUseCase } from "./checkoutQuickPosSale.useCase";
 import { createQuickPosFailure, type QuickPosResult } from "./quickPosError";
 
 type Params = {
-  getPrimaryFinanceAccountUseCase: GetPrimaryFinanceAccountUseCase;
+  getActiveAccountUseCase: GetActiveAccountUseCase;
   createPosSaleUseCase: CreatePosSaleUseCase;
   createFinanceTransactionUseCase: CreateFinanceTransactionUseCase;
   adjustFinanceAccountBalanceUseCase: AdjustFinanceAccountBalanceUseCase;
@@ -54,7 +54,7 @@ const updateInventoryStock = async (
 };
 
 export const createCheckoutQuickPosSaleUseCase = ({
-  getPrimaryFinanceAccountUseCase,
+  getActiveAccountUseCase,
   createPosSaleUseCase,
   createFinanceTransactionUseCase,
   adjustFinanceAccountBalanceUseCase,
@@ -69,7 +69,7 @@ export const createCheckoutQuickPosSaleUseCase = ({
       return createQuickPosFailure("insufficientStock");
     }
 
-    const accountResult = await getPrimaryFinanceAccountUseCase.execute(input.profileId);
+    const accountResult = await getActiveAccountUseCase.execute();
 
     if (!accountResult.success || !accountResult.value) {
       return createQuickPosFailure("noPrimaryAccount");

@@ -1,8 +1,8 @@
 import type { AdjustFinanceAccountBalanceUseCase } from "@/features/finance/account/useCase/adjustFinanceAccountBalance.useCase";
-import type { GetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/getPrimaryFinanceAccount.useCase";
 import type { CreateFinanceTransactionUseCase } from "@/features/finance/transaction/useCase/createFinanceTransaction.useCase";
 import type { GetPaymentRecordByIdUseCase } from "@/features/transactions/paymentRecord/useCase/getPaymentRecordById.useCase";
 import type { SettlePaymentRecordUseCase } from "@/features/transactions/paymentRecord/useCase/settlePaymentRecord.useCase";
+import type { GetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase";
 import type { GetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase";
 import type {
   SettleTransactionsPaymentRecordCommand,
@@ -16,7 +16,7 @@ import {
 type Dependencies = {
   getActiveProfileUseCase: GetActiveProfileUseCase;
   getPaymentRecordByIdUseCase: GetPaymentRecordByIdUseCase;
-  getPrimaryFinanceAccountUseCase: GetPrimaryFinanceAccountUseCase;
+  getActiveAccountUseCase: GetActiveAccountUseCase;
   createFinanceTransactionUseCase: CreateFinanceTransactionUseCase;
   adjustFinanceAccountBalanceUseCase: AdjustFinanceAccountBalanceUseCase;
   settlePaymentRecordUseCase: SettlePaymentRecordUseCase;
@@ -69,16 +69,15 @@ export const createSettleTransactionsPaymentRecordUseCase = (
       return createTransactionsFailure("noActiveProfile");
     }
 
-    const primaryAccountResult =
-      await dependencies.getPrimaryFinanceAccountUseCase.execute(record.profileId);
+    const activeAccountResult = await dependencies.getActiveAccountUseCase.execute();
 
-    if (!primaryAccountResult.success || !primaryAccountResult.value) {
+    if (!activeAccountResult.success || !activeAccountResult.value) {
       return createTransactionsFailure("noPrimaryAccount");
     }
 
     const transactionResult = await dependencies.createFinanceTransactionUseCase.execute({
       profileId: record.profileId,
-      accountId: primaryAccountResult.value.id,
+      accountId: activeAccountResult.value.id,
       entryType: createEntryType(record.direction),
       categoryName: createCategoryName(record.direction),
       counterpartyName: record.partyName,
@@ -95,7 +94,7 @@ export const createSettleTransactionsPaymentRecordUseCase = (
 
     const adjustBalanceResult =
       await dependencies.adjustFinanceAccountBalanceUseCase.execute({
-        accountId: primaryAccountResult.value.id,
+        accountId: activeAccountResult.value.id,
         deltaAmount: createBalanceDelta(record.direction, record.outstandingAmount),
       });
 

@@ -1,12 +1,15 @@
 import type { Database } from "@nozbe/watermelondb";
+import { createAppSettingUseCases } from "@/features/auth/appSettings/factory/createAppSettingUseCases";
 import { createLocalFinanceAccountDataSource } from "@/features/finance/account/data/dataSource/localFinanceAccount.dataSource.impl";
 import { createFinanceAccountRepository } from "@/features/finance/account/data/repository/financeAccount.repository.impl";
 import { createAdjustFinanceAccountBalanceUseCase } from "@/features/finance/account/useCase/adjustFinanceAccountBalance.useCase.impl";
 import { createEnsureDefaultFinanceAccountsUseCase } from "@/features/finance/account/useCase/ensureDefaultFinanceAccounts.useCase.impl";
+import { createGetFinanceAccountsByProfileUseCase } from "@/features/finance/account/useCase/getFinanceAccountsByProfile.useCase.impl";
 import { createGetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/getPrimaryFinanceAccount.useCase.impl";
 import { createLocalFinanceTransactionDataSource } from "@/features/finance/transaction/data/dataSource/localFinanceTransaction.dataSource.impl";
 import { createFinanceTransactionRepository } from "@/features/finance/transaction/data/repository/financeTransaction.repository.impl";
 import { createCreateFinanceTransactionUseCase } from "@/features/finance/transaction/useCase/createFinanceTransaction.useCase.impl";
+import { createGetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase.impl";
 import { createLocalTransferBeneficiaryDataSource } from "@/features/transfers/beneficiary/data/dataSource/localTransferBeneficiary.dataSource.impl";
 import { createTransferBeneficiaryRepository } from "@/features/transfers/beneficiary/data/repository/transferBeneficiary.repository.impl";
 import { createCreateTransferBeneficiaryUseCase } from "@/features/transfers/beneficiary/useCase/createTransferBeneficiary.useCase.impl";
@@ -55,10 +58,23 @@ export const createSendMoneyDependencies = ({
   const transferRecordRepository = createTransferRecordRepository(
     createLocalTransferRecordDataSource(database),
   );
+  const appSettingUseCases = createAppSettingUseCases(database);
+  const getActiveProfileUseCase = createGetActiveProfileUseCase(activeProfileRepository);
+  const getActiveAccountUseCase = createGetActiveAccountUseCase({
+    getActiveProfileUseCase,
+    getAppSettingUseCase: appSettingUseCases.getAppSettingUseCase,
+    getFinanceAccountsByProfileUseCase: createGetFinanceAccountsByProfileUseCase(
+      financeAccountRepository,
+    ),
+    getPrimaryFinanceAccountUseCase: createGetPrimaryFinanceAccountUseCase(
+      financeAccountRepository,
+    ),
+    setActiveAccountIdUseCase: appSettingUseCases.setActiveAccountIdUseCase,
+  });
 
   return {
     loadSendMoneyOverviewUseCase: createLoadSendMoneyOverviewUseCase({
-      getActiveProfileUseCase: createGetActiveProfileUseCase(activeProfileRepository),
+      getActiveProfileUseCase,
       ensureDefaultFinanceAccountsUseCase: createEnsureDefaultFinanceAccountsUseCase(
         financeAccountRepository,
       ),
@@ -72,10 +88,8 @@ export const createSendMoneyDependencies = ({
       getScheduledTransfersUseCase: createGetScheduledTransfersUseCase(transferRecordRepository),
     }),
     submitSendMoneyTransferUseCase: createSubmitSendMoneyTransferUseCase({
-      getActiveProfileUseCase: createGetActiveProfileUseCase(activeProfileRepository),
-      getPrimaryFinanceAccountUseCase: createGetPrimaryFinanceAccountUseCase(
-        financeAccountRepository,
-      ),
+      getActiveProfileUseCase,
+      getActiveAccountUseCase,
       createTransferBeneficiaryUseCase: createCreateTransferBeneficiaryUseCase(
         transferBeneficiaryRepository,
       ),

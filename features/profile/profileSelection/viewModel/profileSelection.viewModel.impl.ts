@@ -1,17 +1,27 @@
+import type { AuthError } from "@/features/auth/shared/authError.types";
 import { getAuthErrorMessage } from "@/features/auth/shared/authErrorMessage";
 import { translate } from "@/shared/i18n/resources";
 import { Status } from "@/shared/types/status.types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { GetProfilesByAccountIdUseCase } from "@/features/auth/profile/useCase/getProfilesByAccountId.useCase";
-import type { SetActiveProfileUseCase } from "@/features/auth/profile/useCase/setActiveProfile.useCase";
 import type { GetCurrentAuthSessionUseCase } from "@/features/auth/session/useCase/getCurrentAuthSession.useCase";
+import type { ActivateSelectedProfileUseCase } from "../useCase/activateSelectedProfile.useCase";
 import type { ProfileSelectionState, ProfileSelectionViewModel } from "./profileSelection.viewModel";
 
 type Params = {
   getCurrentAuthSessionUseCase: GetCurrentAuthSessionUseCase;
   getProfilesByAccountIdUseCase: GetProfilesByAccountIdUseCase;
-  setActiveProfileUseCase: SetActiveProfileUseCase;
+  activateSelectedProfileUseCase: ActivateSelectedProfileUseCase;
+  onActivated: () => void;
   onCreateBusiness: () => void;
+};
+
+const getProfileSelectionErrorMessage = (error: AuthError | Error): string => {
+  if ("type" in error) {
+    return getAuthErrorMessage(error);
+  }
+
+  return error.message;
 };
 
 export const useProfileSelectionViewModel = (
@@ -20,7 +30,8 @@ export const useProfileSelectionViewModel = (
   const {
     getCurrentAuthSessionUseCase,
     getProfilesByAccountIdUseCase,
-    setActiveProfileUseCase,
+    activateSelectedProfileUseCase,
+    onActivated,
     onCreateBusiness,
   } = params;
 
@@ -125,22 +136,30 @@ export const useProfileSelectionViewModel = (
     }));
 
     try {
-      const result = await setActiveProfileUseCase.execute(state.selectedProfileId);
+      const result = await activateSelectedProfileUseCase.execute(
+        state.selectedProfileId,
+      );
 
       if (!result.success) {
         setState((currentState) => ({
           ...currentState,
           status: Status.Failure,
-          errorMessage: getAuthErrorMessage(result.error),
+          errorMessage: getProfileSelectionErrorMessage(result.error),
         }));
         return;
       }
 
       await loadProfiles();
+      onActivated();
     } finally {
       isSubmittingRef.current = false;
     }
-  }, [loadProfiles, setActiveProfileUseCase, state.selectedProfileId]);
+  }, [
+    activateSelectedProfileUseCase,
+    loadProfiles,
+    onActivated,
+    state.selectedProfileId,
+  ]);
 
   const onCreateBusinessPress = useCallback((): void => {
     onCreateBusiness();

@@ -1,11 +1,11 @@
 import React from "react";
 import { router } from "expo-router";
+import { createAppSettingUseCases } from "@/features/auth/appSettings/factory/createAppSettingUseCases";
 import { createLanguageSelectionFactory } from "@/features/auth/languageSelection/factory/languageSelectionScreenFactory";
 import { createLocalAuthSessionDataSource } from "@/features/auth/session/data/dataSource/localAuthSession.datasource.impl";
 import { createAuthSessionRepository } from "@/features/auth/session/data/repository/authSession.repository.impl";
-import { createLocalAccessSession } from "@/features/auth/session/utils/localAccessSession";
+import { resolveAccessibleAuthSession } from "@/features/auth/session/utils/localAccessSession";
 import { createGetCurrentAuthSessionUseCase } from "@/features/auth/session/useCase/getCurrentAuthSession.useCase.impl";
-import { createUpsertAuthSessionUseCase } from "@/features/auth/session/useCase/upsertAuthSession.useCase.impl";
 import { createValidateCurrentAuthSessionUseCase } from "@/features/auth/session/useCase/validateCurrentAuthSession.useCase.impl";
 import { database } from "@/src/database/database";
 
@@ -25,9 +25,9 @@ export default function LanguageScreenRoute(): React.JSX.Element {
     [authSessionRepository],
   );
 
-  const upsertAuthSessionUseCase = React.useMemo(
-    () => createUpsertAuthSessionUseCase(authSessionRepository),
-    [authSessionRepository],
+  const appSettingUseCases = React.useMemo(
+    () => createAppSettingUseCases(database),
+    [],
   );
 
   const Screen = React.useMemo(
@@ -35,17 +35,24 @@ export default function LanguageScreenRoute(): React.JSX.Element {
       createLanguageSelectionFactory({
         database,
         onContinue: async () => {
-          await createLocalAccessSession({
+          await appSettingUseCases.completeOnboardingUseCase.execute();
+
+          const session = await resolveAccessibleAuthSession({
             getCurrentAuthSessionUseCase,
             validateCurrentAuthSessionUseCase,
-            upsertAuthSessionUseCase,
           });
-          router.replace("/");
+
+          if (session?.accountId) {
+            router.replace("/");
+            return;
+          }
+
+          router.replace("/(auth)/phone-auth");
         },
       }),
     [
+      appSettingUseCases.completeOnboardingUseCase,
       getCurrentAuthSessionUseCase,
-      upsertAuthSessionUseCase,
       validateCurrentAuthSessionUseCase,
     ],
   );

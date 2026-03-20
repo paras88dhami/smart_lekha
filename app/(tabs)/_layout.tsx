@@ -56,7 +56,7 @@ export default function TabsLayout(): React.JSX.Element {
   }
 
   if (!isAuthenticated) {
-    return <Redirect href="/(auth)/language" />;
+    return <Redirect href="/" />;
   }
 
   return (
