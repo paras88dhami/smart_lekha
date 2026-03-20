@@ -13,21 +13,30 @@ type Props = {
   viewModel: MoreViewModel;
 };
 
-const getGroupedFeatures = (features: MoreFeatureItem[]) => {
-  const implemented = features.filter((item) => item.status === "implemented");
-  const pending = features.filter((item) => item.status === "placeholder");
+const FEATURE_ICON_MAP: Record<string, string> = {
+  home: "home-outline",
+  transactions: "swap-horizontal-outline",
+  transfers: "paper-plane-outline",
+  pos: "grid-outline",
+  cashBank: "wallet-outline",
+  notifications: "notifications-outline",
+  parties: "people-outline",
+  reports: "bar-chart-outline",
+  profile: "person-circle-outline",
+  auth: "language-outline",
+  more: "ellipsis-horizontal-circle-outline",
+};
 
-  return {
-    implemented,
-    pending,
-  };
+const getFeatureIconName = (feature: MoreFeatureItem): string => {
+  return FEATURE_ICON_MAP[feature.module] ?? "apps-outline";
 };
 
 export default function MoreScreen({ viewModel }: Props): React.JSX.Element {
   const { t } = useTranslation();
 
-  const grouped = React.useMemo(
-    () => getGroupedFeatures(viewModel.state.features),
+  const visibleFeatures = React.useMemo(
+    () =>
+      viewModel.state.features.filter((feature) => feature.status === "implemented"),
     [viewModel.state.features],
   );
 
@@ -38,53 +47,49 @@ export default function MoreScreen({ viewModel }: Props): React.JSX.Element {
         <Text style={styles.subtitle}>{t("more.subtitle")}</Text>
       </View>
 
-      <View style={styles.countRow}>
-        <KhataCard style={styles.countCard}>
-          <Text style={styles.countValue}>{String(grouped.implemented.length)}</Text>
-          <Text style={styles.countLabel}>{t("more.sections.implemented")}</Text>
-        </KhataCard>
-
-        <KhataCard style={styles.countCard}>
-          <Text style={styles.countValue}>{String(grouped.pending.length)}</Text>
-          <Text style={styles.countLabel}>{t("more.sections.pending")}</Text>
-        </KhataCard>
-      </View>
-
-      <Text style={styles.sectionTitle}>{t("more.sections.implemented")}</Text>
-      <KhataCard style={styles.listCard}>
-        {grouped.implemented.map((feature) => (
+      <View style={styles.featureGrid}>
+        {visibleFeatures.map((feature) => (
           <Pressable
             key={feature.id}
-            style={styles.row}
+            style={({ pressed }) => [
+              styles.featureCardPressable,
+              pressed ? styles.featureCardPressablePressed : null,
+            ]}
             onPress={(): void => {
               viewModel.onFeaturePress(feature.id);
             }}
           >
-            <View style={styles.rowLeft}>
-              <Text style={styles.rowTitle}>{feature.title}</Text>
-              <Text style={styles.rowSubtitle}>{feature.description}</Text>
-            </View>
-            <View style={styles.liveBadge}>
-              <Text style={styles.liveBadgeText}>{t("more.status.live")}</Text>
-            </View>
+            <KhataCard style={styles.featureCard}>
+              <View style={styles.featureCardContent}>
+                <View style={styles.iconBubble}>
+                  <AppIcon
+                    family="ion"
+                    name={getFeatureIconName(feature)}
+                    size={20}
+                    color={KhataColors.primaryDark}
+                  />
+                </View>
+
+                <View style={styles.featureCardBody}>
+                  <Text style={styles.featureTitle} numberOfLines={1}>
+                    {feature.title}
+                  </Text>
+                  <Text style={styles.featureDescription} numberOfLines={1}>
+                    {feature.description}
+                  </Text>
+                </View>
+
+                <AppIcon
+                  family="ion"
+                  name="chevron-forward"
+                  size={18}
+                  color={KhataColors.primaryDark}
+                />
+              </View>
+            </KhataCard>
           </Pressable>
         ))}
-      </KhataCard>
-
-      <Text style={styles.sectionTitle}>{t("more.sections.pending")}</Text>
-      <KhataCard style={styles.listCard}>
-        {grouped.pending.map((feature) => (
-          <View key={feature.id} style={styles.row}>
-            <View style={styles.rowLeft}>
-              <Text style={styles.rowTitle}>{feature.title}</Text>
-              <Text style={styles.rowSubtitle}>{feature.description}</Text>
-            </View>
-            <View style={styles.pendingBadge}>
-              <Text style={styles.pendingBadgeText}>{t("more.status.pending")}</Text>
-            </View>
-          </View>
-        ))}
-      </KhataCard>
+      </View>
 
       {viewModel.state.status === Status.Failure && viewModel.state.errorMessage ? (
         <Text style={styles.errorText}>{viewModel.state.errorMessage}</Text>
@@ -123,87 +128,51 @@ const styles = StyleSheet.create({
     color: KhataColors.mutedText,
     fontWeight: "500",
   },
-  countRow: {
-    flexDirection: "row",
+  featureGrid: {
     gap: 10,
   },
-  countCard: {
-    flex: 1,
-    borderRadius: 12,
+  featureCardPressable: {
+    width: "100%",
+  },
+  featureCardPressablePressed: {
+    opacity: 0.9,
+  },
+  featureCard: {
+    minHeight: 96,
+    borderRadius: 18,
+    padding: 14,
+  },
+  featureCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  iconBubble: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: KhataColors.softGreen,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 12,
   },
-  countValue: {
-    fontSize: 24,
-    color: KhataColors.primaryDark,
+  featureCardBody: {
+    flex: 1,
+  },
+  featureTitle: {
+    fontSize: 16,
     fontWeight: "800",
+    color: KhataColors.text,
+    lineHeight: 20,
   },
-  countLabel: {
-    marginTop: 2,
+  featureDescription: {
+    marginTop: 3,
     fontSize: 13,
     color: KhataColors.mutedText,
-    fontWeight: "700",
-  },
-  sectionTitle: {
-    fontSize: 19,
-    fontWeight: "800",
-    color: KhataColors.text,
-  },
-  listCard: {
-    borderRadius: 14,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  row: {
-    minHeight: 60,
-    borderBottomWidth: 1,
-    borderBottomColor: KhataColors.border,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  rowLeft: {
-    flex: 1,
-    paddingVertical: 8,
-  },
-  rowTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: KhataColors.text,
-  },
-  rowSubtitle: {
-    marginTop: 2,
-    fontSize: 12,
-    color: KhataColors.mutedText,
-  },
-  liveBadge: {
-    backgroundColor: KhataColors.softGreen,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  liveBadgeText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: KhataColors.primaryDark,
-  },
-  pendingBadge: {
-    backgroundColor: KhataColors.background,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderWidth: 1,
-    borderColor: KhataColors.border,
-  },
-  pendingBadgeText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: KhataColors.mutedText,
+    lineHeight: 17,
   },
   errorText: {
     color: KhataColors.error,
     fontSize: 14,
+    fontWeight: "600",
   },
 });
