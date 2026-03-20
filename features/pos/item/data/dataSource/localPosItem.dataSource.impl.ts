@@ -1,10 +1,11 @@
+import type { CreatePosItemRecord } from "../../types/types";
 import type { Result } from "@/shared/types/result.types";
-import type { Database } from "@nozbe/watermelondb";
+import type { Collection, Database } from "@nozbe/watermelondb";
 import { Q } from "@nozbe/watermelondb";
 import type { PosItemDataSource } from "./posItem.dataSource";
 import type { PosItemModel } from "./posItem.model";
 
-const getCollection = (database: Database) => {
+const getCollection = (database: Database): Collection<PosItemModel> => {
   return database.get<PosItemModel>("pos_items");
 };
 
@@ -37,18 +38,19 @@ export const createLocalPosItemDataSource = (
     }
   },
 
-  async createItem(payload: PosItemModel): Promise<Result<PosItemModel>> {
+  async createItem(payload: CreatePosItemRecord): Promise<Result<PosItemModel>> {
     try {
       const collection = getCollection(database);
       const timestamp = Date.now();
 
       const record = await database.write(async () => {
         return collection.create((currentRecord: PosItemModel) => {
-          currentRecord.profileId = payload.profileId?.trim() ?? "";
-          currentRecord.itemName = payload.itemName?.trim() ?? "";
+          currentRecord.profileId = payload.profileId.trim();
+          currentRecord.itemName = payload.itemName.trim();
+          currentRecord.categoryName = payload.categoryName?.trim() ?? null;
           currentRecord.sku = payload.sku?.trim() ?? null;
-          currentRecord.unitPrice = Math.max(0, payload.unitPrice ?? 0);
-          currentRecord.availableStock = Math.max(0, payload.availableStock ?? 0);
+          currentRecord.unitPrice = Math.max(0, payload.unitPrice);
+          currentRecord.availableStock = Math.max(0, payload.availableStock);
           currentRecord.isActive = Boolean(payload.isActive);
           currentRecord.createdAt = timestamp;
           currentRecord.updatedAt = timestamp;
@@ -75,7 +77,7 @@ export const createLocalPosItemDataSource = (
         await record.update((currentRecord: PosItemModel) => {
           currentRecord.availableStock = Math.max(
             0,
-            (currentRecord.availableStock ?? 0) + deltaQuantity,
+            currentRecord.availableStock + deltaQuantity,
           );
           currentRecord.updatedAt = Date.now();
         });

@@ -238,5 +238,47 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 5,
+      steps: [
+        addColumns({
+          table: "pos_items",
+          columns: [
+            {
+              name: "category_name",
+              type: "string",
+              isOptional: true,
+              isIndexed: true,
+            },
+          ],
+        }),
+        createTable({
+          name: "quick_pos_category_slots",
+          columns: [
+            { name: "profile_id", type: "string", isIndexed: true },
+            { name: "slot_order", type: "number", isIndexed: true },
+            {
+              name: "category_name",
+              type: "string",
+              isOptional: true,
+              isIndexed: true,
+            },
+            { name: "created_at", type: "number" },
+            { name: "updated_at", type: "number" },
+          ],
+        }),
+        createTable({
+          name: "quick_pos_product_slots",
+          columns: [
+            { name: "profile_id", type: "string", isIndexed: true },
+            { name: "category_name", type: "string", isIndexed: true },
+            { name: "slot_order", type: "number", isIndexed: true },
+            { name: "item_id", type: "string", isOptional: true, isIndexed: true },
+            { name: "created_at", type: "number" },
+            { name: "updated_at", type: "number" },
+          ],
+        }),
+      ],
+    },
   ],
 });

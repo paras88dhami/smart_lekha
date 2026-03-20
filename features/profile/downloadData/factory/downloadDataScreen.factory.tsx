@@ -6,7 +6,7 @@ import { createFinanceAccountRepository } from "@/features/finance/account/data/
 import { createGetFinanceTransactionsUseCase } from "@/features/finance/transaction/useCase/getFinanceTransactions.useCase.impl";
 import { createLocalFinanceTransactionDataSource } from "@/features/finance/transaction/data/dataSource/localFinanceTransaction.dataSource.impl";
 import { createFinanceTransactionRepository } from "@/features/finance/transaction/data/repository/financeTransaction.repository.impl";
-import { createGetPosItemsUseCase } from "@/features/pos/item/useCase/useCases.impl";
+import { createGetPosItemsUseCase } from "@/features/pos/item/useCase/getPosItems.useCase.impl";
 import { createLocalPosItemDataSource } from "@/features/pos/item/data/dataSource/localPosItem.dataSource.impl";
 import { createPosItemRepository } from "@/features/pos/item/data/repository/posItem.repository.impl";
 import { createGetRecentPosSalesUseCase } from "@/features/pos/sale/useCase/useCases.impl";
@@ -35,12 +35,12 @@ export const createDownloadDataScreenFactory = ({ database }: Params) => {
       const repository = createActiveProfileRepository(localDataSource);
 
       return createGetActiveProfileUseCase(repository);
-    }, [database]);
+    }, []);
 
     const financeAccountRepository = React.useMemo(() => {
       const localDataSource = createLocalFinanceAccountDataSource(database);
       return createFinanceAccountRepository(localDataSource);
-    }, [database]);
+    }, []);
 
     const getFinanceAccountsByProfileUseCase = React.useMemo(
       () => createGetFinanceAccountsByProfileUseCase(financeAccountRepository),
@@ -50,7 +50,7 @@ export const createDownloadDataScreenFactory = ({ database }: Params) => {
     const financeTransactionRepository = React.useMemo(() => {
       const localDataSource = createLocalFinanceTransactionDataSource(database);
       return createFinanceTransactionRepository(localDataSource);
-    }, [database]);
+    }, []);
 
     const getFinanceTransactionsUseCase = React.useMemo(
       () => createGetFinanceTransactionsUseCase(financeTransactionRepository),
@@ -60,7 +60,7 @@ export const createDownloadDataScreenFactory = ({ database }: Params) => {
     const transferBeneficiaryRepository = React.useMemo(() => {
       const localDataSource = createLocalTransferBeneficiaryDataSource(database);
       return createTransferBeneficiaryRepository(localDataSource);
-    }, [database]);
+    }, []);
 
     const getTransferBeneficiariesUseCase = React.useMemo(
       () => createGetTransferBeneficiariesUseCase(transferBeneficiaryRepository),
@@ -70,7 +70,7 @@ export const createDownloadDataScreenFactory = ({ database }: Params) => {
     const transferRecordRepository = React.useMemo(() => {
       const localDataSource = createLocalTransferRecordDataSource(database);
       return createTransferRecordRepository(localDataSource);
-    }, [database]);
+    }, []);
 
     const getSavedTransfersUseCase = React.useMemo(
       () => createGetSavedTransfersUseCase(transferRecordRepository),
@@ -85,7 +85,7 @@ export const createDownloadDataScreenFactory = ({ database }: Params) => {
     const posItemRepository = React.useMemo(() => {
       const localDataSource = createLocalPosItemDataSource(database);
       return createPosItemRepository(localDataSource);
-    }, [database]);
+    }, []);
 
     const getPosItemsUseCase = React.useMemo(
       () => createGetPosItemsUseCase(posItemRepository),
@@ -95,7 +95,7 @@ export const createDownloadDataScreenFactory = ({ database }: Params) => {
     const posSaleRepository = React.useMemo(() => {
       const localDataSource = createLocalPosSaleDataSource(database);
       return createPosSaleRepository(localDataSource);
-    }, [database]);
+    }, []);
 
     const getRecentPosSalesUseCase = React.useMemo(
       () => createGetRecentPosSalesUseCase(posSaleRepository),

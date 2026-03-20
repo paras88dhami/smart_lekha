@@ -3,7 +3,7 @@ import { Status } from "@/shared/types/status.types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { GetFinanceAccountsByProfileUseCase } from "@/features/finance/account/useCase/getFinanceAccountsByProfile.useCase";
 import type { GetFinanceTransactionsUseCase } from "@/features/finance/transaction/useCase/getFinanceTransactions.useCase";
-import type { GetPosItemsUseCase } from "@/features/pos/item/useCase/types";
+import type { GetPosItemsUseCase } from "@/features/pos/item/useCase/getPosItems.useCase";
 import type { GetRecentPosSalesUseCase } from "@/features/pos/sale/useCase/types";
 import type { GetTransferBeneficiariesUseCase } from "@/features/transfers/beneficiary/useCase/getTransferBeneficiaries.useCase";
 import type { GetSavedTransfersUseCase, GetScheduledTransfersUseCase } from "@/features/transfers/record/useCase/types";
@@ -95,7 +95,7 @@ export const useDownloadDataViewModel = (
         getTransferBeneficiariesUseCase.execute(profile.profileId),
         getSavedTransfersUseCase.execute(profile.profileId, 100),
         getScheduledTransfersUseCase.execute(profile.profileId, 100),
-        getPosItemsUseCase.execute(profile.profileId),
+        getPosItemsUseCase.execute({ profileId: profile.profileId }),
         getRecentPosSalesUseCase.execute(profile.profileId, 100),
       ]);
 

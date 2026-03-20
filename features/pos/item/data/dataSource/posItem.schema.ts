@@ -5,6 +5,7 @@ export const posItemTable = tableSchema({
   columns: [
     { name: "profile_id", type: "string", isIndexed: true },
     { name: "item_name", type: "string", isIndexed: true },
+    { name: "category_name", type: "string", isOptional: true, isIndexed: true },
     { name: "sku", type: "string", isOptional: true, isIndexed: true },
     { name: "unit_price", type: "number" },
     { name: "available_stock", type: "number" },

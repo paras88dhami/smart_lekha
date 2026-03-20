@@ -2,6 +2,7 @@ export type PosItem = {
   id: string;
   profileId: string;
   itemName: string;
+  categoryName: string | null;
   sku: string | null;
   unitPrice: number;
   availableStock: number;
@@ -11,6 +12,17 @@ export type PosItem = {
 export type CreatePosItemInput = {
   profileId: string;
   itemName: string;
+  categoryName: string | null;
+  sku: string | null;
+  unitPrice: number;
+  availableStock: number;
+  isActive: boolean;
+};
+
+export type CreatePosItemRecord = {
+  profileId: string;
+  itemName: string;
+  categoryName: string | null;
   sku: string | null;
   unitPrice: number;
   availableStock: number;

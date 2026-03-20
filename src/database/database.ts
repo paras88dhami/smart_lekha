@@ -12,12 +12,13 @@ import { transferRecordDbConfig } from "@/features/transfers/record/data/dataSou
 import { posItemDbConfig } from "@/features/pos/item/data/dataSource/db/posItemDbConfig";
 import { posSaleDbConfig } from "@/features/pos/sale/data/dataSource/db/posSaleDbConfig";
 import { createDatabase } from "@/shared/database/createDatabase";
+import { quickPosSlotDbConfig } from "@/features/transactions/quickPos/slot/data/dataSource/db/quickPosSlotDbConfig";
 import { migrations } from "./migration";
 import { seedDefaultAppSettings } from "./seed/seedDefaultAppSettings";
 import { seedBusinessCategories } from "./seed/seedBusinessCategories";
 
 const schema = appSchema({
-  version: 4,
+  version: 5,
   tables: [
     ...appSettingsDbConfig.tables,
     ...authSessionDbConfig.tables,
@@ -31,6 +32,7 @@ const schema = appSchema({
     ...transferRecordDbConfig.tables,
     ...posItemDbConfig.tables,
     ...posSaleDbConfig.tables,
+    ...quickPosSlotDbConfig.tables,
   ],
 });
 
@@ -49,6 +51,7 @@ export const database = createDatabase({
     ...transferRecordDbConfig.models,
     ...posItemDbConfig.models,
     ...posSaleDbConfig.models,
+    ...quickPosSlotDbConfig.models,
   ],
   migrations,
 });
