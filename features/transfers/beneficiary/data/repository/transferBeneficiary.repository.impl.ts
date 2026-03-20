@@ -3,7 +3,10 @@ import type {
   CreateTransferBeneficiaryInput,
   TransferBeneficiary,
 } from "../../types/types";
-import type { TransferBeneficiaryDataSource } from "../dataSource/transferBeneficiary.dataSource";
+import type {
+  CreateTransferBeneficiaryRecord,
+  TransferBeneficiaryDataSource,
+} from "../dataSource/transferBeneficiary.dataSource";
 import type { TransferBeneficiaryModel } from "../dataSource/transferBeneficiary.model";
 import type { TransferBeneficiaryRepository } from "./transferBeneficiary.repository";
 
@@ -11,18 +14,18 @@ const mapBeneficiary = (
   record: TransferBeneficiaryModel,
 ): TransferBeneficiary => ({
   id: record.id,
-  profileId: record.profileId?.trim() ?? "",
-  beneficiaryName: record.beneficiaryName?.trim() ?? "",
+  profileId: record.profileId.trim(),
+  beneficiaryName: record.beneficiaryName.trim(),
   bankName: record.bankName?.trim() ?? null,
   accountNumber: record.accountNumber?.trim() ?? null,
   mobileNumber: record.mobileNumber?.trim() ?? null,
-  transferMethod: record.transferMethod ?? "other_bank",
-  isFavorite: Boolean(record.isFavorite),
+  transferMethod: record.transferMethod,
+  isFavorite: record.isFavorite,
 });
 
 const toPayload = (
   input: CreateTransferBeneficiaryInput,
-): TransferBeneficiaryModel => {
+): CreateTransferBeneficiaryRecord => {
   return {
     profileId: input.profileId.trim(),
     beneficiaryName: input.beneficiaryName.trim(),
@@ -31,7 +34,7 @@ const toPayload = (
     mobileNumber: input.mobileNumber?.trim() ?? null,
     transferMethod: input.transferMethod,
     isFavorite: input.isFavorite,
-  } as TransferBeneficiaryModel;
+  };
 };
 
 const createFailure = <T>(error: Error): Result<T> => ({

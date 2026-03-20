@@ -1,7 +1,10 @@
 import type { Result } from "@/shared/types/result.types";
 import type { Database } from "@nozbe/watermelondb";
 import { Q } from "@nozbe/watermelondb";
-import type { TransferRecordDataSource } from "./transferRecord.dataSource";
+import type {
+  CreateTransferRecordPayload,
+  TransferRecordDataSource,
+} from "./transferRecord.dataSource";
 import type {
   TransferRecordModel,
   TransferRecordType,
@@ -45,20 +48,22 @@ export const createLocalTransferRecordDataSource = (
     }
   },
 
-  async createRecord(payload: TransferRecordModel): Promise<Result<TransferRecordModel>> {
+  async createRecord(
+    payload: CreateTransferRecordPayload,
+  ): Promise<Result<TransferRecordModel>> {
     try {
       const collection = getCollection(database);
       const timestamp = Date.now();
 
       const record = await database.write(async () => {
         return collection.create((currentRecord: TransferRecordModel) => {
-          currentRecord.profileId = payload.profileId?.trim() ?? "";
-          currentRecord.beneficiaryId = payload.beneficiaryId?.trim() ?? "";
-          currentRecord.fromAccountId = payload.fromAccountId?.trim() ?? null;
-          currentRecord.amount = Math.max(0, payload.amount ?? 0);
-          currentRecord.note = payload.note?.trim() ?? null;
+          currentRecord.profileId = payload.profileId;
+          currentRecord.beneficiaryId = payload.beneficiaryId;
+          currentRecord.fromAccountId = payload.fromAccountId;
+          currentRecord.amount = payload.amount;
+          currentRecord.note = payload.note;
           currentRecord.recordType = payload.recordType;
-          currentRecord.scheduledFor = payload.scheduledFor ?? null;
+          currentRecord.scheduledFor = payload.scheduledFor;
           currentRecord.status = payload.status;
           currentRecord.createdAt = timestamp;
           currentRecord.updatedAt = timestamp;

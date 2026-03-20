@@ -1,6 +1,20 @@
 import type { Result } from "@/shared/types/result.types";
-import type { TransferRecordType } from "./transferRecord.model";
-import type { TransferRecordModel } from "./transferRecord.model";
+import type {
+  TransferRecordModel,
+  TransferRecordStatus,
+  TransferRecordType,
+} from "./transferRecord.model";
+
+export type CreateTransferRecordPayload = {
+  profileId: string;
+  beneficiaryId: string;
+  fromAccountId: string | null;
+  amount: number;
+  note: string | null;
+  recordType: TransferRecordType;
+  scheduledFor: number | null;
+  status: TransferRecordStatus;
+};
 
 export interface TransferRecordDataSource {
   getByProfileAndType(
@@ -8,5 +22,5 @@ export interface TransferRecordDataSource {
     recordType: TransferRecordType,
     limit: number,
   ): Promise<Result<TransferRecordModel[]>>;
-  createRecord(payload: TransferRecordModel): Promise<Result<TransferRecordModel>>;
+  createRecord(payload: CreateTransferRecordPayload): Promise<Result<TransferRecordModel>>;
 }

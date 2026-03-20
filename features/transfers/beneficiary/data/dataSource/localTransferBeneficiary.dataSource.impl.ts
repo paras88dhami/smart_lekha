@@ -1,7 +1,10 @@
 import type { Result } from "@/shared/types/result.types";
 import type { Database } from "@nozbe/watermelondb";
 import { Q } from "@nozbe/watermelondb";
-import type { TransferBeneficiaryDataSource } from "./transferBeneficiary.dataSource";
+import type {
+  CreateTransferBeneficiaryRecord,
+  TransferBeneficiaryDataSource,
+} from "./transferBeneficiary.dataSource";
 import type { TransferBeneficiaryModel } from "./transferBeneficiary.model";
 
 const getCollection = (database: Database) => {
@@ -63,7 +66,7 @@ export const createLocalTransferBeneficiaryDataSource = (
   },
 
   async createBeneficiary(
-    payload: TransferBeneficiaryModel,
+    payload: CreateTransferBeneficiaryRecord,
   ): Promise<Result<TransferBeneficiaryModel>> {
     try {
       const timestamp = Date.now();
@@ -71,13 +74,13 @@ export const createLocalTransferBeneficiaryDataSource = (
 
       const record = await database.write(async () => {
         return collection.create((currentRecord: TransferBeneficiaryModel) => {
-          currentRecord.profileId = payload.profileId?.trim() ?? "";
-          currentRecord.beneficiaryName = payload.beneficiaryName?.trim() ?? "";
-          currentRecord.bankName = payload.bankName?.trim() ?? null;
-          currentRecord.accountNumber = payload.accountNumber?.trim() ?? null;
-          currentRecord.mobileNumber = payload.mobileNumber?.trim() ?? null;
+          currentRecord.profileId = payload.profileId;
+          currentRecord.beneficiaryName = payload.beneficiaryName;
+          currentRecord.bankName = payload.bankName;
+          currentRecord.accountNumber = payload.accountNumber;
+          currentRecord.mobileNumber = payload.mobileNumber;
           currentRecord.transferMethod = payload.transferMethod;
-          currentRecord.isFavorite = Boolean(payload.isFavorite);
+          currentRecord.isFavorite = payload.isFavorite;
           currentRecord.createdAt = timestamp;
           currentRecord.updatedAt = timestamp;
         });

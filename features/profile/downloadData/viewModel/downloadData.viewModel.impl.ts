@@ -6,7 +6,8 @@ import type { GetFinanceTransactionsUseCase } from "@/features/finance/transacti
 import type { GetPosItemsUseCase } from "@/features/pos/item/useCase/getPosItems.useCase";
 import type { GetRecentPosSalesUseCase } from "@/features/pos/sale/useCase/types";
 import type { GetTransferBeneficiariesUseCase } from "@/features/transfers/beneficiary/useCase/getTransferBeneficiaries.useCase";
-import type { GetSavedTransfersUseCase, GetScheduledTransfersUseCase } from "@/features/transfers/record/useCase/types";
+import type { GetSavedTransfersUseCase } from "@/features/transfers/record/useCase/getSavedTransfers.useCase";
+import type { GetScheduledTransfersUseCase } from "@/features/transfers/record/useCase/getScheduledTransfers.useCase";
 import type { GetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase";
 import type { DownloadDataState, DownloadDataViewModel } from "./downloadData.viewModel";
 

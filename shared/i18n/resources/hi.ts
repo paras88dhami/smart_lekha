@@ -214,8 +214,10 @@ const hi = {
     title: "पैसा भेजें",
     subtitle: "नेपाल और भारत अनुकूल ट्रांसफर विकल्प",
     methodsTitle: "ट्रांसफर तरीके",
-    favoritesTitle: "पसंदीदा खाते",
-    savedTitle: "सेव/शेड्यूल ट्रांसफर",
+    favoritesTitle: "पसंदीदा लाभार्थी",
+    beneficiariesTitle: "लाभार्थी",
+    savedTitle: "सेव ट्रांसफर",
+    scheduledTitle: "शेड्यूल ट्रांसफर",
     addTransfer: "ट्रांसफर जोड़ें",
     viewAllSaved: "सभी देखें",
     methods: {
@@ -236,7 +238,9 @@ const hi = {
     },
     empty: {
       favorites: "कोई पसंदीदा खाता नहीं है।",
+      beneficiaries: "कोई लाभार्थी नहीं है।",
       saved: "कोई सेव ट्रांसफर नहीं है।",
+      scheduled: "कोई शेड्यूल ट्रांसफर नहीं है।",
     },
     errors: {
       noActiveProfile: "कोई सक्रिय प्रोफाइल नहीं मिला।",

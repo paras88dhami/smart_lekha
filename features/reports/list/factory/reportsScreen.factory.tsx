@@ -9,7 +9,8 @@ import { createLocalPosSaleDataSource } from "@/features/pos/sale/data/dataSourc
 import { createPosSaleRepository } from "@/features/pos/sale/data/repository/posSale.repository.impl";
 import { createLocalTransferRecordDataSource } from "@/features/transfers/record/data/dataSource/localTransferRecord.dataSource.impl";
 import { createTransferRecordRepository } from "@/features/transfers/record/data/repository/transferRecord.repository.impl";
-import { createGetSavedTransfersUseCase, createGetScheduledTransfersUseCase } from "@/features/transfers/record/useCase/useCases.impl";
+import { createGetSavedTransfersUseCase } from "@/features/transfers/record/useCase/getSavedTransfers.useCase.impl";
+import { createGetScheduledTransfersUseCase } from "@/features/transfers/record/useCase/getScheduledTransfers.useCase.impl";
 import { createLocalActiveProfileDataSource } from "@/features/workspace/activeProfile/data/dataSource/localActiveProfile.dataSource.impl";
 import { createActiveProfileRepository } from "@/features/workspace/activeProfile/data/repository/activeProfile.repository.impl";
 import { createGetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase.impl";
@@ -27,12 +28,12 @@ export const createReportsScreenFactory = ({ database }: Params) => {
       const repository = createActiveProfileRepository(localDataSource);
 
       return createGetActiveProfileUseCase(repository);
-    }, [database]);
+    }, []);
 
     const financeTransactionRepository = React.useMemo(() => {
       const localDataSource = createLocalFinanceTransactionDataSource(database);
       return createFinanceTransactionRepository(localDataSource);
-    }, [database]);
+    }, []);
 
     const getFinanceSummaryUseCase = React.useMemo(
       () => createGetFinanceSummaryUseCase(financeTransactionRepository),
@@ -47,7 +48,7 @@ export const createReportsScreenFactory = ({ database }: Params) => {
     const posSaleRepository = React.useMemo(() => {
       const localDataSource = createLocalPosSaleDataSource(database);
       return createPosSaleRepository(localDataSource);
-    }, [database]);
+    }, []);
 
     const getRecentPosSalesUseCase = React.useMemo(
       () => createGetRecentPosSalesUseCase(posSaleRepository),
@@ -57,7 +58,7 @@ export const createReportsScreenFactory = ({ database }: Params) => {
     const transferRecordRepository = React.useMemo(() => {
       const localDataSource = createLocalTransferRecordDataSource(database);
       return createTransferRecordRepository(localDataSource);
-    }, [database]);
+    }, []);
 
     const getSavedTransfersUseCase = React.useMemo(
       () => createGetSavedTransfersUseCase(transferRecordRepository),

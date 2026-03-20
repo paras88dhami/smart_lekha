@@ -4,24 +4,29 @@ import type {
   FinanceAccount,
 } from "../../types/types";
 import type { FinanceAccountModel } from "../dataSource/financeAccount.model";
-import type { FinanceAccountDataSource } from "../dataSource/financeAccount.dataSource";
+import type {
+  CreateFinanceAccountRecord,
+  FinanceAccountDataSource,
+} from "../dataSource/financeAccount.dataSource";
 import type { FinanceAccountRepository } from "./financeAccount.repository";
 import type { Result } from "@/shared/types/result.types";
 
 const mapFinanceAccount = (record: FinanceAccountModel): FinanceAccount => {
   return {
     id: record.id,
-    profileId: record.profileId?.trim() ?? "",
-    accountName: record.accountName?.trim() ?? "",
+    profileId: record.profileId.trim(),
+    accountName: record.accountName.trim(),
     accountNumber: record.accountNumber?.trim() ?? null,
-    accountType: record.accountType ?? "cash",
-    isPrimary: Boolean(record.isPrimary),
-    currencyCode: record.currencyCode?.trim() ?? "NPR",
-    currentBalance: record.currentBalance ?? 0,
+    accountType: record.accountType,
+    isPrimary: record.isPrimary,
+    currencyCode: record.currencyCode.trim(),
+    currentBalance: record.currentBalance,
   };
 };
 
-const toModelPayload = (input: CreateFinanceAccountInput): FinanceAccountModel => {
+const toDataSourcePayload = (
+  input: CreateFinanceAccountInput,
+): CreateFinanceAccountRecord => {
   return {
     profileId: input.profileId.trim(),
     accountName: input.accountName.trim(),
@@ -30,7 +35,7 @@ const toModelPayload = (input: CreateFinanceAccountInput): FinanceAccountModel =
     isPrimary: input.isPrimary,
     currencyCode: input.currencyCode.trim() || "NPR",
     currentBalance: input.currentBalance,
-  } as FinanceAccountModel;
+  };
 };
 
 const createFailure = <T>(error: Error): Result<T> => ({
@@ -70,7 +75,7 @@ export const createFinanceAccountRepository = (
   },
 
   async createAccount(input: CreateFinanceAccountInput): Promise<Result<FinanceAccount>> {
-    const result = await localDataSource.createAccount(toModelPayload(input));
+    const result = await localDataSource.createAccount(toDataSourcePayload(input));
 
     if (!result.success) {
       return createFailure<FinanceAccount>(result.error);

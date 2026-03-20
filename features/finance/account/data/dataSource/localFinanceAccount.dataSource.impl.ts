@@ -1,15 +1,24 @@
 import type { Result } from "@/shared/types/result.types";
 import type { Database } from "@nozbe/watermelondb";
-import { Q } from "@nozbe/watermelondb";
-import type { FinanceAccountDataSource } from "./financeAccount.dataSource";
+import type {
+  CreateFinanceAccountRecord,
+  FinanceAccountDataSource,
+} from "./financeAccount.dataSource";
 import type { FinanceAccountModel } from "./financeAccount.model";
+import {
+  createFinanceAccountRecord,
+  getFinanceAccountCollection,
+  getFinanceAccountsByProfileQuery,
+  mapFinanceAccountDataSourceError,
+  setPrimaryFinanceAccountRecord,
+  updateFinanceAccountBalance,
+} from "./helpers/localFinanceAccount.dataSource.helpers";
 
-const getCollection = (database: Database) => {
-  return database.get<FinanceAccountModel>("finance_accounts");
-};
-
-const mapUnknownError = (error: unknown, fallbackMessage: string): Error => {
-  return error instanceof Error ? error : new Error(fallbackMessage);
+const createFailure = <T>(error: unknown, message: string): Result<T> => {
+  return {
+    success: false,
+    error: mapFinanceAccountDataSourceError(error, message),
+  };
 };
 
 export const createLocalFinanceAccountDataSource = (
@@ -17,19 +26,10 @@ export const createLocalFinanceAccountDataSource = (
 ): FinanceAccountDataSource => ({
   async getAccountsByProfileId(profileId: string): Promise<Result<FinanceAccountModel[]>> {
     try {
-      const records = await getCollection(database)
-        .query(Q.where("profile_id", profileId), Q.sortBy("created_at", Q.asc))
-        .fetch();
-
-      return {
-        success: true,
-        value: records,
-      };
+      const accounts = await getFinanceAccountsByProfileQuery(database, profileId).fetch();
+      return { success: true, value: accounts };
     } catch (error) {
-      return {
-        success: false,
-        error: mapUnknownError(error, "Failed to load finance accounts."),
-      };
+      return createFailure(error, "Failed to load finance accounts.");
     }
   },
 
@@ -37,129 +37,46 @@ export const createLocalFinanceAccountDataSource = (
     profileId: string,
   ): Promise<Result<FinanceAccountModel | null>> {
     try {
-      const primaryRecord = await getCollection(database)
-        .query(
-          Q.where("profile_id", profileId),
-          Q.where("is_primary", true),
-          Q.sortBy("updated_at", Q.desc),
-        )
-        .fetch();
-
-      if (primaryRecord.length > 0) {
-        return {
-          success: true,
-          value: primaryRecord[0],
-        };
-      }
-
-      const fallbackRecords = await getCollection(database)
-        .query(Q.where("profile_id", profileId), Q.sortBy("created_at", Q.asc))
-        .fetch();
-
-      return {
-        success: true,
-        value: fallbackRecords[0] ?? null,
-      };
+      const accounts = await getFinanceAccountsByProfileQuery(database, profileId).fetch();
+      const primaryAccount = accounts.find((account) => account.isPrimary) ?? null;
+      return { success: true, value: primaryAccount };
     } catch (error) {
-      return {
-        success: false,
-        error: mapUnknownError(error, "Failed to load primary finance account."),
-      };
+      return createFailure(error, "Failed to load the primary finance account.");
     }
   },
 
-  async createAccount(payload: FinanceAccountModel): Promise<Result<FinanceAccountModel>> {
+  async createAccount(
+    payload: CreateFinanceAccountRecord,
+  ): Promise<Result<FinanceAccountModel>> {
     try {
-      const timestamp = Date.now();
-      const collection = getCollection(database);
-
-      const record = await database.write(async () => {
-        return collection.create((currentRecord: FinanceAccountModel) => {
-          currentRecord.profileId = payload.profileId?.trim() ?? "";
-          currentRecord.accountName = payload.accountName?.trim() ?? "";
-          currentRecord.accountNumber = payload.accountNumber?.trim() ?? null;
-          currentRecord.accountType = payload.accountType;
-          currentRecord.isPrimary = Boolean(payload.isPrimary);
-          currentRecord.currencyCode = payload.currencyCode?.trim() ?? "NPR";
-          currentRecord.currentBalance = payload.currentBalance ?? 0;
-          currentRecord.createdAt = timestamp;
-          currentRecord.updatedAt = timestamp;
-        });
-      });
-
-      return {
-        success: true,
-        value: record,
-      };
+      const account = await createFinanceAccountRecord(database, payload);
+      return { success: true, value: account };
     } catch (error) {
-      return {
-        success: false,
-        error: mapUnknownError(error, "Failed to create finance account."),
-      };
+      return createFailure(error, "Failed to create the finance account.");
     }
   },
 
   async adjustBalance(accountId: string, deltaAmount: number): Promise<Result<void>> {
     try {
-      const record = await getCollection(database).find(accountId);
-
-      await database.write(async () => {
-        await record.update((currentRecord: FinanceAccountModel) => {
-          currentRecord.currentBalance =
-            (currentRecord.currentBalance ?? 0) + deltaAmount;
-          currentRecord.updatedAt = Date.now();
-        });
-      });
-
-      return {
-        success: true,
-        value: undefined,
-      };
+      const account = await getFinanceAccountCollection(database).find(accountId);
+      await updateFinanceAccountBalance(database, account, deltaAmount);
+      return { success: true, value: undefined };
     } catch (error) {
-      return {
-        success: false,
-        error: mapUnknownError(error, "Failed to update finance account balance."),
-      };
+      return createFailure(error, "Failed to update the finance account balance.");
     }
   },
 
   async setPrimaryAccount(accountId: string): Promise<Result<void>> {
     try {
-      const collection = getCollection(database);
-      const targetRecord = await collection.find(accountId);
-      const profileId = targetRecord.profileId?.trim() ?? "";
-
-      if (!profileId) {
-        return {
-          success: false,
-          error: new Error("Invalid account profile for primary update."),
-        };
-      }
-
-      const profileAccounts = await collection
-        .query(Q.where("profile_id", profileId))
-        .fetch();
-
-      const timestamp = Date.now();
-
-      await database.write(async () => {
-        for (const accountRecord of profileAccounts) {
-          await accountRecord.update((currentRecord: FinanceAccountModel) => {
-            currentRecord.isPrimary = currentRecord.id === accountId;
-            currentRecord.updatedAt = timestamp;
-          });
-        }
-      });
-
-      return {
-        success: true,
-        value: undefined,
-      };
+      const selectedAccount = await getFinanceAccountCollection(database).find(accountId);
+      const profileAccounts = await getFinanceAccountsByProfileQuery(
+        database,
+        selectedAccount.profileId,
+      ).fetch();
+      await setPrimaryFinanceAccountRecord(database, accountId, profileAccounts);
+      return { success: true, value: undefined };
     } catch (error) {
-      return {
-        success: false,
-        error: mapUnknownError(error, "Failed to set primary finance account."),
-      };
+      return createFailure(error, "Failed to update the primary finance account.");
     }
   },
 });

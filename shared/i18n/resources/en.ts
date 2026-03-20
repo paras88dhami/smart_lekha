@@ -215,8 +215,10 @@ const en = {
     title: "Send Money",
     subtitle: "Transfer using Nepal and India friendly rails",
     methodsTitle: "Transfer Methods",
-    favoritesTitle: "Favourite Accounts",
-    savedTitle: "Saved/Scheduled Transfers",
+    favoritesTitle: "Favourite Beneficiaries",
+    beneficiariesTitle: "Beneficiaries",
+    savedTitle: "Saved Transfers",
+    scheduledTitle: "Scheduled Transfers",
     addTransfer: "Add Transfer",
     viewAllSaved: "View All",
     methods: {
@@ -237,7 +239,9 @@ const en = {
     },
     empty: {
       favorites: "No favourite accounts yet.",
+      beneficiaries: "No beneficiaries yet.",
       saved: "No saved transfers yet.",
+      scheduled: "No scheduled transfers yet.",
     },
     errors: {
       noActiveProfile: "No active profile found.",

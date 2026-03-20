@@ -11,13 +11,13 @@ export type TransferMethod =
 export class TransferBeneficiaryModel extends Model {
   static readonly table = "transfer_beneficiaries";
 
-  @field("profile_id") profileId?: string;
-  @field("beneficiary_name") beneficiaryName?: string;
-  @field("bank_name") bankName?: string | null;
-  @field("account_number") accountNumber?: string | null;
-  @field("mobile_number") mobileNumber?: string | null;
-  @field("transfer_method") transferMethod?: TransferMethod;
-  @field("is_favorite") isFavorite?: boolean;
-  @field("created_at") createdAt?: number;
-  @field("updated_at") updatedAt?: number;
+  @field("profile_id") profileId!: string;
+  @field("beneficiary_name") beneficiaryName!: string;
+  @field("bank_name") bankName!: string | null;
+  @field("account_number") accountNumber!: string | null;
+  @field("mobile_number") mobileNumber!: string | null;
+  @field("transfer_method") transferMethod!: TransferMethod;
+  @field("is_favorite") isFavorite!: boolean;
+  @field("created_at") createdAt!: number;
+  @field("updated_at") updatedAt!: number;
 }

@@ -214,8 +214,10 @@ const ne = {
     title: "पैसा पठाउनुहोस्",
     subtitle: "नेपाल र भारतमैत्री ट्रान्सफर विकल्प",
     methodsTitle: "ट्रान्सफर विधिहरू",
-    favoritesTitle: "मनपर्ने खाता",
-    savedTitle: "सेभ/तालिका ट्रान्सफर",
+    favoritesTitle: "मनपर्ने लाभग्राही",
+    beneficiariesTitle: "लाभग्राही",
+    savedTitle: "सेभ ट्रान्सफर",
+    scheduledTitle: "तालिका ट्रान्सफर",
     addTransfer: "ट्रान्सफर थप्नुहोस्",
     viewAllSaved: "सबै हेर्नुहोस्",
     methods: {
@@ -236,7 +238,9 @@ const ne = {
     },
     empty: {
       favorites: "मनपर्ने खाता छैन।",
+      beneficiaries: "लाभग्राही छैन।",
       saved: "सेभ ट्रान्सफर छैन।",
+      scheduled: "तालिका ट्रान्सफर छैन।",
     },
     errors: {
       noActiveProfile: "सक्रिय प्रोफाइल भेटिएन।",

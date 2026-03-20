@@ -2,7 +2,7 @@ import { translate } from "@/shared/i18n/resources";
 import { Status } from "@/shared/types/status.types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { GetFinanceTransactionsUseCase } from "@/features/finance/transaction/useCase/getFinanceTransactions.useCase";
-import type { GetScheduledTransfersUseCase } from "@/features/transfers/record/useCase/types";
+import type { GetScheduledTransfersUseCase } from "@/features/transfers/record/useCase/getScheduledTransfers.useCase";
 import type { GetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase";
 import type { NotificationsState, NotificationsViewModel } from "./notifications.viewModel";
 

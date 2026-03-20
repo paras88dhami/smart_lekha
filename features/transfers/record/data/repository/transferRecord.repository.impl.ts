@@ -4,26 +4,31 @@ import type {
   TransferRecord,
 } from "../../types/types";
 import type {
+  CreateTransferRecordPayload,
+  TransferRecordDataSource,
+} from "../dataSource/transferRecord.dataSource";
+import type {
   TransferRecordModel,
   TransferRecordType,
 } from "../dataSource/transferRecord.model";
-import type { TransferRecordDataSource } from "../dataSource/transferRecord.dataSource";
 import type { TransferRecordRepository } from "./transferRecord.repository";
 
 const mapRecord = (record: TransferRecordModel): TransferRecord => ({
   id: record.id,
-  profileId: record.profileId?.trim() ?? "",
-  beneficiaryId: record.beneficiaryId?.trim() ?? "",
+  profileId: record.profileId.trim(),
+  beneficiaryId: record.beneficiaryId.trim(),
   fromAccountId: record.fromAccountId?.trim() ?? null,
-  amount: Math.max(0, record.amount ?? 0),
+  amount: Math.max(0, record.amount),
   note: record.note?.trim() ?? null,
-  recordType: record.recordType ?? "saved",
-  scheduledFor: record.scheduledFor ?? null,
-  status: record.status ?? "pending",
-  createdAt: record.createdAt ?? Date.now(),
+  recordType: record.recordType,
+  scheduledFor: record.scheduledFor,
+  status: record.status,
+  createdAt: record.createdAt,
 });
 
-const toPayload = (input: CreateTransferRecordInput): TransferRecordModel => {
+const toPayload = (
+  input: CreateTransferRecordInput,
+): CreateTransferRecordPayload => {
   return {
     profileId: input.profileId.trim(),
     beneficiaryId: input.beneficiaryId.trim(),
@@ -33,7 +38,7 @@ const toPayload = (input: CreateTransferRecordInput): TransferRecordModel => {
     recordType: input.recordType,
     scheduledFor: input.scheduledFor ?? null,
     status: input.status,
-  } as TransferRecordModel;
+  };
 };
 
 const createFailure = <T>(error: Error): Result<T> => ({
