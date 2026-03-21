@@ -30,6 +30,19 @@ export type CreateFinanceTransactionInput = {
   referenceId: string | null;
 };
 
+export type UpdateFinanceTransactionInput = {
+  transactionId: string;
+  accountId: string | null;
+  entryType: FinanceEntryType;
+  categoryName: string | null;
+  counterpartyName: string | null;
+  note: string | null;
+  status: FinanceEntryStatus;
+  amount: number;
+  occurredAt: number;
+  referenceId: string | null;
+};
+
 export type FinanceSummary = {
   totalInflow: number;
   totalOutflow: number;

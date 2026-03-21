@@ -40,13 +40,23 @@ export default function SendMoneyScreen({ viewModel }: Props): React.JSX.Element
         <SendMoneyTransferForm
           title={t("sendMoney.addTransfer")}
           submitLabel={t("sendMoney.form.submit")}
+          transferTargetTitle={t("sendMoney.form.transferTarget")}
+          beneficiaryLabel={t("sendMoney.form.transferToBeneficiary")}
+          ownAccountLabel={t("sendMoney.form.transferToOwnAccount")}
+          sourceAccountTitle={t("sendMoney.form.sourceAccount")}
+          destinationAccountTitle={t("sendMoney.form.destinationAccount")}
+          emptyAccountsLabel={t("sendMoney.empty.accounts")}
           beneficiaryNamePlaceholder={t("sendMoney.form.beneficiaryName")}
           accountNumberPlaceholder={t("sendMoney.form.accountNumber")}
           mobileNumberPlaceholder={t("sendMoney.form.mobileNumber")}
           amountPlaceholder={t("sendMoney.form.amount")}
           notePlaceholder={t("sendMoney.form.note")}
           scheduleLabel={t("sendMoney.form.scheduleForTomorrow")}
+          accounts={viewModel.state.accounts}
           selectedMethod={viewModel.state.selectedMethod}
+          selectedTargetType={viewModel.state.form.targetType}
+          selectedSourceAccountId={viewModel.state.form.sourceAccountId}
+          selectedDestinationAccountId={viewModel.state.form.destinationAccountId}
           beneficiaryNameInput={viewModel.state.form.beneficiaryNameInput}
           accountNumberInput={viewModel.state.form.accountNumberInput}
           mobileNumberInput={viewModel.state.form.mobileNumberInput}
@@ -54,6 +64,9 @@ export default function SendMoneyScreen({ viewModel }: Props): React.JSX.Element
           noteInput={viewModel.state.form.noteInput}
           isScheduled={viewModel.state.form.isScheduled}
           isSubmitting={viewModel.state.status === Status.Loading}
+          onTargetTypePress={viewModel.onTargetTypePress}
+          onSourceAccountPress={viewModel.onSourceAccountPress}
+          onDestinationAccountPress={viewModel.onDestinationAccountPress}
           onBeneficiaryNameChange={viewModel.onBeneficiaryNameChange}
           onAccountNumberChange={viewModel.onAccountNumberChange}
           onMobileNumberChange={viewModel.onMobileNumberChange}

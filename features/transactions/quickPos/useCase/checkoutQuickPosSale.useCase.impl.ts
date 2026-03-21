@@ -3,12 +3,12 @@ import type { CreateFinanceTransactionUseCase } from "@/features/finance/transac
 import type { PosItem, PosCartLine } from "@/features/pos/item/types/types";
 import type { UpdatePosItemStockUseCase } from "@/features/pos/item/useCase/updatePosItemStock.useCase";
 import type { CreatePosSaleUseCase } from "@/features/pos/sale/useCase/createPosSale.useCase";
-import type { GetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase";
+import type { GetFinanceAccountByIdUseCase } from "@/features/finance/account/useCase/getFinanceAccountById.useCase";
 import type { CheckoutQuickPosSaleInput, CheckoutQuickPosSaleUseCase } from "./checkoutQuickPosSale.useCase";
 import { createQuickPosFailure, type QuickPosResult } from "./quickPosError";
 
 type Params = {
-  getActiveAccountUseCase: GetActiveAccountUseCase;
+  getFinanceAccountByIdUseCase: GetFinanceAccountByIdUseCase;
   createPosSaleUseCase: CreatePosSaleUseCase;
   createFinanceTransactionUseCase: CreateFinanceTransactionUseCase;
   adjustFinanceAccountBalanceUseCase: AdjustFinanceAccountBalanceUseCase;
@@ -54,7 +54,7 @@ const updateInventoryStock = async (
 };
 
 export const createCheckoutQuickPosSaleUseCase = ({
-  getActiveAccountUseCase,
+  getFinanceAccountByIdUseCase,
   createPosSaleUseCase,
   createFinanceTransactionUseCase,
   adjustFinanceAccountBalanceUseCase,
@@ -69,10 +69,15 @@ export const createCheckoutQuickPosSaleUseCase = ({
       return createQuickPosFailure("insufficientStock");
     }
 
-    const accountResult = await getActiveAccountUseCase.execute();
+    const accountResult = await getFinanceAccountByIdUseCase.execute(input.receivingAccountId);
 
-    if (!accountResult.success || !accountResult.value) {
-      return createQuickPosFailure("noPrimaryAccount");
+    if (
+      !accountResult.success ||
+      !accountResult.value ||
+      accountResult.value.profileId !== input.profileId ||
+      accountResult.value.isArchived
+    ) {
+      return createQuickPosFailure("invalidReceivingAccount");
     }
 
     const saleNumber = generateSaleNumber();

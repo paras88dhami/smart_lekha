@@ -1,6 +1,9 @@
 import type { Collection, Database, Query } from "@nozbe/watermelondb";
 import { Q } from "@nozbe/watermelondb";
-import type { CreateFinanceAccountRecord } from "../financeAccount.dataSource";
+import type {
+  CreateFinanceAccountRecord,
+  UpdateFinanceAccountRecord,
+} from "../financeAccount.dataSource";
 import type { FinanceAccountModel } from "../financeAccount.model";
 
 export const getFinanceAccountCollection = (
@@ -22,6 +25,7 @@ export const getFinanceAccountsByProfileQuery = (
 ): Query<FinanceAccountModel> => {
   return getFinanceAccountCollection(database).query(
     Q.where("profile_id", profileId),
+    Q.where("is_archived", false),
     Q.sortBy("created_at", Q.asc),
   );
 };
@@ -40,10 +44,43 @@ export const createFinanceAccountRecord = async (
       currentRecord.accountNumber = payload.accountNumber;
       currentRecord.accountType = payload.accountType;
       currentRecord.isPrimary = payload.isPrimary;
+      currentRecord.isArchived = false;
       currentRecord.currencyCode = payload.currencyCode;
       currentRecord.currentBalance = payload.currentBalance;
       currentRecord.createdAt = timestamp;
       currentRecord.updatedAt = timestamp;
+    });
+  });
+};
+
+export const updateFinanceAccountRecord = async (
+  database: Database,
+  record: FinanceAccountModel,
+  payload: UpdateFinanceAccountRecord,
+): Promise<FinanceAccountModel> => {
+  const timestamp = Date.now();
+
+  await database.write(async (): Promise<void> => {
+    await record.update((currentRecord: FinanceAccountModel): void => {
+      currentRecord.accountName = payload.accountName;
+      currentRecord.accountNumber = payload.accountNumber;
+      currentRecord.accountType = payload.accountType;
+      currentRecord.updatedAt = timestamp;
+    });
+  });
+
+  return record;
+};
+
+export const archiveFinanceAccountRecord = async (
+  database: Database,
+  record: FinanceAccountModel,
+): Promise<void> => {
+  await database.write(async (): Promise<void> => {
+    await record.update((currentRecord: FinanceAccountModel): void => {
+      currentRecord.isArchived = true;
+      currentRecord.isPrimary = false;
+      currentRecord.updatedAt = Date.now();
     });
   });
 };

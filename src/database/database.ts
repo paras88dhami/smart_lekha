@@ -19,7 +19,7 @@ import { seedDefaultAppSettings } from "./seed/seedDefaultAppSettings";
 import { seedBusinessCategories } from "./seed/seedBusinessCategories";
 
 const schema = appSchema({
-  version: 7,
+  version: 9,
   tables: [
     ...appSettingsDbConfig.tables,
     ...authSessionDbConfig.tables,
@@ -60,12 +60,8 @@ export const database = createDatabase({
 });
 
 export const runAuthSeeds = async (): Promise<void> => {
-  try {
-    await seedDefaultAppSettings(database);
-    await seedBusinessCategories(database);
-  } catch (error) {
-    console.error("Auth database seed failed", error);
-  }
+  await seedDefaultAppSettings(database);
+  await seedBusinessCategories(database);
 };
 
 export default database;

@@ -26,12 +26,16 @@ import { createSettleTransactionsPaymentRecordUseCase } from "../useCase/settleT
 
 type Params = {
   database: Database;
+  onAddTransactionPress: () => void;
   onQuickPosPress: () => void;
+  onTransactionPress: (transactionId: string) => void;
 };
 
 export const createTransactionsOverviewDependencies = ({
   database,
+  onAddTransactionPress,
   onQuickPosPress,
+  onTransactionPress,
 }: Params) => {
   const activeProfileDataSource = createLocalActiveProfileDataSource(database);
   const activeProfileRepository = createActiveProfileRepository(activeProfileDataSource);
@@ -82,6 +86,9 @@ export const createTransactionsOverviewDependencies = ({
     loadTransactionsOverviewUseCase: createLoadTransactionsOverviewUseCase({
       getActiveProfileUseCase,
       ensureDefaultFinanceAccountsUseCase,
+      getFinanceAccountsByProfileUseCase: createGetFinanceAccountsByProfileUseCase(
+        financeAccountRepository,
+      ),
       getFinanceTransactionsUseCase,
       getOpenPaymentRecordsUseCase,
     }),
@@ -99,6 +106,8 @@ export const createTransactionsOverviewDependencies = ({
         adjustFinanceAccountBalanceUseCase,
         settlePaymentRecordUseCase,
       }),
+    onAddTransactionPress,
     onQuickPosPress,
+    onTransactionPress,
   };
 };

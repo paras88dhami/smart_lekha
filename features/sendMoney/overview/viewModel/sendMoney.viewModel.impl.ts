@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { TransferMethod } from "@/features/transfers/shared/types/transferMethod.types";
+import type { TransferRecordTargetType } from "@/features/transfers/record/data/dataSource/transferRecord.model";
 import type { SendMoneyViewModel } from "./sendMoney.viewModel";
 import type { LoadSendMoneyOverviewUseCase } from "../useCase/loadSendMoneyOverview.useCase";
 import type { SubmitSendMoneyTransferUseCase } from "../useCase/submitSendMoneyTransfer.useCase";
@@ -11,6 +12,9 @@ import {
   changeSendMoneyMobileNumber,
   changeSendMoneyNote,
   selectSendMoneyMethod,
+  selectSendMoneyDestinationAccount,
+  selectSendMoneySourceAccount,
+  selectSendMoneyTargetType,
   toggleSendMoneyForm,
   toggleSendMoneySchedule,
 } from "./sendMoneyFormActions";
@@ -62,6 +66,18 @@ export const useSendMoneyViewModel = (dependencies: Dependencies): SendMoneyView
 
   const onToggleAddTransferPress = useCallback((): void => {
     setState(toggleSendMoneyForm);
+  }, []);
+
+  const onTargetTypePress = useCallback((targetType: TransferRecordTargetType): void => {
+    setState((currentState) => selectSendMoneyTargetType(currentState, targetType));
+  }, []);
+
+  const onSourceAccountPress = useCallback((accountId: string): void => {
+    setState((currentState) => selectSendMoneySourceAccount(currentState, accountId));
+  }, []);
+
+  const onDestinationAccountPress = useCallback((accountId: string): void => {
+    setState((currentState) => selectSendMoneyDestinationAccount(currentState, accountId));
   }, []);
 
   const onBeneficiaryNameChange = useCallback((value: string): void => {
@@ -129,6 +145,9 @@ export const useSendMoneyViewModel = (dependencies: Dependencies): SendMoneyView
       onRefreshPress: loadOverview,
       onMethodPress,
       onToggleAddTransferPress,
+      onTargetTypePress,
+      onSourceAccountPress,
+      onDestinationAccountPress,
       onBeneficiaryNameChange,
       onAccountNumberChange,
       onMobileNumberChange,
@@ -144,11 +163,14 @@ export const useSendMoneyViewModel = (dependencies: Dependencies): SendMoneyView
     onAccountNumberChange,
     onAmountChange,
     onBeneficiaryNameChange,
+    onDestinationAccountPress,
     onMethodPress,
     onMobileNumberChange,
     onNoteChange,
     onScheduleTogglePress,
+    onSourceAccountPress,
     onSubmitTransferPress,
+    onTargetTypePress,
     onToggleAddTransferPress,
     state,
   ]);

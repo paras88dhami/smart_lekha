@@ -13,6 +13,13 @@ export type HomeDashboardFlowSummary = {
   todayOutflow: number;
 };
 
+export type HomeDashboardPaymentSummary = {
+  toReceiveAmount: number;
+  toReceiveCount: number;
+  toPayAmount: number;
+  toPayCount: number;
+};
+
 export type HomeDashboardShortcut = {
   key: HomeShortcutKey;
   labelKey: string;
@@ -32,6 +39,7 @@ export type HomeDashboardData = {
   profileName: string;
   accountOverview: HomeDashboardAccountOverview;
   flowSummary: HomeDashboardFlowSummary;
+  paymentSummary: HomeDashboardPaymentSummary;
   shortcuts: HomeDashboardShortcut[];
   recentActivity: HomeDashboardRecentActivity[];
 };

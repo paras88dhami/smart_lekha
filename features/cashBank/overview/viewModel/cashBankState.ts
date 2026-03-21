@@ -1,22 +1,11 @@
 import { Status } from "@/shared/types/status.types";
-import type { CashBankFormState, CashBankOverviewData, CashBankState } from "../types/types";
-
-export const createCashBankFormState = (): CashBankFormState => {
-  return {
-    accountNameInput: "",
-    accountNumberInput: "",
-    openingBalanceInput: "",
-    selectedAccountType: "cash",
-  };
-};
+import type { CashBankOverviewData, CashBankState } from "../types/types";
 
 export const createInitialCashBankState = (): CashBankState => {
   return {
     status: Status.Idle,
     profileName: "",
     accounts: [],
-    showAddAccountForm: false,
-    form: createCashBankFormState(),
     errorMessage: "",
   };
 };

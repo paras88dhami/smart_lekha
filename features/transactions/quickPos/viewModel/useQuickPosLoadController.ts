@@ -51,6 +51,14 @@ export const useQuickPosLoadController = ({
         status: Status.Success,
         items: loadQuickPosResult.value.items,
         productSlots: loadQuickPosResult.value.productSlots,
+        receivingAccounts: loadQuickPosResult.value.receivingAccounts,
+        selectedReceivingAccountId:
+          currentState.selectedReceivingAccountId &&
+          loadQuickPosResult.value.receivingAccounts.some(
+            (account) => account.id === currentState.selectedReceivingAccountId,
+          )
+            ? currentState.selectedReceivingAccountId
+            : loadQuickPosResult.value.activeReceivingAccountId,
         errorMessage: "",
         isCheckingOut: false,
       }));

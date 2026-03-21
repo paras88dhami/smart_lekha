@@ -145,6 +145,45 @@ export const styles = StyleSheet.create({
     fontWeight: "900",
     color: KhataColors.primaryDark,
   },
+  receivingSection: {
+    gap: 8,
+  },
+  receivingTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: KhataColors.mutedText,
+  },
+  receivingList: {
+    gap: 10,
+    paddingRight: 4,
+  },
+  receivingAccountButton: {
+    minWidth: 128,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: KhataColors.border,
+    backgroundColor: KhataColors.background,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 4,
+  },
+  receivingAccountButtonActive: {
+    borderColor: KhataColors.primaryDark,
+    backgroundColor: KhataColors.softGreen,
+  },
+  receivingAccountName: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: KhataColors.text,
+  },
+  receivingAccountNameActive: {
+    color: KhataColors.primaryDark,
+  },
+  receivingAccountMeta: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: KhataColors.mutedText,
+  },
   paymentRow: {
     flexDirection: "row",
     gap: 10,

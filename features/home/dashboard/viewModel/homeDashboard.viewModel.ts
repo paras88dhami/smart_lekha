@@ -3,6 +3,7 @@ import type { StatusType } from "@/shared/types/status.types";
 import type {
   HomeDashboardAccountOverview,
   HomeDashboardFlowSummary,
+  HomeDashboardPaymentSummary,
   HomeDashboardRecentActivity,
   HomeDashboardShortcut,
 } from "../types/types";
@@ -13,6 +14,7 @@ export type HomeDashboardState = {
   profileName: string;
   accountOverview: HomeDashboardAccountOverview;
   flowSummary: HomeDashboardFlowSummary;
+  paymentSummary: HomeDashboardPaymentSummary;
   shortcuts: HomeDashboardShortcut[];
   recentActivity: HomeDashboardRecentActivity[];
   errorMessage: string;

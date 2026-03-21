@@ -12,10 +12,14 @@ type Props = {
   noAccountNumberLabel: string;
   primaryLabel: string;
   setPrimaryLabel: string;
+  statementLabel: string;
+  editLabel: string;
   languageCode: SupportedLanguageCode;
   accounts: CashBankAccountItem[];
   getLabel: (key: string) => string;
+  onEditAccountPress: (accountId: string) => void;
   onSetPrimaryPress: (accountId: string) => void;
+  onViewStatementPress: (accountId: string) => void;
 };
 
 export default function CashBankAccountList(props: Props): React.JSX.Element {
@@ -32,8 +36,12 @@ export default function CashBankAccountList(props: Props): React.JSX.Element {
               noAccountNumberLabel={props.noAccountNumberLabel}
               primaryLabel={props.primaryLabel}
               setPrimaryLabel={props.setPrimaryLabel}
+              statementLabel={props.statementLabel}
+              editLabel={props.editLabel}
               getLabel={props.getLabel}
+              onEditAccountPress={props.onEditAccountPress}
               onSetPrimaryPress={props.onSetPrimaryPress}
+              onViewStatementPress={props.onViewStatementPress}
             />
           ))
         ) : (

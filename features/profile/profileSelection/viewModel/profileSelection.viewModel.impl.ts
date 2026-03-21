@@ -122,44 +122,49 @@ export const useProfileSelectionViewModel = (
     }));
   }, []);
 
-  const onActivateProfilePress = useCallback(async (): Promise<void> => {
-    if (isSubmittingRef.current || !state.selectedProfileId) {
-      return;
-    }
-
-    isSubmittingRef.current = true;
-
-    setState((currentState) => ({
-      ...currentState,
-      status: Status.Loading,
-      errorMessage: "",
-    }));
-
-    try {
-      const result = await activateSelectedProfileUseCase.execute(
-        state.selectedProfileId,
-      );
-
-      if (!result.success) {
-        setState((currentState) => ({
-          ...currentState,
-          status: Status.Failure,
-          errorMessage: getProfileSelectionErrorMessage(result.error),
-        }));
+  const activateProfile = useCallback(
+    async (profileId: string): Promise<void> => {
+      if (isSubmittingRef.current || !profileId) {
         return;
       }
 
-      await loadProfiles();
-      onActivated();
-    } finally {
-      isSubmittingRef.current = false;
-    }
-  }, [
-    activateSelectedProfileUseCase,
-    loadProfiles,
-    onActivated,
-    state.selectedProfileId,
-  ]);
+      isSubmittingRef.current = true;
+
+      setState((currentState) => ({
+        ...currentState,
+        status: Status.Loading,
+        selectedProfileId: profileId,
+        errorMessage: "",
+      }));
+
+      try {
+        const result = await activateSelectedProfileUseCase.execute(profileId);
+
+        if (!result.success) {
+          setState((currentState) => ({
+            ...currentState,
+            status: Status.Failure,
+            errorMessage: getProfileSelectionErrorMessage(result.error),
+          }));
+          return;
+        }
+
+        await loadProfiles();
+        onActivated();
+      } finally {
+        isSubmittingRef.current = false;
+      }
+    },
+    [activateSelectedProfileUseCase, loadProfiles, onActivated],
+  );
+
+  const onProfilePress = useCallback(async (profileId: string): Promise<void> => {
+    await activateProfile(profileId);
+  }, [activateProfile]);
+
+  const onActivateProfilePress = useCallback(async (): Promise<void> => {
+    await activateProfile(state.selectedProfileId);
+  }, [activateProfile, state.selectedProfileId]);
 
   const onCreateBusinessPress = useCallback((): void => {
     onCreateBusiness();
@@ -173,6 +178,7 @@ export const useProfileSelectionViewModel = (
     state,
     onRefreshPress: loadProfiles,
     onSelectProfilePress,
+    onProfilePress,
     onActivateProfilePress,
     onCreateBusinessPress,
   };

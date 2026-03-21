@@ -3,6 +3,7 @@ import type {
   CreateFinanceTransactionInput,
   FinanceSummary,
   FinanceTransaction,
+  UpdateFinanceTransactionInput,
 } from "../../types/types";
 import type { FinanceTransactionDataSource } from "../dataSource/financeTransaction.dataSource";
 import type { FinanceTransactionModel } from "../dataSource/financeTransaction.model";
@@ -27,6 +28,22 @@ const mapTransaction = (record: FinanceTransactionModel): FinanceTransaction => 
 const toPayload = (input: CreateFinanceTransactionInput): FinanceTransactionModel => {
   return {
     profileId: input.profileId.trim(),
+    accountId: input.accountId?.trim() ?? null,
+    entryType: input.entryType,
+    categoryName: input.categoryName?.trim() ?? null,
+    counterpartyName: input.counterpartyName?.trim() ?? null,
+    note: input.note?.trim() ?? null,
+    status: input.status,
+    amount: Math.max(0, input.amount),
+    occurredAt: input.occurredAt,
+    referenceId: input.referenceId?.trim() ?? null,
+  } as FinanceTransactionModel;
+};
+
+const toUpdatePayload = (
+  input: UpdateFinanceTransactionInput,
+): FinanceTransactionModel => {
+  return {
     accountId: input.accountId?.trim() ?? null,
     entryType: input.entryType,
     categoryName: input.categoryName?.trim() ?? null,
@@ -79,6 +96,35 @@ export const createFinanceTransactionRepository = (
     };
   },
 
+  async getByAccountId(
+    accountId: string,
+    limit: number,
+  ): Promise<Result<FinanceTransaction[]>> {
+    const result = await localDataSource.getByAccountId(accountId.trim(), limit);
+
+    if (!result.success) {
+      return createFailure<FinanceTransaction[]>(result.error);
+    }
+
+    return {
+      success: true,
+      value: result.value.map(mapTransaction),
+    };
+  },
+
+  async getById(transactionId: string): Promise<Result<FinanceTransaction>> {
+    const result = await localDataSource.getById(transactionId.trim());
+
+    if (!result.success) {
+      return createFailure<FinanceTransaction>(result.error);
+    }
+
+    return {
+      success: true,
+      value: mapTransaction(result.value),
+    };
+  },
+
   async createTransaction(
     input: CreateFinanceTransactionInput,
   ): Promise<Result<FinanceTransaction>> {
@@ -92,6 +138,28 @@ export const createFinanceTransactionRepository = (
       success: true,
       value: mapTransaction(result.value),
     };
+  },
+
+  async updateTransaction(
+    input: UpdateFinanceTransactionInput,
+  ): Promise<Result<FinanceTransaction>> {
+    const result = await localDataSource.updateTransaction(
+      input.transactionId.trim(),
+      toUpdatePayload(input),
+    );
+
+    if (!result.success) {
+      return createFailure<FinanceTransaction>(result.error);
+    }
+
+    return {
+      success: true,
+      value: mapTransaction(result.value),
+    };
+  },
+
+  async deleteTransaction(transactionId: string): Promise<Result<void>> {
+    return localDataSource.deleteTransaction(transactionId.trim());
   },
 
   async getSummaryByProfileId(profileId: string): Promise<Result<FinanceSummary>> {

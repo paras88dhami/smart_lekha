@@ -2,11 +2,13 @@ import type {
   AdjustFinanceAccountBalanceInput,
   CreateFinanceAccountInput,
   FinanceAccount,
+  UpdateFinanceAccountInput,
 } from "../../types/types";
 import type { FinanceAccountModel } from "../dataSource/financeAccount.model";
 import type {
   CreateFinanceAccountRecord,
   FinanceAccountDataSource,
+  UpdateFinanceAccountRecord,
 } from "../dataSource/financeAccount.dataSource";
 import type { FinanceAccountRepository } from "./financeAccount.repository";
 import type { Result } from "@/shared/types/result.types";
@@ -19,6 +21,7 @@ const mapFinanceAccount = (record: FinanceAccountModel): FinanceAccount => {
     accountNumber: record.accountNumber?.trim() ?? null,
     accountType: record.accountType,
     isPrimary: record.isPrimary,
+    isArchived: record.isArchived,
     currencyCode: record.currencyCode.trim(),
     currentBalance: record.currentBalance,
   };
@@ -35,6 +38,17 @@ const toDataSourcePayload = (
     isPrimary: input.isPrimary,
     currencyCode: input.currencyCode.trim() || "NPR",
     currentBalance: input.currentBalance,
+  };
+};
+
+const toUpdatePayload = (
+  input: UpdateFinanceAccountInput,
+): UpdateFinanceAccountRecord => {
+  return {
+    accountId: input.accountId.trim(),
+    accountName: input.accountName.trim(),
+    accountNumber: input.accountNumber?.trim() ?? null,
+    accountType: input.accountType,
   };
 };
 
@@ -74,6 +88,19 @@ export const createFinanceAccountRepository = (
     };
   },
 
+  async getAccountById(accountId: string): Promise<Result<FinanceAccount>> {
+    const result = await localDataSource.getAccountById(accountId.trim());
+
+    if (!result.success) {
+      return createFailure<FinanceAccount>(result.error);
+    }
+
+    return {
+      success: true,
+      value: mapFinanceAccount(result.value),
+    };
+  },
+
   async createAccount(input: CreateFinanceAccountInput): Promise<Result<FinanceAccount>> {
     const result = await localDataSource.createAccount(toDataSourcePayload(input));
 
@@ -85,6 +112,23 @@ export const createFinanceAccountRepository = (
       success: true,
       value: mapFinanceAccount(result.value),
     };
+  },
+
+  async updateAccount(input: UpdateFinanceAccountInput): Promise<Result<FinanceAccount>> {
+    const result = await localDataSource.updateAccount(toUpdatePayload(input));
+
+    if (!result.success) {
+      return createFailure<FinanceAccount>(result.error);
+    }
+
+    return {
+      success: true,
+      value: mapFinanceAccount(result.value),
+    };
+  },
+
+  async archiveAccount(accountId: string): Promise<Result<void>> {
+    return localDataSource.archiveAccount(accountId.trim());
   },
 
   async adjustBalance(

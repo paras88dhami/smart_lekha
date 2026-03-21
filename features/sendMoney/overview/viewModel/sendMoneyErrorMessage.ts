@@ -13,8 +13,12 @@ export const getSendMoneyErrorMessage = (error: Error): string => {
       return translate("sendMoney.errors.invalidBeneficiary");
     case "invalid_amount":
       return translate("sendMoney.errors.invalidAmount");
-    case "no_primary_account":
-      return translate("sendMoney.errors.noPrimaryAccount");
+    case "invalid_source_account":
+      return translate("sendMoney.errors.invalidSourceAccount");
+    case "invalid_destination_account":
+      return translate("sendMoney.errors.invalidDestinationAccount");
+    case "same_account_transfer":
+      return translate("sendMoney.errors.sameAccountTransfer");
     case "save_failed":
       return translate("sendMoney.errors.saveFailed");
     case "load_failed":

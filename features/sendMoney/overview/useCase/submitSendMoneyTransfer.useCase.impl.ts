@@ -1,15 +1,18 @@
 import type { Result } from "@/shared/types/result.types";
-import type { AdjustFinanceAccountBalanceUseCase } from "@/features/finance/account/useCase/adjustFinanceAccountBalance.useCase";
-import type { CreateFinanceTransactionUseCase } from "@/features/finance/transaction/useCase/createFinanceTransaction.useCase";
-import type { CreateTransferBeneficiaryUseCase } from "@/features/transfers/beneficiary/useCase/createTransferBeneficiary.useCase";
 import type { CreateTransferRecordUseCase } from "@/features/transfers/record/useCase/createTransferRecord.useCase";
-import {
-  hasRequiredTransferMethodInputs,
-  sanitizeTransferMethodInputs,
-} from "@/features/transfers/shared/config/transferMethodCatalog";
-import type { GetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase";
+import type { ExecuteTransferRecordUseCase } from "@/features/transfers/record/useCase/executeTransferRecord.useCase";
+import type { UpdateTransferRecordStatusUseCase } from "@/features/transfers/record/useCase/updateTransferRecordStatus.useCase";
+import type { GetFinanceAccountByIdUseCase } from "@/features/finance/account/useCase/getFinanceAccountById.useCase";
 import type { GetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase";
 import { createSendMoneyError } from "./sendMoneyError";
+import {
+  createSendMoneyFailure,
+  loadSendMoneyAccount,
+  parseTransferAmount,
+  resolveBeneficiaryTransferTarget,
+  resolveOwnAccountTransferTarget,
+} from "./submitSendMoneyTransfer.helpers";
+import type { ResolveSendMoneyBeneficiaryUseCase } from "./resolveSendMoneyBeneficiary.useCase";
 import type {
   SubmitSendMoneyTransferCommand,
   SubmitSendMoneyTransferUseCase,
@@ -17,107 +20,114 @@ import type {
 
 type Dependencies = {
   getActiveProfileUseCase: GetActiveProfileUseCase;
-  getActiveAccountUseCase: GetActiveAccountUseCase;
-  createTransferBeneficiaryUseCase: CreateTransferBeneficiaryUseCase;
+  getFinanceAccountByIdUseCase: GetFinanceAccountByIdUseCase;
+  resolveSendMoneyBeneficiaryUseCase: ResolveSendMoneyBeneficiaryUseCase;
   createTransferRecordUseCase: CreateTransferRecordUseCase;
-  createFinanceTransactionUseCase: CreateFinanceTransactionUseCase;
-  adjustFinanceAccountBalanceUseCase: AdjustFinanceAccountBalanceUseCase;
+  executeTransferRecordUseCase: ExecuteTransferRecordUseCase;
+  updateTransferRecordStatusUseCase: UpdateTransferRecordStatusUseCase;
 };
 
-const parseTransferAmount = (amountInput: string): number => {
-  return Number(amountInput);
-};
+const updateTransferStatus = async (
+  recordId: string,
+  status: "completed" | "failed",
+  updateTransferRecordStatusUseCase: UpdateTransferRecordStatusUseCase,
+): Promise<Result<void>> => {
+  const result = await updateTransferRecordStatusUseCase.execute({
+    recordId,
+    status,
+  });
 
-const createFailure = (error: Error): Result<void> => {
-  return { success: false, error };
+  if (!result.success) {
+    return createSendMoneyFailure("save_failed");
+  }
+
+  return { success: true, value: undefined };
 };
 
 export const createSubmitSendMoneyTransferUseCase = (
   dependencies: Dependencies,
 ): SubmitSendMoneyTransferUseCase => ({
   async execute(input: SubmitSendMoneyTransferCommand): Promise<Result<void>> {
-    const beneficiaryName = input.beneficiaryNameInput.trim();
-    const transferContactFields = sanitizeTransferMethodInputs(input.selectedMethod, {
-      bankNameInput: "",
-      accountNumberInput: input.accountNumberInput,
-      mobileNumberInput: input.mobileNumberInput,
-    });
     const parsedAmount = parseTransferAmount(input.amountInput);
 
-    if (
-      !beneficiaryName ||
-      !hasRequiredTransferMethodInputs(input.selectedMethod, transferContactFields)
-    ) {
-      return createFailure(createSendMoneyError("invalid_beneficiary"));
-    }
-
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      return createFailure(createSendMoneyError("invalid_amount"));
+      return createSendMoneyFailure("invalid_amount");
     }
 
     const activeProfileResult = await dependencies.getActiveProfileUseCase.execute();
+
     if (!activeProfileResult.success || !activeProfileResult.value) {
-      return createFailure(createSendMoneyError("no_active_profile"));
+      return createSendMoneyFailure("no_active_profile");
     }
 
-    const activeAccountResult = await dependencies.getActiveAccountUseCase.execute();
-    if (!activeAccountResult.success || !activeAccountResult.value) {
-      return createFailure(createSendMoneyError("no_primary_account"));
+    const sourceAccountResult = await loadSendMoneyAccount(
+      activeProfileResult.value.profileId,
+      input.sourceAccountId,
+      "invalid_source_account",
+      dependencies.getFinanceAccountByIdUseCase,
+    );
+
+    if (!sourceAccountResult.success) {
+      return sourceAccountResult;
     }
 
-    const beneficiaryResult = await dependencies.createTransferBeneficiaryUseCase.execute({
-      profileId: activeProfileResult.value.profileId,
-      beneficiaryName,
-      bankName: transferContactFields.bankName,
-      accountNumber: transferContactFields.accountNumber,
-      mobileNumber: transferContactFields.mobileNumber,
-      transferMethod: input.selectedMethod,
-      isFavorite: true,
-    });
-    if (!beneficiaryResult.success) {
-      return createFailure(createSendMoneyError("save_failed"));
+    const transferTargetResult =
+      input.targetType === "own_account"
+        ? await resolveOwnAccountTransferTarget(
+            activeProfileResult.value.profileId,
+            sourceAccountResult.value.id,
+            input.destinationAccountId,
+            dependencies.getFinanceAccountByIdUseCase,
+          )
+        : await resolveBeneficiaryTransferTarget(
+            activeProfileResult.value.profileId,
+            input,
+            dependencies.resolveSendMoneyBeneficiaryUseCase,
+          );
+
+    if (!transferTargetResult.success) {
+      return transferTargetResult;
     }
 
     const transferRecordResult = await dependencies.createTransferRecordUseCase.execute({
       profileId: activeProfileResult.value.profileId,
-      beneficiaryId: beneficiaryResult.value.id,
-      fromAccountId: activeAccountResult.value.id,
+      beneficiaryId: transferTargetResult.value.beneficiaryId,
+      fromAccountId: sourceAccountResult.value.id,
+      toAccountId: transferTargetResult.value.toAccountId,
+      targetName: transferTargetResult.value.targetName,
+      targetType: input.targetType,
+      transferMethod: transferTargetResult.value.transferMethod,
       amount: parsedAmount,
       note: input.noteInput.trim() || null,
       recordType: input.isScheduled ? "scheduled" : "saved",
       scheduledFor: input.isScheduled ? Date.now() + 24 * 60 * 60 * 1000 : null,
-      status: input.isScheduled ? "pending" : "completed",
+      status: "pending",
     });
+
     if (!transferRecordResult.success) {
-      return createFailure(createSendMoneyError("save_failed"));
+      return createSendMoneyFailure("save_failed");
     }
 
     if (input.isScheduled) {
       return { success: true, value: undefined };
     }
 
-    const transactionResult = await dependencies.createFinanceTransactionUseCase.execute({
-      profileId: activeProfileResult.value.profileId,
-      accountId: activeAccountResult.value.id,
-      entryType: "transfer_out",
-      categoryName: "Transfers",
-      counterpartyName: beneficiaryName,
-      note: input.noteInput.trim() || null,
-      status: "success",
-      amount: parsedAmount,
-      occurredAt: Date.now(),
-      referenceId: transferRecordResult.value.id,
+    const executionResult = await dependencies.executeTransferRecordUseCase.execute({
+      transferRecord: transferRecordResult.value,
     });
-    if (!transactionResult.success) {
-      return createFailure(createSendMoneyError("save_failed"));
+    const status = executionResult.success ? "completed" : "failed";
+    const statusResult = await updateTransferStatus(
+      transferRecordResult.value.id,
+      status,
+      dependencies.updateTransferRecordStatusUseCase,
+    );
+
+    if (!statusResult.success) {
+      return statusResult;
     }
 
-    const adjustBalanceResult = await dependencies.adjustFinanceAccountBalanceUseCase.execute({
-      accountId: activeAccountResult.value.id,
-      deltaAmount: -parsedAmount,
-    });
-    if (!adjustBalanceResult.success) {
-      return createFailure(createSendMoneyError("save_failed"));
+    if (!executionResult.success) {
+      return { success: false, error: createSendMoneyError("save_failed") };
     }
 
     return { success: true, value: undefined };

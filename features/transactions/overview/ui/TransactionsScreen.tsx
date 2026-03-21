@@ -7,6 +7,7 @@ import React from "react";
 import { StyleSheet, Text } from "react-native";
 import TransactionsCreatePaymentCard from "./components/TransactionsCreatePaymentCard";
 import TransactionsHeader from "./components/TransactionsHeader";
+import TransactionsHistoryFilters from "./components/TransactionsHistoryFilters";
 import TransactionsHistorySection from "./components/TransactionsHistorySection";
 import TransactionsOpenPaymentsSection from "./components/TransactionsOpenPaymentsSection";
 import TransactionsSummaryCards from "./components/TransactionsSummaryCards";
@@ -23,7 +24,9 @@ export default function TransactionsScreen({ viewModel }: Props): React.JSX.Elem
       <TransactionsHeader
         title={t("transactions.title")}
         subtitle={t("transactions.subtitle")}
+        addTransactionLabel={t("transactions.addTransaction")}
         quickPosLabel={t("transactions.quickPos")}
+        onAddTransactionPress={viewModel.onAddTransactionPress}
         onQuickPosPress={viewModel.onQuickPosPress}
       />
 
@@ -33,6 +36,7 @@ export default function TransactionsScreen({ viewModel }: Props): React.JSX.Elem
           description: t("transactions.toReceiveDescription"),
           amount: viewModel.state.toReceiveSummary.totalAmount,
           openCount: viewModel.state.toReceiveSummary.openCount,
+          openLabel: t("transactions.openLabel"),
           languageCode,
           tone: "receive",
         }}
@@ -41,6 +45,7 @@ export default function TransactionsScreen({ viewModel }: Props): React.JSX.Elem
           description: t("transactions.toPayDescription"),
           amount: viewModel.state.toPaySummary.totalAmount,
           openCount: viewModel.state.toPaySummary.openCount,
+          openLabel: t("transactions.openLabel"),
           languageCode,
           tone: "pay",
         }}
@@ -92,11 +97,25 @@ export default function TransactionsScreen({ viewModel }: Props): React.JSX.Elem
         }}
       />
 
+      <TransactionsHistoryFilters
+        accountsTitle={t("transactions.accountFilterTitle")}
+        entryTypesTitle={t("transactions.entryFilterTitle")}
+        allAccountsLabel={t("transactions.allAccounts")}
+        selectedAccountFilterId={viewModel.state.selectedAccountFilterId}
+        selectedEntryFilter={viewModel.state.selectedEntryFilter}
+        accountOptions={viewModel.state.accountOptions}
+        getLabel={t}
+        onAccountFilterPress={viewModel.onAccountFilterPress}
+        onEntryFilterPress={viewModel.onEntryFilterPress}
+      />
+
       <TransactionsHistorySection
         title={t("transactions.historyTitle")}
         emptyLabel={t("transactions.empty")}
         items={viewModel.state.historyItems}
         languageCode={languageCode}
+        getLabel={t}
+        onTransactionPress={viewModel.onTransactionPress}
       />
 
       {viewModel.state.status === Status.Failure && viewModel.state.errorMessage ? (

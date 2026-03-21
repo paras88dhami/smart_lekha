@@ -2,8 +2,10 @@ import { getHomeShortcutMetadata } from "@/features/home/shortcut/config/homeSho
 import type { HomeShortcut } from "@/features/home/shortcut/types/types";
 import type { ActiveProfile } from "@/features/workspace/activeProfile/types/types";
 import type { FinanceTransaction } from "@/features/finance/transaction/types/types";
+import type { PaymentRecord } from "@/features/transactions/paymentRecord/types/types";
 import type {
   HomeDashboardData,
+  HomeDashboardPaymentSummary,
   HomeDashboardRecentActivity,
   HomeDashboardShortcut,
 } from "../types/types";
@@ -48,6 +50,34 @@ const mapRecentActivity = (
   };
 };
 
+const createPaymentSummary = (
+  openPaymentRecords: PaymentRecord[],
+): HomeDashboardPaymentSummary => {
+  return openPaymentRecords.reduce<HomeDashboardPaymentSummary>(
+    (summary, paymentRecord) => {
+      if (paymentRecord.direction === "to_receive") {
+        return {
+          ...summary,
+          toReceiveAmount: summary.toReceiveAmount + paymentRecord.outstandingAmount,
+          toReceiveCount: summary.toReceiveCount + 1,
+        };
+      }
+
+      return {
+        ...summary,
+        toPayAmount: summary.toPayAmount + paymentRecord.outstandingAmount,
+        toPayCount: summary.toPayCount + 1,
+      };
+    },
+    {
+      toReceiveAmount: 0,
+      toReceiveCount: 0,
+      toPayAmount: 0,
+      toPayCount: 0,
+    },
+  );
+};
+
 export const createHomeDashboardData = (
   activeProfile: ActiveProfile,
   sourceData: HomeDashboardSourceData,
@@ -70,6 +100,7 @@ export const createHomeDashboardData = (
       todayInflow: sourceData.summary.todayInflow,
       todayOutflow: sourceData.summary.todayOutflow,
     },
+    paymentSummary: createPaymentSummary(sourceData.openPaymentRecords),
     shortcuts,
     recentActivity: sourceData.recentTransactions.map(mapRecentActivity),
   };

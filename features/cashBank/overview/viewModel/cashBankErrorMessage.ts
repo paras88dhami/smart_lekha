@@ -9,12 +9,22 @@ export const getCashBankErrorMessage = (error: Error): string => {
   switch (error.code) {
     case "no_active_profile":
       return translate("cashBank.errors.noActiveProfile");
+    case "account_not_found":
+      return translate("cashBank.errors.accountNotFound");
     case "invalid_name":
       return translate("cashBank.errors.invalidName");
     case "invalid_opening_balance":
       return translate("cashBank.errors.invalidOpeningBalance");
     case "create_failed":
       return translate("cashBank.errors.createFailed");
+    case "update_failed":
+      return translate("cashBank.errors.updateFailed");
+    case "archive_failed":
+      return translate("cashBank.errors.archiveFailed");
+    case "cannot_archive_primary":
+      return translate("cashBank.errors.cannotArchivePrimary");
+    case "cannot_archive_with_balance":
+      return translate("cashBank.errors.cannotArchiveWithBalance");
     case "set_primary_failed":
       return translate("cashBank.errors.setPrimaryFailed");
     case "load_failed":

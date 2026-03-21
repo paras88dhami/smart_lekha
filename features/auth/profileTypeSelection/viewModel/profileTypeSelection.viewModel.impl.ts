@@ -3,10 +3,10 @@ import { Status } from "@/shared/types/status.types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DEFAULT_BUSINESS_CATEGORY_SEEDS } from "../../businessCategory/data/defaultBusinessCategories";
 import type { GetActiveBusinessCategoriesUseCase } from "../../businessCategory/useCase/getActiveBusinessCategories.useCase";
-import type { SetActiveProfileUseCase } from "../../profile/useCase/setActiveProfile.useCase";
+import type { ActivateProfileContextUseCase } from "@/features/workspace/activeProfile/useCase/activateProfileContext.useCase";
 import { getAuthErrorMessage } from "../../shared/authErrorMessage";
 import type { ProfileType } from "../../profile/data/dataSource/profile.model";
-import type { CreateProfileUseCase } from "../../profile/useCase/createProfile.useCase";
+import type { CreateProfileWithContextUseCase } from "../../profile/useCase/createProfileWithContext.useCase";
 import type { GetProfilesByAccountIdUseCase } from "../../profile/useCase/getProfilesByAccountId.useCase";
 import type {
   BusinessCategoryOption,
@@ -16,6 +16,7 @@ import type {
   ProfileTypeSelectionState,
 } from "../types/types";
 import type { ProfileTypeSelectionViewModel } from "./profileTypeSelection.viewModel";
+import type { AuthError } from "../../shared/authError.types";
 
 const PROFILE_TYPE_OPTIONS: ProfileTypeOption[] = [
   {
@@ -40,10 +41,10 @@ const FALLBACK_BUSINESS_CATEGORIES: BusinessCategoryOption[] =
 type Params = {
   accountId: string;
   mode: ProfileTypeSelectionMode;
-  createProfileUseCase: CreateProfileUseCase;
+  createProfileWithContextUseCase: CreateProfileWithContextUseCase;
   getActiveBusinessCategoriesUseCase: GetActiveBusinessCategoriesUseCase;
   getProfilesByAccountIdUseCase: GetProfilesByAccountIdUseCase;
-  setActiveProfileUseCase: SetActiveProfileUseCase;
+  activateProfileContextUseCase: ActivateProfileContextUseCase;
   onContinue: () => void;
   onClose: () => void;
 };
@@ -73,16 +74,26 @@ const mapExistingProfiles = (
     .filter((profile) => profile.profileName.length > 0);
 };
 
+const getProfileTypeSelectionErrorMessage = (
+  error: AuthError | Error,
+): string => {
+  if ("type" in error) {
+    return getAuthErrorMessage(error);
+  }
+
+  return error.message;
+};
+
 export const useProfileTypeSelectionViewModel = (
   params: Params,
 ): ProfileTypeSelectionViewModel => {
   const {
     accountId,
     mode,
-    createProfileUseCase,
+    createProfileWithContextUseCase,
     getActiveBusinessCategoriesUseCase,
     getProfilesByAccountIdUseCase,
-    setActiveProfileUseCase,
+    activateProfileContextUseCase,
     onContinue,
     onClose,
   } = params;
@@ -277,7 +288,7 @@ export const useProfileTypeSelectionViewModel = (
       }));
 
       try {
-        const setActiveResult = await setActiveProfileUseCase.execute(
+        const setActiveResult = await activateProfileContextUseCase.execute(
           state.selectedExistingProfileId,
         );
 
@@ -285,7 +296,9 @@ export const useProfileTypeSelectionViewModel = (
           setState((currentState) => ({
             ...currentState,
             status: Status.Failure,
-            errorMessage: getAuthErrorMessage(setActiveResult.error),
+            errorMessage: getProfileTypeSelectionErrorMessage(
+              setActiveResult.error,
+            ),
           }));
           return;
         }
@@ -340,7 +353,7 @@ export const useProfileTypeSelectionViewModel = (
         (category) => category.id === state.selectedBusinessCategoryId,
       );
 
-      const result = await createProfileUseCase.execute({
+      const result = await createProfileWithContextUseCase.execute({
         accountId,
         profileType: state.selectedProfileType,
         profileName: trimmedProfileName,
@@ -378,9 +391,9 @@ export const useProfileTypeSelectionViewModel = (
     }
   }, [
     accountId,
-    createProfileUseCase,
+    createProfileWithContextUseCase,
     onContinue,
-    setActiveProfileUseCase,
+    activateProfileContextUseCase,
     state.businessCategories,
     state.mode,
     state.profileName,

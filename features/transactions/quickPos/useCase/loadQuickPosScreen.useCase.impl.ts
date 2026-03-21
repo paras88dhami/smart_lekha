@@ -1,7 +1,10 @@
 import type { EnsureDefaultFinanceAccountsUseCase } from "@/features/finance/account/useCase/ensureDefaultFinanceAccounts.useCase";
+import type { GetFinanceAccountsByProfileUseCase } from "@/features/finance/account/useCase/getFinanceAccountsByProfile.useCase";
 import type { EnsureDefaultPosItemsUseCase } from "@/features/pos/item/useCase/ensureDefaultPosItems.useCase";
 import type { GetPosItemsUseCase } from "@/features/pos/item/useCase/getPosItems.useCase";
+import type { GetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase";
 import type { GetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase";
+import type { FinanceAccount } from "@/features/finance/account/types/types";
 import type { QuickPosProductSlot } from "../slot/types/types";
 import type { EnsureDefaultQuickPosProductSlotsUseCase } from "../slot/useCase/ensureDefaultQuickPosProductSlots.useCase";
 import type { GetQuickPosProductSlotsUseCase } from "../slot/useCase/getQuickPosProductSlots.useCase";
@@ -11,11 +14,22 @@ import { createQuickPosFailure, type QuickPosResult } from "./quickPosError";
 
 type Params = {
   getActiveProfileUseCase: GetActiveProfileUseCase;
+  getActiveAccountUseCase: GetActiveAccountUseCase;
   ensureDefaultFinanceAccountsUseCase: EnsureDefaultFinanceAccountsUseCase;
+  getFinanceAccountsByProfileUseCase: GetFinanceAccountsByProfileUseCase;
   ensureDefaultPosItemsUseCase: EnsureDefaultPosItemsUseCase;
   getPosItemsUseCase: GetPosItemsUseCase;
   ensureDefaultQuickPosProductSlotsUseCase: EnsureDefaultQuickPosProductSlotsUseCase;
   getQuickPosProductSlotsUseCase: GetQuickPosProductSlotsUseCase;
+};
+
+const mapReceivingAccount = (account: FinanceAccount) => {
+  return {
+    id: account.id,
+    accountName: account.accountName,
+    accountType: account.accountType,
+    currencyCode: account.currencyCode,
+  };
 };
 
 const sanitizeProductSlots = (
@@ -33,7 +47,9 @@ const sanitizeProductSlots = (
 
 export const createLoadQuickPosScreenUseCase = ({
   getActiveProfileUseCase,
+  getActiveAccountUseCase,
   ensureDefaultFinanceAccountsUseCase,
+  getFinanceAccountsByProfileUseCase,
   ensureDefaultPosItemsUseCase,
   getPosItemsUseCase,
   ensureDefaultQuickPosProductSlotsUseCase,
@@ -51,6 +67,15 @@ export const createLoadQuickPosScreenUseCase = ({
 
     if (!ensureAccountsResult.success) {
       return createQuickPosFailure("loadFailed", ensureAccountsResult.error);
+    }
+
+    const [activeAccountResult, accountsResult] = await Promise.all([
+      getActiveAccountUseCase.execute(),
+      getFinanceAccountsByProfileUseCase.execute(profileId),
+    ]);
+
+    if (!activeAccountResult.success || !accountsResult.success) {
+      return createQuickPosFailure("loadFailed");
     }
 
     const ensureItemsResult = await ensureDefaultPosItemsUseCase.execute({ profileId });
@@ -85,6 +110,9 @@ export const createLoadQuickPosScreenUseCase = ({
       value: {
         profileId,
         items: itemsResult.value,
+        receivingAccounts: accountsResult.value.map(mapReceivingAccount),
+        activeReceivingAccountId:
+          activeAccountResult.value?.id ?? accountsResult.value[0]?.id ?? "",
         productSlots: sanitizeProductSlots(
           productSlotsResult.value,
           new Set(itemsResult.value.map((item) => item.id)),

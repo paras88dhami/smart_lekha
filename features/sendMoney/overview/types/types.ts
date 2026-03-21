@@ -1,5 +1,7 @@
 import type { TransferMethod } from "@/features/transfers/shared/types/transferMethod.types";
+import type { FinanceAccountType } from "@/features/finance/account/data/dataSource/financeAccount.model";
 import type { StatusType } from "@/shared/types/status.types";
+import type { TransferRecordTargetType } from "@/features/transfers/record/data/dataSource/transferRecord.model";
 
 export type SendMoneyBeneficiaryItem = {
   id: string;
@@ -10,9 +12,24 @@ export type SendMoneyBeneficiaryItem = {
   transferMethod: TransferMethod;
 };
 
+export type SendMoneyAccountItem = {
+  id: string;
+  accountName: string;
+  accountType: FinanceAccountType;
+  currencyCode: string;
+  currentBalance: number;
+};
+
 export type SendMoneyTransferItem = {
   id: string;
-  beneficiaryId: string;
+  beneficiaryId: string | null;
+  fromAccountId: string | null;
+  toAccountId: string | null;
+  targetName: string;
+  targetType: TransferRecordTargetType;
+  transferMethod: TransferMethod;
+  sourceAccountName: string | null;
+  destinationAccountName: string | null;
   amount: number;
   note: string | null;
   recordType: "saved" | "scheduled" | "instant";
@@ -22,6 +39,8 @@ export type SendMoneyTransferItem = {
 };
 
 export type SendMoneyOverviewData = {
+  accounts: SendMoneyAccountItem[];
+  activeAccountId: string;
   beneficiaries: SendMoneyBeneficiaryItem[];
   favorites: SendMoneyBeneficiaryItem[];
   savedTransfers: SendMoneyTransferItem[];
@@ -29,6 +48,9 @@ export type SendMoneyOverviewData = {
 };
 
 export type SendMoneyFormState = {
+  targetType: TransferRecordTargetType;
+  sourceAccountId: string;
+  destinationAccountId: string;
   beneficiaryNameInput: string;
   accountNumberInput: string;
   mobileNumberInput: string;
@@ -40,6 +62,7 @@ export type SendMoneyFormState = {
 export type SendMoneyState = {
   status: StatusType;
   selectedMethod: TransferMethod;
+  accounts: SendMoneyAccountItem[];
   beneficiaries: SendMoneyBeneficiaryItem[];
   favorites: SendMoneyBeneficiaryItem[];
   savedTransfers: SendMoneyTransferItem[];
@@ -54,6 +77,9 @@ export interface SendMoneyViewModel {
   onRefreshPress(): Promise<void>;
   onMethodPress(method: TransferMethod): void;
   onToggleAddTransferPress(): void;
+  onTargetTypePress(targetType: TransferRecordTargetType): void;
+  onSourceAccountPress(accountId: string): void;
+  onDestinationAccountPress(accountId: string): void;
   onBeneficiaryNameChange(value: string): void;
   onAccountNumberChange(value: string): void;
   onMobileNumberChange(value: string): void;

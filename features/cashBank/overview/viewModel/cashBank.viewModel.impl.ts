@@ -1,35 +1,26 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { FinanceAccountType } from "@/features/finance/account/data/dataSource/financeAccount.model";
 import type { CashBankViewModel } from "./cashBank.viewModel";
-import type { CreateCashBankAccountUseCase } from "../useCase/createCashBankAccount.useCase";
 import type { LoadCashBankOverviewUseCase } from "../useCase/loadCashBankOverview.useCase";
 import type { SetCashBankPrimaryAccountUseCase } from "../useCase/setCashBankPrimaryAccount.useCase";
 import { getCashBankErrorMessage } from "./cashBankErrorMessage";
 import {
-  createCashBankFormState,
   createFailureCashBankState,
   createInitialCashBankState,
   createLoadingCashBankState,
   createSuccessCashBankState,
 } from "./cashBankState";
-import {
-  changeCashBankAccountName,
-  changeCashBankAccountNumber,
-  changeCashBankAccountType,
-  changeCashBankOpeningBalance,
-  toggleCashBankAddAccountForm,
-} from "./cashBankFormActions";
 
 type Dependencies = {
   loadCashBankOverviewUseCase: LoadCashBankOverviewUseCase;
-  createCashBankAccountUseCase: CreateCashBankAccountUseCase;
   setCashBankPrimaryAccountUseCase: SetCashBankPrimaryAccountUseCase;
+  onAddAccountPress: () => void;
+  onEditAccountPress: (accountId: string) => void;
+  onViewStatementPress: (accountId: string) => void;
 };
 
 export const useCashBankViewModel = (dependencies: Dependencies): CashBankViewModel => {
   const [state, setState] = useState(createInitialCashBankState);
   const isLoadingReference = useRef<boolean>(false);
-  const isSubmittingReference = useRef<boolean>(false);
 
   const loadOverview = useCallback(async (): Promise<void> => {
     if (isLoadingReference.current) {
@@ -54,61 +45,13 @@ export const useCashBankViewModel = (dependencies: Dependencies): CashBankViewMo
     }
   }, [dependencies.loadCashBankOverviewUseCase]);
 
-  const onToggleAddAccountPress = useCallback((): void => {
-    setState(toggleCashBankAddAccountForm);
-  }, []);
-
-  const onAccountNameChange = useCallback((value: string): void => {
-    setState((currentState) => changeCashBankAccountName(currentState, value));
-  }, []);
-
-  const onAccountNumberChange = useCallback((value: string): void => {
-    setState((currentState) => changeCashBankAccountNumber(currentState, value));
-  }, []);
-
-  const onOpeningBalanceChange = useCallback((value: string): void => {
-    setState((currentState) => changeCashBankOpeningBalance(currentState, value));
-  }, []);
-
-  const onAccountTypePress = useCallback((accountType: FinanceAccountType): void => {
-    setState((currentState) => changeCashBankAccountType(currentState, accountType));
-  }, []);
-
-  const onCreateAccountPress = useCallback(async (): Promise<void> => {
-    if (isSubmittingReference.current) {
-      return;
-    }
-
-    isSubmittingReference.current = true;
-    setState(createLoadingCashBankState);
-
-    try {
-      const result = await dependencies.createCashBankAccountUseCase.execute(state.form);
-      if (!result.success) {
-        setState((currentState) =>
-          createFailureCashBankState(currentState, getCashBankErrorMessage(result.error)),
-        );
-        return;
-      }
-
-      setState((currentState) => ({
-        ...currentState,
-        showAddAccountForm: false,
-        form: createCashBankFormState(),
-      }));
-      await loadOverview();
-    } finally {
-      isSubmittingReference.current = false;
-    }
-  }, [dependencies.createCashBankAccountUseCase, loadOverview, state.form]);
-
   const onSetPrimaryPress = useCallback(
     async (accountId: string): Promise<void> => {
-      if (isSubmittingReference.current) {
+      if (isLoadingReference.current) {
         return;
       }
 
-      isSubmittingReference.current = true;
+      isLoadingReference.current = true;
       setState(createLoadingCashBankState);
 
       try {
@@ -122,7 +65,7 @@ export const useCashBankViewModel = (dependencies: Dependencies): CashBankViewMo
 
         await loadOverview();
       } finally {
-        isSubmittingReference.current = false;
+        isLoadingReference.current = false;
       }
     },
     [dependencies.setCashBankPrimaryAccountUseCase, loadOverview],
@@ -136,23 +79,17 @@ export const useCashBankViewModel = (dependencies: Dependencies): CashBankViewMo
     return {
       state,
       onRefreshPress: loadOverview,
-      onToggleAddAccountPress,
-      onAccountNameChange,
-      onAccountNumberChange,
-      onOpeningBalanceChange,
-      onAccountTypePress,
-      onCreateAccountPress,
+      onAddAccountPress: dependencies.onAddAccountPress,
+      onEditAccountPress: dependencies.onEditAccountPress,
+      onViewStatementPress: dependencies.onViewStatementPress,
       onSetPrimaryPress,
     };
   }, [
+    dependencies.onAddAccountPress,
+    dependencies.onEditAccountPress,
+    dependencies.onViewStatementPress,
     loadOverview,
-    onAccountNameChange,
-    onAccountNumberChange,
-    onAccountTypePress,
-    onCreateAccountPress,
-    onOpeningBalanceChange,
     onSetPrimaryPress,
-    onToggleAddAccountPress,
     state,
   ]);
 };

@@ -35,6 +35,8 @@ export default function QuickPosScreen({ viewModel }: Props): React.JSX.Element 
         />
 
         <QuickPosSummaryPanel
+          receivingAccounts={viewModel.state.receivingAccounts}
+          selectedReceivingAccountId={viewModel.state.selectedReceivingAccountId}
           cart={viewModel.state.cart}
           totalAmount={viewModel.state.totalAmount}
           paymentMode={viewModel.state.paymentMode}
@@ -43,6 +45,7 @@ export default function QuickPosScreen({ viewModel }: Props): React.JSX.Element 
           onIncreaseItemPress={viewModel.onIncreaseItemPress}
           onDecreaseItemPress={viewModel.onDecreaseItemPress}
           onPaymentModePress={viewModel.onPaymentModePress}
+          onReceivingAccountPress={viewModel.onReceivingAccountPress}
           onClearCartPress={viewModel.onClearCartPress}
           onCheckoutPress={(): void => {
             void viewModel.onCheckoutPress();

@@ -3,11 +3,16 @@ import type { Result } from "@/shared/types/result.types";
 export type TransactionsErrorCode =
   | "invalidAmount"
   | "invalidPartyName"
+  | "noAccountSelected"
   | "loadFailed"
   | "noActiveProfile"
   | "noPrimaryAccount"
   | "recordNotFound"
+  | "transactionNotFound"
+  | "editLocked"
   | "saveFailed"
+  | "updateFailed"
+  | "deleteFailed"
   | "settleFailed";
 
 export type TransactionsError = {

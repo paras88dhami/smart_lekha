@@ -24,6 +24,8 @@ export const createInitialQuickPosState = (): QuickPosState => ({
   status: Status.Idle,
   items: [],
   productSlots: [],
+  receivingAccounts: [],
+  selectedReceivingAccountId: "",
   cart: [],
   paymentMode: "cash",
   totalAmount: 0,

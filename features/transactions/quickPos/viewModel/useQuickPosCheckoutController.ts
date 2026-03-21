@@ -45,6 +45,7 @@ export const useQuickPosCheckoutController = ({
 
     const checkoutResult = await checkoutQuickPosSaleUseCase.execute({
       profileId: profileIdRef.current,
+      receivingAccountId: state.selectedReceivingAccountId,
       items: state.items,
       cart: state.cart,
       totalAmount: state.totalAmount,

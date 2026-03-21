@@ -8,9 +8,7 @@ type Props = {
   subtitle: string;
   profileName: string;
   addAccountLabel: string;
-  cancelLabel: string;
-  showAddAccountForm: boolean;
-  onToggleAddAccountPress: () => void;
+  onAddAccountPress: () => void;
 };
 
 export default function CashBankHeader(props: Props): React.JSX.Element {
@@ -23,10 +21,10 @@ export default function CashBankHeader(props: Props): React.JSX.Element {
         </View>
 
         <KhataButton
-          title={props.showAddAccountForm ? props.cancelLabel : props.addAccountLabel}
+          title={props.addAccountLabel}
           variant="secondary"
           style={styles.button}
-          onPress={props.onToggleAddAccountPress}
+          onPress={props.onAddAccountPress}
         />
       </View>
 

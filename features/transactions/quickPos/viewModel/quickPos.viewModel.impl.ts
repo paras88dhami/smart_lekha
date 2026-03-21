@@ -56,7 +56,8 @@ export const useQuickPosViewModel = ({
     syncCartState,
     applyFailureState,
   });
-  const { onSearchValueChange, onPaymentModePress } = useQuickPosScreenStateController({ setState });
+  const { onSearchValueChange, onPaymentModePress, onReceivingAccountPress } =
+    useQuickPosScreenStateController({ setState });
 
   const {
     onOpenProductPicker,
@@ -90,12 +91,13 @@ export const useQuickPosViewModel = ({
     void loadQuickPosScreen();
   }, [loadQuickPosScreen]);
 
-  return useMemo(() => ({ state, onRefreshPress: loadQuickPosScreen, onSearchValueChange, onIncreaseItemPress, onDecreaseItemPress, onPaymentModePress, onClearCartPress, onOpenProductPicker, onCloseProductPicker, onPickerSearchValueChange, onProductDraftChange, onSelectProduct, onCreateProductPress, onClearProductSlot, onCheckoutPress }), [
+  return useMemo(() => ({ state, onRefreshPress: loadQuickPosScreen, onSearchValueChange, onIncreaseItemPress, onDecreaseItemPress, onPaymentModePress, onReceivingAccountPress, onClearCartPress, onOpenProductPicker, onCloseProductPicker, onPickerSearchValueChange, onProductDraftChange, onSelectProduct, onCreateProductPress, onClearProductSlot, onCheckoutPress }), [
     loadQuickPosScreen,
     onSearchValueChange,
     onIncreaseItemPress,
     onDecreaseItemPress,
     onPaymentModePress,
+    onReceivingAccountPress,
     onClearCartPress,
     onOpenProductPicker,
     onCloseProductPicker,

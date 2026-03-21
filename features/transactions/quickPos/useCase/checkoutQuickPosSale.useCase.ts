@@ -4,6 +4,7 @@ import type { QuickPosResult } from "./quickPosError";
 
 export type CheckoutQuickPosSaleInput = {
   profileId: string;
+  receivingAccountId: string;
   items: PosItem[];
   cart: PosCartLine[];
   totalAmount: number;

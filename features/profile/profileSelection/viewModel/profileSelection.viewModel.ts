@@ -22,6 +22,7 @@ export interface ProfileSelectionViewModel {
   state: ProfileSelectionState;
   onRefreshPress(): Promise<void>;
   onSelectProfilePress(profileId: string): void;
+  onProfilePress(profileId: string): Promise<void>;
   onActivateProfilePress(): Promise<void>;
   onCreateBusinessPress(): void;
 }

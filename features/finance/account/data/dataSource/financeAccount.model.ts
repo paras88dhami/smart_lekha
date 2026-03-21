@@ -11,6 +11,7 @@ export class FinanceAccountModel extends Model {
   @field("account_number") accountNumber!: string | null;
   @field("account_type") accountType!: FinanceAccountType;
   @field("is_primary") isPrimary!: boolean;
+  @field("is_archived") isArchived!: boolean;
   @field("currency_code") currencyCode!: string;
   @field("current_balance") currentBalance!: number;
   @field("created_at") createdAt!: number;

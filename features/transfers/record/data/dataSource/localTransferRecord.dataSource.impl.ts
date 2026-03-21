@@ -7,6 +7,7 @@ import type {
 } from "./transferRecord.dataSource";
 import type {
   TransferRecordModel,
+  TransferRecordStatus,
   TransferRecordType,
 } from "./transferRecord.model";
 
@@ -48,6 +49,33 @@ export const createLocalTransferRecordDataSource = (
     }
   },
 
+  async getDueScheduledRecords(
+    profileId: string,
+    scheduledUntil: number,
+  ): Promise<Result<TransferRecordModel[]>> {
+    try {
+      const records = await getCollection(database)
+        .query(
+          Q.where("profile_id", profileId),
+          Q.where("record_type", "scheduled"),
+          Q.where("status", "pending"),
+          Q.where("scheduled_for", Q.lte(scheduledUntil)),
+          Q.sortBy("scheduled_for", Q.asc),
+        )
+        .fetch();
+
+      return {
+        success: true,
+        value: records,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: mapUnknownError(error),
+      };
+    }
+  },
+
   async createRecord(
     payload: CreateTransferRecordPayload,
   ): Promise<Result<TransferRecordModel>> {
@@ -60,6 +88,10 @@ export const createLocalTransferRecordDataSource = (
           currentRecord.profileId = payload.profileId;
           currentRecord.beneficiaryId = payload.beneficiaryId;
           currentRecord.fromAccountId = payload.fromAccountId;
+          currentRecord.toAccountId = payload.toAccountId;
+          currentRecord.targetName = payload.targetName;
+          currentRecord.targetType = payload.targetType;
+          currentRecord.transferMethod = payload.transferMethod;
           currentRecord.amount = payload.amount;
           currentRecord.note = payload.note;
           currentRecord.recordType = payload.recordType;
@@ -67,6 +99,32 @@ export const createLocalTransferRecordDataSource = (
           currentRecord.status = payload.status;
           currentRecord.createdAt = timestamp;
           currentRecord.updatedAt = timestamp;
+        });
+      });
+
+      return {
+        success: true,
+        value: record,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: mapUnknownError(error),
+      };
+    }
+  },
+
+  async updateStatus(
+    recordId: string,
+    status: TransferRecordStatus,
+  ): Promise<Result<TransferRecordModel>> {
+    try {
+      const record = await getCollection(database).find(recordId);
+
+      await database.write(async () => {
+        await record.update((currentRecord: TransferRecordModel) => {
+          currentRecord.status = status;
+          currentRecord.updatedAt = Date.now();
         });
       });
 

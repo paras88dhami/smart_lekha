@@ -9,6 +9,9 @@ import type { GetRecentFinanceTransactionsUseCase } from "@/features/finance/tra
 import type { HomeShortcut } from "@/features/home/shortcut/types/types";
 import type { EnsureDefaultHomeShortcutsUseCase } from "@/features/home/shortcut/useCase/ensureDefaultHomeShortcuts.useCase";
 import type { GetHomeShortcutsUseCase } from "@/features/home/shortcut/useCase/getHomeShortcuts.useCase";
+import type { PaymentRecord } from "@/features/transactions/paymentRecord/types/types";
+import type { GetOpenPaymentRecordsUseCase } from "@/features/transactions/paymentRecord/useCase/getOpenPaymentRecords.useCase";
+import type { ExecuteDueScheduledTransfersUseCase } from "@/features/transfers/record/useCase/executeDueScheduledTransfers.useCase";
 import type { GetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase";
 import type { ActiveProfile } from "@/features/workspace/activeProfile/types/types";
 import type { GetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase";
@@ -23,6 +26,8 @@ export type LoadHomeDashboardParams = {
   getHomeShortcutsUseCase: GetHomeShortcutsUseCase;
   getRecentFinanceTransactionsUseCase: GetRecentFinanceTransactionsUseCase;
   getFinanceSummaryUseCase: GetFinanceSummaryUseCase;
+  getOpenPaymentRecordsUseCase: GetOpenPaymentRecordsUseCase;
+  executeDueScheduledTransfersUseCase: ExecuteDueScheduledTransfersUseCase;
 };
 
 export type HomeDashboardSourceData = {
@@ -30,6 +35,7 @@ export type HomeDashboardSourceData = {
   shortcuts: HomeShortcut[];
   recentTransactions: FinanceTransaction[];
   summary: FinanceSummary;
+  openPaymentRecords: PaymentRecord[];
 };
 
 export const createHomeDashboardFailureResult = <T>(
@@ -86,23 +92,36 @@ export const loadHomeDashboardSourceData = async (
   profileId: string,
   params: LoadHomeDashboardParams,
 ): Promise<Result<HomeDashboardSourceData, HomeDashboardError>> => {
+  const executeDueTransfersResult = await params.executeDueScheduledTransfersUseCase.execute(
+    profileId,
+  );
+
+  if (!executeDueTransfersResult.success) {
+    return createHomeDashboardFailureResult<HomeDashboardSourceData>(
+      "dashboard_load_failed",
+    );
+  }
+
   const [
     activeAccountResult,
     shortcutsResult,
     recentTransactionsResult,
     financeSummaryResult,
+    openPaymentRecordsResult,
   ] = await Promise.all([
     params.getActiveAccountUseCase.execute(),
     params.getHomeShortcutsUseCase.execute(profileId),
     params.getRecentFinanceTransactionsUseCase.execute(profileId, 8),
     params.getFinanceSummaryUseCase.execute(profileId),
+    params.getOpenPaymentRecordsUseCase.execute(profileId),
   ]);
 
   if (
     !activeAccountResult.success ||
     !shortcutsResult.success ||
     !recentTransactionsResult.success ||
-    !financeSummaryResult.success
+    !financeSummaryResult.success ||
+    !openPaymentRecordsResult.success
   ) {
     return createHomeDashboardFailureResult<HomeDashboardSourceData>(
       "dashboard_load_failed",
@@ -116,6 +135,7 @@ export const loadHomeDashboardSourceData = async (
       shortcuts: shortcutsResult.value,
       recentTransactions: recentTransactionsResult.value,
       summary: financeSummaryResult.value,
+      openPaymentRecords: openPaymentRecordsResult.value,
     },
   };
 };

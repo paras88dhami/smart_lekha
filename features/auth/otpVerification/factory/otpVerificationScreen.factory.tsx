@@ -1,11 +1,9 @@
 import type { Database } from "@nozbe/watermelondb";
 import React from "react";
-import { createAppSettingUseCases } from "@/features/auth/appSettings/factory/createAppSettingUseCases";
 import { isSupportedLanguageCode } from "@/shared/i18n/resources";
 import { createLocalProfileDataSource } from "../../profile/data/dataSource/profile.datasource.impl";
 import { createProfileRepository } from "../../profile/data/repository/profile.repository.impl";
 import { createGetProfilesByAccountIdUseCase } from "../../profile/useCase/getProfilesByAccountId.useCase.impl";
-import { createSetActiveProfileUseCase } from "../../profile/useCase/setActiveProfile.useCase.impl";
 import type { LanguageCodeType } from "../../languageSelection/types/types";
 import { createLocalOtpRequestDataSource } from "../../otp/data/dataSource/localOtpRequest.dataSource.impl";
 import { createRemoteOtpAuthDataSource } from "../../otp/data/dataSource/remoteOtpAuth.dataSource.impl";
@@ -20,19 +18,6 @@ import {
 import { createLocalAuthSessionDataSource } from "../../session/data/dataSource/localAuthSession.datasource.impl";
 import { createAuthSessionRepository } from "../../session/data/repository/authSession.repository.impl";
 import { createUpsertAuthSessionUseCase } from "../../session/useCase/upsertAuthSession.useCase.impl";
-import { createLocalFinanceAccountDataSource } from "@/features/finance/account/data/dataSource/localFinanceAccount.dataSource.impl";
-import { createFinanceAccountRepository } from "@/features/finance/account/data/repository/financeAccount.repository.impl";
-import { createEnsureDefaultFinanceAccountsUseCase } from "@/features/finance/account/useCase/ensureDefaultFinanceAccounts.useCase.impl";
-import { createGetFinanceAccountsByProfileUseCase } from "@/features/finance/account/useCase/getFinanceAccountsByProfile.useCase.impl";
-import { createGetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/getPrimaryFinanceAccount.useCase.impl";
-import { createLocalHomeShortcutDataSource } from "@/features/home/shortcut/data/dataSource/localHomeShortcut.dataSource.impl";
-import { createHomeShortcutRepository } from "@/features/home/shortcut/data/repository/homeShortcut.repository.impl";
-import { createEnsureDefaultHomeShortcutsUseCase } from "@/features/home/shortcut/useCase/ensureDefaultHomeShortcuts.useCase.impl";
-import { createGetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase.impl";
-import { createLocalActiveProfileDataSource } from "@/features/workspace/activeProfile/data/dataSource/localActiveProfile.dataSource.impl";
-import { createActiveProfileRepository } from "@/features/workspace/activeProfile/data/repository/activeProfile.repository.impl";
-import { createGetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase.impl";
-import { createActivateProfileContextUseCase } from "@/features/workspace/activeProfile/useCase/activateProfileContext.useCase.impl";
 import type { OtpVerificationResult } from "../types/types";
 import { createResolveVerifiedAccountRouteUseCase } from "../useCase/resolveVerifiedAccountRoute.useCase.impl";
 import OtpVerificationScreen from "../ui/OtpVerificationScreen";
@@ -235,59 +220,14 @@ export const createOtpVerificationScreenFactory = ({
       () => createGetProfilesByAccountIdUseCase(profileRepository),
       [profileRepository],
     );
-
-    const setActiveProfileUseCase = React.useMemo(
-      () => createSetActiveProfileUseCase(profileRepository),
-      [profileRepository],
-    );
-    const appSettingUseCases = React.useMemo(
-      () => createAppSettingUseCases(database),
-      [],
-    );
-    const financeAccountRepository = React.useMemo(() => {
-      return createFinanceAccountRepository(createLocalFinanceAccountDataSource(database));
-    }, []);
-    const homeShortcutRepository = React.useMemo(() => {
-      return createHomeShortcutRepository(createLocalHomeShortcutDataSource(database));
-    }, []);
-    const activeProfileRepository = React.useMemo(() => {
-      return createActiveProfileRepository(createLocalActiveProfileDataSource(database));
-    }, []);
-
     const isResolvingNextRouteRef = React.useRef(false);
 
     const resolveVerifiedAccountRouteUseCase = React.useMemo(() => {
       return createResolveVerifiedAccountRouteUseCase({
         getProfilesByAccountIdUseCase,
-        activateProfileContextUseCase: createActivateProfileContextUseCase({
-          setActiveProfileUseCase,
-          setActiveProfileIdUseCase: appSettingUseCases.setActiveProfileIdUseCase,
-          clearActiveAccountIdUseCase:
-            appSettingUseCases.clearActiveAccountIdUseCase,
-          ensureDefaultFinanceAccountsUseCase:
-            createEnsureDefaultFinanceAccountsUseCase(financeAccountRepository),
-          ensureDefaultHomeShortcutsUseCase:
-            createEnsureDefaultHomeShortcutsUseCase(homeShortcutRepository),
-          getActiveAccountUseCase: createGetActiveAccountUseCase({
-            getActiveProfileUseCase:
-              createGetActiveProfileUseCase(activeProfileRepository),
-            getAppSettingUseCase: appSettingUseCases.getAppSettingUseCase,
-            getFinanceAccountsByProfileUseCase:
-              createGetFinanceAccountsByProfileUseCase(financeAccountRepository),
-            getPrimaryFinanceAccountUseCase:
-              createGetPrimaryFinanceAccountUseCase(financeAccountRepository),
-            setActiveAccountIdUseCase:
-              appSettingUseCases.setActiveAccountIdUseCase,
-          }),
-        }),
       });
     }, [
-      activeProfileRepository,
-      appSettingUseCases,
-      financeAccountRepository,
       getProfilesByAccountIdUseCase,
-      homeShortcutRepository,
-      setActiveProfileUseCase,
     ]);
 
     const handleVerified = React.useCallback(
@@ -313,12 +253,7 @@ export const createOtpVerificationScreenFactory = ({
             return;
           }
 
-          if (result.value === "home") {
-            onNavigateHome();
-            return;
-          }
-
-          if (result.value === "create_business") {
+          if (result.value === "create_profile") {
             onNavigateCreateProfile(input.accountId);
             return;
           }

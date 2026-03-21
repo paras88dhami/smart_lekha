@@ -13,6 +13,18 @@ import { createLocalHomeShortcutDataSource } from "@/features/home/shortcut/data
 import { createHomeShortcutRepository } from "@/features/home/shortcut/data/repository/homeShortcut.repository.impl";
 import { createEnsureDefaultHomeShortcutsUseCase } from "@/features/home/shortcut/useCase/ensureDefaultHomeShortcuts.useCase.impl";
 import { createGetHomeShortcutsUseCase } from "@/features/home/shortcut/useCase/getHomeShortcuts.useCase.impl";
+import { createLocalPaymentRecordDataSource } from "@/features/transactions/paymentRecord/data/dataSource/localPaymentRecord.dataSource.impl";
+import { createPaymentRecordRepository } from "@/features/transactions/paymentRecord/data/repository/paymentRecord.repository.impl";
+import { createGetOpenPaymentRecordsUseCase } from "@/features/transactions/paymentRecord/useCase/getOpenPaymentRecords.useCase.impl";
+import { createLocalTransferRecordDataSource } from "@/features/transfers/record/data/dataSource/localTransferRecord.dataSource.impl";
+import { createTransferRecordRepository } from "@/features/transfers/record/data/repository/transferRecord.repository.impl";
+import { createExecuteDueScheduledTransfersUseCase } from "@/features/transfers/record/useCase/executeDueScheduledTransfers.useCase.impl";
+import { createExecuteTransferRecordUseCase } from "@/features/transfers/record/useCase/executeTransferRecord.useCase.impl";
+import { createGetDueScheduledTransfersUseCase } from "@/features/transfers/record/useCase/getDueScheduledTransfers.useCase.impl";
+import { createUpdateTransferRecordStatusUseCase } from "@/features/transfers/record/useCase/updateTransferRecordStatus.useCase.impl";
+import { createGetFinanceAccountByIdUseCase } from "@/features/finance/account/useCase/getFinanceAccountById.useCase.impl";
+import { createAdjustFinanceAccountBalanceUseCase } from "@/features/finance/account/useCase/adjustFinanceAccountBalance.useCase.impl";
+import { createCreateFinanceTransactionUseCase } from "@/features/finance/transaction/useCase/createFinanceTransaction.useCase.impl";
 import { createGetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase.impl";
 import { createLocalActiveProfileDataSource } from "@/features/workspace/activeProfile/data/dataSource/localActiveProfile.dataSource.impl";
 import { createActiveProfileRepository } from "@/features/workspace/activeProfile/data/repository/activeProfile.repository.impl";
@@ -43,27 +55,53 @@ export const createHomeDashboardDependencies = ({
   const homeShortcutRepository = createHomeShortcutRepository(
     createLocalHomeShortcutDataSource(database),
   );
+  const paymentRecordRepository = createPaymentRecordRepository(
+    createLocalPaymentRecordDataSource(database),
+  );
+  const transferRecordRepository = createTransferRecordRepository(
+    createLocalTransferRecordDataSource(database),
+  );
   const appSettingUseCases = createAppSettingUseCases(database);
+  const getActiveProfileUseCase = createGetActiveProfileUseCase(activeProfileRepository);
+  const getActiveAccountUseCase = createGetActiveAccountUseCase({
+    getActiveProfileUseCase,
+    getAppSettingUseCase: appSettingUseCases.getAppSettingUseCase,
+    getFinanceAccountsByProfileUseCase: createGetFinanceAccountsByProfileUseCase(
+      financeAccountRepository,
+    ),
+    getPrimaryFinanceAccountUseCase: createGetPrimaryFinanceAccountUseCase(
+      financeAccountRepository,
+    ),
+    setActiveAccountIdUseCase: appSettingUseCases.setActiveAccountIdUseCase,
+  });
+  const executeTransferRecordUseCase = createExecuteTransferRecordUseCase({
+    getFinanceAccountByIdUseCase: createGetFinanceAccountByIdUseCase(
+      financeAccountRepository,
+    ),
+    createFinanceTransactionUseCase: createCreateFinanceTransactionUseCase(
+      financeTransactionRepository,
+    ),
+    adjustFinanceAccountBalanceUseCase: createAdjustFinanceAccountBalanceUseCase(
+      financeAccountRepository,
+    ),
+  });
+  const executeDueScheduledTransfersUseCase = createExecuteDueScheduledTransfersUseCase({
+    getDueScheduledTransfersUseCase: createGetDueScheduledTransfersUseCase(
+      transferRecordRepository,
+    ),
+    executeTransferRecordUseCase,
+    updateTransferRecordStatusUseCase: createUpdateTransferRecordStatusUseCase(
+      transferRecordRepository,
+    ),
+  });
 
   return {
     loadHomeDashboardUseCase: createLoadHomeDashboardUseCase({
-      getActiveProfileUseCase: createGetActiveProfileUseCase(activeProfileRepository),
+      getActiveProfileUseCase,
       ensureDefaultFinanceAccountsUseCase: createEnsureDefaultFinanceAccountsUseCase(
         financeAccountRepository,
       ),
-      getActiveAccountUseCase: createGetActiveAccountUseCase({
-        getActiveProfileUseCase: createGetActiveProfileUseCase(
-          activeProfileRepository,
-        ),
-        getAppSettingUseCase: appSettingUseCases.getAppSettingUseCase,
-        getFinanceAccountsByProfileUseCase: createGetFinanceAccountsByProfileUseCase(
-          financeAccountRepository,
-        ),
-        getPrimaryFinanceAccountUseCase: createGetPrimaryFinanceAccountUseCase(
-          financeAccountRepository,
-        ),
-        setActiveAccountIdUseCase: appSettingUseCases.setActiveAccountIdUseCase,
-      }),
+      getActiveAccountUseCase,
       ensureDefaultHomeShortcutsUseCase: createEnsureDefaultHomeShortcutsUseCase(
         homeShortcutRepository,
       ),
@@ -74,6 +112,10 @@ export const createHomeDashboardDependencies = ({
       getFinanceSummaryUseCase: createGetFinanceSummaryUseCase(
         financeTransactionRepository,
       ),
+      getOpenPaymentRecordsUseCase: createGetOpenPaymentRecordsUseCase(
+        paymentRecordRepository,
+      ),
+      executeDueScheduledTransfersUseCase,
     }),
   };
 };

@@ -311,5 +311,49 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 8,
+      steps: [
+        addColumns({
+          table: "finance_accounts",
+          columns: [
+            {
+              name: "is_archived",
+              type: "boolean",
+              isIndexed: true,
+            },
+          ],
+        }),
+      ],
+    },
+    {
+      toVersion: 9,
+      steps: [
+        addColumns({
+          table: "transfer_records",
+          columns: [
+            {
+              name: "to_account_id",
+              type: "string",
+              isOptional: true,
+              isIndexed: true,
+            },
+            { name: "target_name", type: "string", isOptional: true },
+            {
+              name: "target_type",
+              type: "string",
+              isOptional: true,
+              isIndexed: true,
+            },
+            {
+              name: "transfer_method",
+              type: "string",
+              isOptional: true,
+              isIndexed: true,
+            },
+          ],
+        }),
+      ],
+    },
   ],
 });

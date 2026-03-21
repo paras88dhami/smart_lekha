@@ -2,6 +2,7 @@ import type { Database } from "@nozbe/watermelondb";
 import { createAppSettingUseCases } from "@/features/auth/appSettings/factory/createAppSettingUseCases";
 import { createAdjustFinanceAccountBalanceUseCase } from "@/features/finance/account/useCase/adjustFinanceAccountBalance.useCase.impl";
 import { createEnsureDefaultFinanceAccountsUseCase } from "@/features/finance/account/useCase/ensureDefaultFinanceAccounts.useCase.impl";
+import { createGetFinanceAccountByIdUseCase } from "@/features/finance/account/useCase/getFinanceAccountById.useCase.impl";
 import { createGetFinanceAccountsByProfileUseCase } from "@/features/finance/account/useCase/getFinanceAccountsByProfile.useCase.impl";
 import { createGetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/getPrimaryFinanceAccount.useCase.impl";
 import { createLocalFinanceAccountDataSource } from "@/features/finance/account/data/dataSource/localFinanceAccount.dataSource.impl";
@@ -86,7 +87,11 @@ export const createQuickPosDependencies = (database: Database) => {
   );
   const loadQuickPosScreenUseCase = createLoadQuickPosScreenUseCase({
     getActiveProfileUseCase,
+    getActiveAccountUseCase,
     ensureDefaultFinanceAccountsUseCase,
+    getFinanceAccountsByProfileUseCase: createGetFinanceAccountsByProfileUseCase(
+      financeAccountRepository,
+    ),
     ensureDefaultPosItemsUseCase,
     getPosItemsUseCase,
     ensureDefaultQuickPosProductSlotsUseCase,
@@ -102,7 +107,9 @@ export const createQuickPosDependencies = (database: Database) => {
     assignQuickPosProductSelectionUseCase,
   });
   const checkoutQuickPosSaleUseCase = createCheckoutQuickPosSaleUseCase({
-    getActiveAccountUseCase,
+    getFinanceAccountByIdUseCase: createGetFinanceAccountByIdUseCase(
+      financeAccountRepository,
+    ),
     createPosSaleUseCase,
     createFinanceTransactionUseCase,
     adjustFinanceAccountBalanceUseCase,

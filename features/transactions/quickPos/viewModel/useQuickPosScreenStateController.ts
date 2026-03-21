@@ -14,6 +14,7 @@ type Params = {
 export type QuickPosScreenStateController = {
   onSearchValueChange: (searchValue: string) => void;
   onPaymentModePress: (mode: QuickPosPaymentMode) => void;
+  onReceivingAccountPress: (accountId: string) => void;
 };
 
 export const useQuickPosScreenStateController = ({
@@ -31,8 +32,17 @@ export const useQuickPosScreenStateController = ({
     }));
   }, [setState]);
 
+  const onReceivingAccountPress = useCallback((accountId: string): void => {
+    setState((currentState) => ({
+      ...currentState,
+      selectedReceivingAccountId: accountId,
+      errorMessage: "",
+    }));
+  }, [setState]);
+
   return {
     onSearchValueChange,
     onPaymentModePress,
+    onReceivingAccountPress,
   };
 };

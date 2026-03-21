@@ -7,6 +7,7 @@ import { createGetActiveBusinessCategoriesUseCase } from "@/features/auth/busine
 import { createLocalProfileDataSource } from "@/features/auth/profile/data/dataSource/profile.datasource.impl";
 import { createProfileRepository } from "@/features/auth/profile/data/repository/profile.repository.impl";
 import { createCreateProfileUseCase } from "@/features/auth/profile/useCase/createProfile.useCase.impl";
+import { createCreateProfileWithContextUseCase } from "@/features/auth/profile/useCase/createProfileWithContext.useCase.impl";
 import { createLocalAuthSessionDataSource } from "@/features/auth/session/data/dataSource/localAuthSession.datasource.impl";
 import { createAuthSessionRepository } from "@/features/auth/session/data/repository/authSession.repository.impl";
 import { createGetCurrentAuthSessionUseCase } from "@/features/auth/session/useCase/getCurrentAuthSession.useCase.impl";
@@ -72,26 +73,31 @@ export const createCreateBusinessScreenFactory = ({
     }, []);
 
     const createBusinessProfileBootstrapUseCase = React.useMemo(() => {
+      const createProfileWithContextUseCase =
+        createCreateProfileWithContextUseCase({
+          createProfileUseCase,
+          setActiveProfileIdUseCase: appSettingUseCases.setActiveProfileIdUseCase,
+          clearActiveAccountIdUseCase:
+            appSettingUseCases.clearActiveAccountIdUseCase,
+          ensureDefaultFinanceAccountsUseCase:
+            createEnsureDefaultFinanceAccountsUseCase(financeAccountRepository),
+          ensureDefaultHomeShortcutsUseCase:
+            createEnsureDefaultHomeShortcutsUseCase(homeShortcutRepository),
+          getActiveAccountUseCase: createGetActiveAccountUseCase({
+            getActiveProfileUseCase:
+              createGetActiveProfileUseCase(activeProfileRepository),
+            getAppSettingUseCase: appSettingUseCases.getAppSettingUseCase,
+            getFinanceAccountsByProfileUseCase:
+              createGetFinanceAccountsByProfileUseCase(financeAccountRepository),
+            getPrimaryFinanceAccountUseCase:
+              createGetPrimaryFinanceAccountUseCase(financeAccountRepository),
+            setActiveAccountIdUseCase:
+              appSettingUseCases.setActiveAccountIdUseCase,
+          }),
+        });
+
       return createCreateBusinessProfileBootstrapUseCase({
-        createProfileUseCase,
-        setActiveProfileIdUseCase: appSettingUseCases.setActiveProfileIdUseCase,
-        clearActiveAccountIdUseCase:
-          appSettingUseCases.clearActiveAccountIdUseCase,
-        ensureDefaultFinanceAccountsUseCase:
-          createEnsureDefaultFinanceAccountsUseCase(financeAccountRepository),
-        ensureDefaultHomeShortcutsUseCase:
-          createEnsureDefaultHomeShortcutsUseCase(homeShortcutRepository),
-        getActiveAccountUseCase: createGetActiveAccountUseCase({
-          getActiveProfileUseCase:
-            createGetActiveProfileUseCase(activeProfileRepository),
-          getAppSettingUseCase: appSettingUseCases.getAppSettingUseCase,
-          getFinanceAccountsByProfileUseCase:
-            createGetFinanceAccountsByProfileUseCase(financeAccountRepository),
-          getPrimaryFinanceAccountUseCase:
-            createGetPrimaryFinanceAccountUseCase(financeAccountRepository),
-          setActiveAccountIdUseCase:
-            appSettingUseCases.setActiveAccountIdUseCase,
-        }),
+        createProfileWithContextUseCase,
       });
     }, [
       activeProfileRepository,

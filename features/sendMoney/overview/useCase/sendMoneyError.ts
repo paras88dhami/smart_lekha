@@ -3,7 +3,9 @@ export type SendMoneyErrorCode =
   | "load_failed"
   | "invalid_beneficiary"
   | "invalid_amount"
-  | "no_primary_account"
+  | "invalid_source_account"
+  | "invalid_destination_account"
+  | "same_account_transfer"
   | "save_failed";
 
 export class SendMoneyError extends Error {

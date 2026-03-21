@@ -12,6 +12,7 @@ type SummaryCardProps = {
   description: string;
   amount: number;
   openCount: number;
+  openLabel: string;
   languageCode: SupportedLanguageCode;
   tone: "receive" | "pay";
 };
@@ -30,6 +31,7 @@ const SummaryCard = ({
   description,
   amount,
   openCount,
+  openLabel,
   languageCode,
   tone,
 }: SummaryCardProps): React.JSX.Element => {
@@ -44,7 +46,7 @@ const SummaryCard = ({
           languageCode,
         })}
       </Text>
-      <Text style={styles.countText}>{`${openCount} open`}</Text>
+      <Text style={styles.countText}>{`${openCount} ${openLabel}`}</Text>
     </KhataCard>
   );
 };

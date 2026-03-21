@@ -35,6 +35,30 @@ const mapUnknownError = (error: unknown, fallbackMessage: string): Error => {
   return error instanceof Error ? error : new Error(fallbackMessage);
 };
 
+const queryTransactionsByProfile = (
+  database: Database,
+  profileId: string,
+  limit: number,
+) => {
+  return getCollection(database).query(
+    Q.where("profile_id", profileId),
+    Q.sortBy("occurred_at", Q.desc),
+    Q.take(limit),
+  );
+};
+
+const queryTransactionsByAccount = (
+  database: Database,
+  accountId: string,
+  limit: number,
+) => {
+  return getCollection(database).query(
+    Q.where("account_id", accountId),
+    Q.sortBy("occurred_at", Q.desc),
+    Q.take(limit),
+  );
+};
+
 export const createLocalFinanceTransactionDataSource = (
   database: Database,
 ): FinanceTransactionDataSource => ({
@@ -43,13 +67,7 @@ export const createLocalFinanceTransactionDataSource = (
     limit: number,
   ): Promise<Result<FinanceTransactionModel[]>> {
     try {
-      const records = await getCollection(database)
-        .query(
-          Q.where("profile_id", profileId),
-          Q.sortBy("occurred_at", Q.desc),
-          Q.take(limit),
-        )
-        .fetch();
+      const records = await queryTransactionsByProfile(database, profileId, limit).fetch();
 
       return {
         success: true,
@@ -68,13 +86,7 @@ export const createLocalFinanceTransactionDataSource = (
     limit: number,
   ): Promise<Result<FinanceTransactionModel[]>> {
     try {
-      const records = await getCollection(database)
-        .query(
-          Q.where("profile_id", profileId),
-          Q.sortBy("occurred_at", Q.desc),
-          Q.take(limit),
-        )
-        .fetch();
+      const records = await queryTransactionsByProfile(database, profileId, limit).fetch();
 
       return {
         success: true,
@@ -84,6 +96,41 @@ export const createLocalFinanceTransactionDataSource = (
       return {
         success: false,
         error: mapUnknownError(error, "Failed to load transactions."),
+      };
+    }
+  },
+
+  async getByAccountId(
+    accountId: string,
+    limit: number,
+  ): Promise<Result<FinanceTransactionModel[]>> {
+    try {
+      const records = await queryTransactionsByAccount(database, accountId, limit).fetch();
+
+      return {
+        success: true,
+        value: records,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: mapUnknownError(error, "Failed to load account transactions."),
+      };
+    }
+  },
+
+  async getById(transactionId: string): Promise<Result<FinanceTransactionModel>> {
+    try {
+      const record = await getCollection(database).find(transactionId);
+
+      return {
+        success: true,
+        value: record,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: mapUnknownError(error, "Failed to load the transaction."),
       };
     }
   },
@@ -120,6 +167,61 @@ export const createLocalFinanceTransactionDataSource = (
       return {
         success: false,
         error: mapUnknownError(error, "Failed to create transaction."),
+      };
+    }
+  },
+
+  async updateTransaction(
+    transactionId: string,
+    payload: FinanceTransactionModel,
+  ): Promise<Result<FinanceTransactionModel>> {
+    try {
+      const record = await getCollection(database).find(transactionId);
+      const timestamp = Date.now();
+
+      await database.write(async (): Promise<void> => {
+        await record.update((currentRecord: FinanceTransactionModel): void => {
+          currentRecord.accountId = payload.accountId?.trim() ?? null;
+          currentRecord.entryType = payload.entryType;
+          currentRecord.categoryName = payload.categoryName?.trim() ?? null;
+          currentRecord.counterpartyName = payload.counterpartyName?.trim() ?? null;
+          currentRecord.note = payload.note?.trim() ?? null;
+          currentRecord.status = payload.status;
+          currentRecord.amount = payload.amount ?? 0;
+          currentRecord.occurredAt = payload.occurredAt ?? timestamp;
+          currentRecord.referenceId = payload.referenceId?.trim() ?? null;
+          currentRecord.updatedAt = timestamp;
+        });
+      });
+
+      return {
+        success: true,
+        value: record,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: mapUnknownError(error, "Failed to update the transaction."),
+      };
+    }
+  },
+
+  async deleteTransaction(transactionId: string): Promise<Result<void>> {
+    try {
+      const record = await getCollection(database).find(transactionId);
+
+      await database.write(async (): Promise<void> => {
+        await record.destroyPermanently();
+      });
+
+      return {
+        success: true,
+        value: undefined,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: mapUnknownError(error, "Failed to delete the transaction."),
       };
     }
   },

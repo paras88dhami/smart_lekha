@@ -7,6 +7,7 @@ export type FinanceAccount = {
   accountNumber: string | null;
   accountType: FinanceAccountType;
   isPrimary: boolean;
+  isArchived: boolean;
   currencyCode: string;
   currentBalance: number;
 };
@@ -19,6 +20,13 @@ export type CreateFinanceAccountInput = {
   isPrimary: boolean;
   currencyCode: string;
   currentBalance: number;
+};
+
+export type UpdateFinanceAccountInput = {
+  accountId: string;
+  accountName: string;
+  accountNumber: string | null;
+  accountType: FinanceAccountType;
 };
 
 export type AdjustFinanceAccountBalanceInput = {

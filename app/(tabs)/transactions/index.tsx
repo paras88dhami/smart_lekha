@@ -8,8 +8,17 @@ export default function TransactionsRoute(): React.JSX.Element {
     () =>
       createTransactionsScreenFactory({
         database,
+        onAddTransactionPress: () => {
+          router.push("/(tabs)/transactions/form");
+        },
         onQuickPosPress: () => {
           router.push("/(tabs)/quick-pos" as never);
+        },
+        onTransactionPress: (transactionId: string) => {
+          router.push({
+            pathname: "/(tabs)/transactions/detail",
+            params: { transactionId },
+          });
         },
       }),
     [],
@@ -17,6 +26,3 @@ export default function TransactionsRoute(): React.JSX.Element {
 
   return <Screen />;
 }
-
-
-

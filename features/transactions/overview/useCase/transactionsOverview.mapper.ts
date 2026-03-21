@@ -1,6 +1,8 @@
 import type { FinanceTransaction } from "@/features/finance/transaction/types/types";
+import type { FinanceAccount } from "@/features/finance/account/types/types";
 import type { PaymentRecord } from "@/features/transactions/paymentRecord/types/types";
 import type {
+  TransactionsAccountFilterOption,
   TransactionsHistoryItem,
   TransactionsOpenPaymentItem,
   TransactionsOverviewData,
@@ -19,6 +21,8 @@ const createHistoryTitle = (transaction: FinanceTransaction): string => {
 const mapHistoryItem = (transaction: FinanceTransaction): TransactionsHistoryItem => ({
   id: transaction.id,
   title: createHistoryTitle(transaction),
+  accountId: transaction.accountId,
+  accountName: null,
   occurredAt: transaction.occurredAt,
   amount: transaction.amount,
   entryType: transaction.entryType,
@@ -44,10 +48,26 @@ const createSummary = (items: TransactionsOpenPaymentItem[]): TransactionsSummar
   );
 };
 
+const mapAccountFilterOption = (
+  account: FinanceAccount,
+): TransactionsAccountFilterOption => {
+  return {
+    id: account.id,
+    accountName: account.accountName,
+  };
+};
+
 export const mapTransactionsOverviewData = (
   transactions: FinanceTransaction[],
   paymentRecords: PaymentRecord[],
+  accounts: FinanceAccount[],
+  profileName: string,
 ): TransactionsOverviewData => {
+  const accountNameById = new Map<string, string>(
+    accounts.map((account: FinanceAccount): [string, string] => {
+      return [account.id, account.accountName];
+    }),
+  );
   const toReceiveItems = paymentRecords
     .filter((record) => record.direction === "to_receive")
     .map(mapOpenPaymentItem);
@@ -56,10 +76,22 @@ export const mapTransactionsOverviewData = (
     .map(mapOpenPaymentItem);
 
   return {
+    profileName,
+    accountOptions: accounts.map(mapAccountFilterOption),
     toReceiveSummary: createSummary(toReceiveItems),
     toPaySummary: createSummary(toPayItems),
     toReceiveItems,
     toPayItems,
-    historyItems: transactions.map(mapHistoryItem),
+    historyItems: transactions.map((transaction: FinanceTransaction): TransactionsHistoryItem => {
+      const historyItem = mapHistoryItem(transaction);
+      const accountName = historyItem.accountId
+        ? accountNameById.get(historyItem.accountId) ?? null
+        : null;
+
+      return {
+        ...historyItem,
+        accountName,
+      };
+    }),
   };
 };

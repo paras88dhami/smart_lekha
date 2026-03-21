@@ -1,5 +1,4 @@
 import type { CashBankViewModel } from "@/features/cashBank/overview/viewModel/cashBank.viewModel";
-import CashBankAccountFormCard from "@/features/cashBank/overview/ui/components/CashBankAccountFormCard";
 import CashBankAccountList from "@/features/cashBank/overview/ui/components/CashBankAccountList";
 import CashBankHeader from "@/features/cashBank/overview/ui/components/CashBankHeader";
 import ScreenContainer from "@/shared/components/ui/ScreenContainer";
@@ -23,33 +22,8 @@ export default function CashBankScreen({ viewModel }: Props): React.JSX.Element 
         subtitle={t("cashBank.subtitle")}
         profileName={viewModel.state.profileName}
         addAccountLabel={t("cashBank.addAccount")}
-        cancelLabel={t("common.cancel")}
-        showAddAccountForm={viewModel.state.showAddAccountForm}
-        onToggleAddAccountPress={viewModel.onToggleAddAccountPress}
+        onAddAccountPress={viewModel.onAddAccountPress}
       />
-
-      {viewModel.state.showAddAccountForm ? (
-        <CashBankAccountFormCard
-          title={t("cashBank.addAccount")}
-          saveLabel={t("common.save")}
-          accountNamePlaceholder={t("cashBank.form.accountName")}
-          accountNumberPlaceholder={t("cashBank.form.accountNumber")}
-          openingBalancePlaceholder={t("cashBank.form.openingBalance")}
-          accountNameInput={viewModel.state.form.accountNameInput}
-          accountNumberInput={viewModel.state.form.accountNumberInput}
-          openingBalanceInput={viewModel.state.form.openingBalanceInput}
-          selectedAccountType={viewModel.state.form.selectedAccountType}
-          isSubmitting={viewModel.state.status === Status.Loading}
-          getLabel={t}
-          onAccountNameChange={viewModel.onAccountNameChange}
-          onAccountNumberChange={viewModel.onAccountNumberChange}
-          onOpeningBalanceChange={viewModel.onOpeningBalanceChange}
-          onAccountTypePress={viewModel.onAccountTypePress}
-          onCreateAccountPress={(): void => {
-            void viewModel.onCreateAccountPress();
-          }}
-        />
-      ) : null}
 
       <CashBankAccountList
         title={t("cashBank.accounts")}
@@ -57,12 +31,16 @@ export default function CashBankScreen({ viewModel }: Props): React.JSX.Element 
         noAccountNumberLabel={t("cashBank.noAccountNumber")}
         primaryLabel={t("cashBank.primary")}
         setPrimaryLabel={t("cashBank.setPrimary")}
+        statementLabel={t("cashBank.statement")}
+        editLabel={t("common.edit")}
         languageCode={languageCode}
         accounts={viewModel.state.accounts}
         getLabel={t}
+        onEditAccountPress={viewModel.onEditAccountPress}
         onSetPrimaryPress={(accountId: string): void => {
           void viewModel.onSetPrimaryPress(accountId);
         }}
+        onViewStatementPress={viewModel.onViewStatementPress}
       />
 
       {viewModel.state.status === Status.Failure && viewModel.state.errorMessage ? (

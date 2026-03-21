@@ -1,25 +1,39 @@
 import KhataButton from "@/shared/components/ui/KhataButton";
 import KhataCard from "@/shared/components/ui/KhataCard";
 import AppIcon from "@/shared/components/icons/AppIcon";
+import type { SendMoneyAccountItem } from "@/features/sendMoney/overview/types/types";
 import {
   getTransferMethodInputConfig,
   type TransferMethodInputConfig,
 } from "@/features/transfers/shared/config/transferMethodCatalog";
 import type { TransferMethod } from "@/features/transfers/shared/types/transferMethod.types";
+import type { TransferRecordTargetType } from "@/features/transfers/record/data/dataSource/transferRecord.model";
 import { KhataColors } from "@/shared/theme/colors";
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import SendMoneyAccountSelector from "./SendMoneyAccountSelector";
+import SendMoneyTransferTargetSwitch from "./SendMoneyTransferTargetSwitch";
 
 type Props = {
   title: string;
   submitLabel: string;
+  transferTargetTitle: string;
+  beneficiaryLabel: string;
+  ownAccountLabel: string;
+  sourceAccountTitle: string;
+  destinationAccountTitle: string;
+  emptyAccountsLabel: string;
   beneficiaryNamePlaceholder: string;
   accountNumberPlaceholder: string;
   mobileNumberPlaceholder: string;
   amountPlaceholder: string;
   notePlaceholder: string;
   scheduleLabel: string;
+  accounts: SendMoneyAccountItem[];
   selectedMethod: TransferMethod;
+  selectedTargetType: TransferRecordTargetType;
+  selectedSourceAccountId: string;
+  selectedDestinationAccountId: string;
   beneficiaryNameInput: string;
   accountNumberInput: string;
   mobileNumberInput: string;
@@ -27,6 +41,9 @@ type Props = {
   noteInput: string;
   isScheduled: boolean;
   isSubmitting: boolean;
+  onTargetTypePress: (targetType: TransferRecordTargetType) => void;
+  onSourceAccountPress: (accountId: string) => void;
+  onDestinationAccountPress: (accountId: string) => void;
   onBeneficiaryNameChange: (value: string) => void;
   onAccountNumberChange: (value: string) => void;
   onMobileNumberChange: (value: string) => void;
@@ -78,14 +95,44 @@ export default function SendMoneyTransferForm(props: Props): React.JSX.Element {
     <KhataCard style={styles.card}>
       <Text style={styles.title}>{props.title}</Text>
 
-      <TextInput
-        style={styles.input}
-        value={props.beneficiaryNameInput}
-        onChangeText={props.onBeneficiaryNameChange}
-        placeholder={props.beneficiaryNamePlaceholder}
+      <SendMoneyTransferTargetSwitch
+        title={props.transferTargetTitle}
+        beneficiaryLabel={props.beneficiaryLabel}
+        ownAccountLabel={props.ownAccountLabel}
+        selectedTargetType={props.selectedTargetType}
+        onTargetTypePress={props.onTargetTypePress}
       />
 
-      {renderTransferDetailInputs(inputConfig, props)}
+      <SendMoneyAccountSelector
+        title={props.sourceAccountTitle}
+        emptyLabel={props.emptyAccountsLabel}
+        accounts={props.accounts}
+        selectedAccountId={props.selectedSourceAccountId}
+        onAccountPress={props.onSourceAccountPress}
+      />
+
+      {props.selectedTargetType === "beneficiary" ? (
+        <>
+          <TextInput
+            style={styles.input}
+            value={props.beneficiaryNameInput}
+            onChangeText={props.onBeneficiaryNameChange}
+            placeholder={props.beneficiaryNamePlaceholder}
+          />
+
+          {renderTransferDetailInputs(inputConfig, props)}
+        </>
+      ) : (
+        <SendMoneyAccountSelector
+          title={props.destinationAccountTitle}
+          emptyLabel={props.emptyAccountsLabel}
+          accounts={props.accounts.filter(
+            (account) => account.id !== props.selectedSourceAccountId,
+          )}
+          selectedAccountId={props.selectedDestinationAccountId}
+          onAccountPress={props.onDestinationAccountPress}
+        />
+      )}
 
       <TextInput
         style={styles.input}

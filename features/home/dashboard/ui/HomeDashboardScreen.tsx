@@ -26,6 +26,7 @@ export default function HomeDashboardScreen({ viewModel }: Props): React.JSX.Ele
 
       <HomeDashboardSummarySection
         flowSummary={viewModel.state.flowSummary}
+        paymentSummary={viewModel.state.paymentSummary}
         currencyCode={viewModel.state.accountOverview.currencyCode}
       />
 

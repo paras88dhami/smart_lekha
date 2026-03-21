@@ -1,10 +1,18 @@
 import type { PosCartLine, PosItem } from "@/features/pos/item/types/types";
 import type { QuickPosProductSlot } from "@/features/transactions/quickPos/slot/types/types";
+import type { FinanceAccountType } from "@/features/finance/account/data/dataSource/financeAccount.model";
 import type { StatusType } from "@/shared/types/status.types";
 
 export type QuickPosCartItem = PosCartLine;
 
 export type QuickPosPaymentMode = "cash" | "bank";
+
+export type QuickPosReceivingAccount = {
+  id: string;
+  accountName: string;
+  accountType: FinanceAccountType;
+  currencyCode: string;
+};
 
 export type QuickPosProductDraft = {
   itemName: string;
@@ -34,6 +42,8 @@ export type QuickPosState = {
   status: StatusType;
   items: PosItem[];
   productSlots: QuickPosProductSlot[];
+  receivingAccounts: QuickPosReceivingAccount[];
+  selectedReceivingAccountId: string;
   cart: QuickPosCartItem[];
   paymentMode: QuickPosPaymentMode;
   totalAmount: number;
@@ -50,6 +60,7 @@ export interface QuickPosViewModel {
   onIncreaseItemPress(itemId: string): void;
   onDecreaseItemPress(itemId: string): void;
   onPaymentModePress(mode: QuickPosPaymentMode): void;
+  onReceivingAccountPress(accountId: string): void;
   onClearCartPress(): void;
   onOpenProductPicker(slotId: string): void;
   onCloseProductPicker(): void;

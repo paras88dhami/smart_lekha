@@ -19,6 +19,12 @@ const getProfileTypeLabelKey = (profileType: "business" | "personal"): string =>
     : "auth.selectProfile.personalTitle";
 };
 
+const getProfileSubtitleKey = (profileType: "business" | "personal"): string => {
+  return profileType === "business"
+    ? "auth.selectProfile.businessSubtitle"
+    : "auth.selectProfile.personalSubtitle";
+};
+
 export default function ProfileSelectionScreen({
   viewModel,
 }: Props): React.JSX.Element {
@@ -43,29 +49,34 @@ export default function ProfileSelectionScreen({
             const displayName = profile.displayName || profile.profileName;
             const profileTypeLabel = t(getProfileTypeLabelKey(profile.profileType));
             const subtitle = profile.businessCategoryName
-              ? `${profileTypeLabel} • ${profile.businessCategoryName}`
-              : profileTypeLabel;
+              ? profile.businessCategoryName
+              : t(getProfileSubtitleKey(profile.profileType));
 
             return (
               <Pressable
                 key={profile.id}
                 style={[styles.profileRow, isSelected ? styles.profileRowSelected : null]}
                 onPress={(): void => {
-                  viewModel.onSelectProfilePress(profile.id);
+                  void viewModel.onProfilePress(profile.id);
                 }}
               >
                 <View style={styles.profileRowLeft}>
                   <Text style={styles.profileName}>{displayName}</Text>
+                  <View style={styles.profileBadgeRow}>
+                    <View style={styles.profileTypeBadge}>
+                      <Text style={styles.profileTypeBadgeText}>{profileTypeLabel}</Text>
+                    </View>
+
+                    {profile.isActive ? (
+                      <View style={styles.activeBadge}>
+                        <Text style={styles.activeBadgeText}>{t("profile.profileSelection.active")}</Text>
+                      </View>
+                    ) : null}
+                  </View>
                   <Text style={styles.profileMeta}>{subtitle}</Text>
                 </View>
 
                 <View style={styles.profileRowRight}>
-                  {profile.isActive ? (
-                    <View style={styles.activeBadge}>
-                      <Text style={styles.activeBadgeText}>{t("profile.profileSelection.active")}</Text>
-                    </View>
-                  ) : null}
-
                   {isSelected ? (
                     <AppIcon
                       family="ion"
@@ -73,7 +84,14 @@ export default function ProfileSelectionScreen({
                       size={22}
                       color={KhataColors.primary}
                     />
-                  ) : null}
+                  ) : (
+                    <AppIcon
+                      family="ion"
+                      name="chevron-forward"
+                      size={18}
+                      color={KhataColors.mutedText}
+                    />
+                  )}
                 </View>
               </Pressable>
             );
@@ -133,14 +151,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   profileRow: {
-    minHeight: 64,
+    minHeight: 78,
     borderBottomWidth: 1,
     borderBottomColor: KhataColors.border,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 10,
-    paddingVertical: 8,
+    paddingVertical: 10,
   },
   profileRowSelected: {
     backgroundColor: KhataColors.softGreen,
@@ -155,13 +173,33 @@ const styles = StyleSheet.create({
     color: KhataColors.text,
     fontWeight: "700",
   },
+  profileBadgeRow: {
+    marginTop: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  profileTypeBadge: {
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: KhataColors.primary,
+  },
+  profileTypeBadgeText: {
+    fontSize: 10,
+    color: KhataColors.surface,
+    fontWeight: "700",
+  },
   profileMeta: {
-    marginTop: 2,
+    marginTop: 6,
     fontSize: 12,
     color: KhataColors.mutedText,
+    fontWeight: "600",
   },
   profileRowRight: {
     alignItems: "flex-end",
+    justifyContent: "center",
     gap: 6,
   },
   activeBadge: {
@@ -189,3 +227,4 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
+

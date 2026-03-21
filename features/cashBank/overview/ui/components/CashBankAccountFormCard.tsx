@@ -16,13 +16,15 @@ type Props = {
   accountNumberInput: string;
   openingBalanceInput: string;
   selectedAccountType: FinanceAccountType;
+  showOpeningBalanceInput: boolean;
+  openingBalanceEditable: boolean;
   isSubmitting: boolean;
   getLabel: (key: string) => string;
   onAccountNameChange: (value: string) => void;
   onAccountNumberChange: (value: string) => void;
   onOpeningBalanceChange: (value: string) => void;
   onAccountTypePress: (accountType: FinanceAccountType) => void;
-  onCreateAccountPress: () => void;
+  onSubmitPress: () => void;
 };
 
 export default function CashBankAccountFormCard(props: Props): React.JSX.Element {
@@ -45,13 +47,16 @@ export default function CashBankAccountFormCard(props: Props): React.JSX.Element
         keyboardType="number-pad"
       />
 
-      <TextInput
-        style={styles.input}
-        value={props.openingBalanceInput}
-        onChangeText={props.onOpeningBalanceChange}
-        placeholder={props.openingBalancePlaceholder}
-        keyboardType="decimal-pad"
-      />
+      {props.showOpeningBalanceInput ? (
+        <TextInput
+          style={styles.input}
+          value={props.openingBalanceInput}
+          onChangeText={props.onOpeningBalanceChange}
+          placeholder={props.openingBalancePlaceholder}
+          keyboardType="decimal-pad"
+          editable={props.openingBalanceEditable}
+        />
+      ) : null}
 
       <CashBankAccountTypeSelector
         selectedAccountType={props.selectedAccountType}
@@ -62,7 +67,7 @@ export default function CashBankAccountFormCard(props: Props): React.JSX.Element
       <KhataButton
         title={props.saveLabel}
         disabled={props.isSubmitting}
-        onPress={props.onCreateAccountPress}
+        onPress={props.onSubmitPress}
       />
     </KhataCard>
   );

@@ -6,16 +6,26 @@ import { useTransactionsViewModel } from "../viewModel/transactions.viewModel.im
 
 type Params = {
   database: Database;
+  onAddTransactionPress: () => void;
   onQuickPosPress: () => void;
+  onTransactionPress: (transactionId: string) => void;
 };
 
 export const createTransactionsScreenFactory = ({
   database,
+  onAddTransactionPress,
   onQuickPosPress,
+  onTransactionPress,
 }: Params) => {
   return function TransactionsScreenFactory(): React.JSX.Element {
     const dependencies = React.useMemo(
-      () => createTransactionsOverviewDependencies({ database, onQuickPosPress }),
+      () =>
+        createTransactionsOverviewDependencies({
+          database,
+          onAddTransactionPress,
+          onQuickPosPress,
+          onTransactionPress,
+        }),
       [],
     );
     const viewModel = useTransactionsViewModel(dependencies);

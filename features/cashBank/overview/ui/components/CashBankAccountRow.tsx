@@ -16,13 +16,22 @@ type Props = {
   noAccountNumberLabel: string;
   primaryLabel: string;
   setPrimaryLabel: string;
+  statementLabel: string;
+  editLabel: string;
   getLabel: (key: string) => string;
+  onEditAccountPress: (accountId: string) => void;
   onSetPrimaryPress: (accountId: string) => void;
+  onViewStatementPress: (accountId: string) => void;
 };
 
 export default function CashBankAccountRow(props: Props): React.JSX.Element {
   return (
-    <View style={styles.row}>
+    <Pressable
+      style={styles.row}
+      onPress={(): void => {
+        props.onViewStatementPress(props.account.id);
+      }}
+    >
       <View style={styles.iconBubble}>
         <AppIcon
           family="ion"
@@ -65,8 +74,28 @@ export default function CashBankAccountRow(props: Props): React.JSX.Element {
             <Text style={styles.primaryActionText}>{props.setPrimaryLabel}</Text>
           </Pressable>
         )}
+
+        <View style={styles.actionRow}>
+          <Pressable
+            style={styles.secondaryAction}
+            onPress={(): void => {
+              props.onViewStatementPress(props.account.id);
+            }}
+          >
+            <Text style={styles.secondaryActionText}>{props.statementLabel}</Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.secondaryAction}
+            onPress={(): void => {
+              props.onEditAccountPress(props.account.id);
+            }}
+          >
+            <Text style={styles.secondaryActionText}>{props.editLabel}</Text>
+          </Pressable>
+        </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -94,6 +123,7 @@ const styles = StyleSheet.create({
   meta: { marginTop: 2, fontSize: 11, color: KhataColors.primaryDark, fontWeight: "700" },
   trailing: { alignItems: "flex-end", justifyContent: "center", gap: 6 },
   amount: { fontSize: 13, color: KhataColors.text, fontWeight: "800", textAlign: "right" },
+  actionRow: { flexDirection: "row", gap: 6 },
   primaryBadge: {
     borderRadius: 10,
     paddingHorizontal: 10,
@@ -110,4 +140,15 @@ const styles = StyleSheet.create({
     borderColor: KhataColors.border,
   },
   primaryActionText: { fontSize: 11, color: KhataColors.mutedText, fontWeight: "700" },
+  secondaryAction: {
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: KhataColors.background,
+  },
+  secondaryActionText: {
+    fontSize: 11,
+    color: KhataColors.primaryDark,
+    fontWeight: "700",
+  },
 });

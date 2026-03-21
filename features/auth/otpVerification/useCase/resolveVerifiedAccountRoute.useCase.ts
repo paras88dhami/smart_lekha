@@ -1,8 +1,7 @@
 import type { Result } from "@/shared/types/result.types";
 
 export type VerifiedAccountDestination =
-  | "home"
-  | "create_business"
+  | "create_profile"
   | "profile_selection";
 
 export type ResolveVerifiedAccountRouteInput = {

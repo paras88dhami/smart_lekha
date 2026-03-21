@@ -5,6 +5,7 @@ export type QuickPosErrorCode =
   | "emptyCart"
   | "insufficientStock"
   | "invalidProduct"
+  | "invalidReceivingAccount"
   | "loadFailed"
   | "noActiveProfile"
   | "noPrimaryAccount"

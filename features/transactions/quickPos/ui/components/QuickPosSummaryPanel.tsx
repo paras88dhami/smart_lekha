@@ -1,6 +1,7 @@
 import type {
   QuickPosCartItem,
   QuickPosPaymentMode,
+  QuickPosReceivingAccount,
 } from "@/features/transactions/quickPos/viewModel/quickPos.viewModel";
 import AppIcon from "@/shared/components/icons/AppIcon";
 import KhataButton from "@/shared/components/ui/KhataButton";
@@ -15,6 +16,8 @@ import QuickPosSummaryRow from "./QuickPosSummaryRow";
 import { styles } from "./QuickPosSummaryPanel.styles";
 
 type Props = {
+  receivingAccounts: QuickPosReceivingAccount[];
+  selectedReceivingAccountId: string;
   cart: QuickPosCartItem[];
   totalAmount: number;
   paymentMode: QuickPosPaymentMode;
@@ -23,11 +26,14 @@ type Props = {
   onIncreaseItemPress: (itemId: string) => void;
   onDecreaseItemPress: (itemId: string) => void;
   onPaymentModePress: (mode: QuickPosPaymentMode) => void;
+  onReceivingAccountPress: (accountId: string) => void;
   onClearCartPress: () => void;
   onCheckoutPress: () => void;
 };
 
 export default function QuickPosSummaryPanel({
+  receivingAccounts,
+  selectedReceivingAccountId,
   cart,
   totalAmount,
   paymentMode,
@@ -36,6 +42,7 @@ export default function QuickPosSummaryPanel({
   onIncreaseItemPress,
   onDecreaseItemPress,
   onPaymentModePress,
+  onReceivingAccountPress,
   onClearCartPress,
   onCheckoutPress,
 }: Props): React.JSX.Element {
@@ -105,6 +112,42 @@ export default function QuickPosSummaryPanel({
         </Text>
       </View>
 
+      <View style={styles.receivingSection}>
+        <Text style={styles.receivingTitle}>{t("quickPos.receiveIn")}</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.receivingList}
+        >
+          {receivingAccounts.map((account) => (
+            <Pressable
+              key={account.id}
+              style={[
+                styles.receivingAccountButton,
+                account.id === selectedReceivingAccountId
+                  ? styles.receivingAccountButtonActive
+                  : null,
+              ]}
+              onPress={(): void => {
+                onReceivingAccountPress(account.id);
+              }}
+            >
+              <Text
+                style={[
+                  styles.receivingAccountName,
+                  account.id === selectedReceivingAccountId
+                    ? styles.receivingAccountNameActive
+                    : null,
+                ]}
+              >
+                {account.accountName}
+              </Text>
+              <Text style={styles.receivingAccountMeta}>{account.accountType.toUpperCase()}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
+
       <View style={styles.paymentRow}>
         {(["cash", "bank"] as QuickPosPaymentMode[]).map((mode) => (
           <Pressable
@@ -131,7 +174,11 @@ export default function QuickPosSummaryPanel({
 
       <KhataButton
         title={t("quickPos.payNow")}
-        disabled={isCheckingOut || totalAmount <= 0}
+        disabled={
+          isCheckingOut ||
+          totalAmount <= 0 ||
+          selectedReceivingAccountId.trim().length <= 0
+        }
         onPress={onCheckoutPress}
         style={styles.payButton}
       />

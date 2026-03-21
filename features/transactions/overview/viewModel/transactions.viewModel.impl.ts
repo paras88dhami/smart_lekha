@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PaymentRecordDirection } from "@/features/transactions/paymentRecord/data/dataSource/paymentRecord.model";
+import type { TransactionsEntryFilter } from "../config/transactionHistoryFilterCatalog";
 import type { TransactionsViewModel } from "../types/types";
 import type { CreateTransactionsPaymentRecordUseCase } from "../useCase/createTransactionsPaymentRecord.useCase";
 import type { LoadTransactionsOverviewUseCase } from "../useCase/loadTransactionsOverview.useCase";
@@ -12,12 +13,15 @@ import {
   createSuccessTransactionsState,
   createTransactionsFormState,
 } from "./transactionsState";
+import { filterTransactionsHistoryItems } from "./transactionsHistoryFilter";
 
 type Dependencies = {
   loadTransactionsOverviewUseCase: LoadTransactionsOverviewUseCase;
   createTransactionsPaymentRecordUseCase: CreateTransactionsPaymentRecordUseCase;
   settleTransactionsPaymentRecordUseCase: SettleTransactionsPaymentRecordUseCase;
+  onAddTransactionPress: () => void;
   onQuickPosPress: () => void;
+  onTransactionPress: (transactionId: string) => void;
 };
 
 export const useTransactionsViewModel = (
@@ -60,6 +64,30 @@ export const useTransactionsViewModel = (
       ...currentState,
       selectedDirection: direction,
       errorMessage: "",
+    }));
+  }, []);
+
+  const onAccountFilterPress = useCallback((accountId: string): void => {
+    setState((currentState) => ({
+      ...currentState,
+      selectedAccountFilterId: accountId,
+      historyItems: filterTransactionsHistoryItems(
+        currentState.allHistoryItems,
+        accountId,
+        currentState.selectedEntryFilter,
+      ),
+    }));
+  }, []);
+
+  const onEntryFilterPress = useCallback((entryFilter: TransactionsEntryFilter): void => {
+    setState((currentState) => ({
+      ...currentState,
+      selectedEntryFilter: entryFilter,
+      historyItems: filterTransactionsHistoryItems(
+        currentState.allHistoryItems,
+        currentState.selectedAccountFilterId,
+        entryFilter,
+      ),
     }));
   }, []);
 
@@ -183,21 +211,29 @@ export const useTransactionsViewModel = (
   return useMemo<TransactionsViewModel>(
     () => ({
       state,
+      onAddTransactionPress: dependencies.onAddTransactionPress,
       onRefreshPress: loadOverview,
       onDirectionPress,
+      onAccountFilterPress,
+      onEntryFilterPress,
       onPartyNameChange,
       onAmountChange,
       onNoteChange,
       onCreatePaymentPress,
       onSettlePaymentPress,
       onQuickPosPress: dependencies.onQuickPosPress,
+      onTransactionPress: dependencies.onTransactionPress,
     }),
     [
+      dependencies.onAddTransactionPress,
       dependencies.onQuickPosPress,
+      dependencies.onTransactionPress,
       loadOverview,
+      onAccountFilterPress,
       onAmountChange,
       onCreatePaymentPress,
       onDirectionPress,
+      onEntryFilterPress,
       onNoteChange,
       onPartyNameChange,
       onSettlePaymentPress,

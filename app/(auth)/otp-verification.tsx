@@ -13,8 +13,14 @@ export default function OtpVerificationRoute(): React.JSX.Element {
         onNavigateHome: () => {
           router.replace("/");
         },
-        onNavigateCreateProfile: () => {
-          router.replace("/create-business");
+        onNavigateCreateProfile: (accountId: string) => {
+          router.replace({
+            pathname: "/profile-type-selection",
+            params: {
+              accountId,
+              selectionMode: "create",
+            },
+          });
         },
         onNavigateSelectExistingProfile: () => {
           router.replace("/profile-selection");
