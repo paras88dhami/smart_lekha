@@ -1,5 +1,6 @@
+import { useFocusEffect } from "@react-navigation/native";
 import type { HomeShortcutKey } from "@/features/home/shortcut/data/dataSource/homeShortcut.model";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { LoadHomeDashboardUseCase } from "../useCase/loadHomeDashboard.useCase";
 import { getHomeDashboardErrorMessage } from "./homeDashboardErrorMessage";
 import {
@@ -89,9 +90,11 @@ export const useHomeDashboardViewModel = (params: Params): HomeDashboardViewMode
     [shortcutActionMap],
   );
 
-  useEffect((): void => {
-    void loadDashboard();
-  }, [loadDashboard]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadDashboard();
+    }, [loadDashboard]),
+  );
 
   return useMemo<HomeDashboardViewModel>(() => {
     return {

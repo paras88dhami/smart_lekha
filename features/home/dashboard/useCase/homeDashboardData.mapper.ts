@@ -91,10 +91,11 @@ export const createHomeDashboardData = (
   return {
     profileName: activeProfile.profileName,
     accountOverview: {
-      accountName: sourceData.activeAccount?.accountName ?? "",
-      accountNumber: sourceData.activeAccount?.accountNumber ?? "",
-      currencyCode: sourceData.activeAccount?.currencyCode ?? "NPR",
-      balance: sourceData.activeAccount?.currentBalance ?? 0,
+      currencyCode: sourceData.accounts[0]?.currencyCode ?? "NPR",
+      totalBalance: sourceData.accounts.reduce((totalBalance, account) => {
+        return totalBalance + account.currentBalance;
+      }, 0),
+      accountCount: sourceData.accounts.length,
     },
     flowSummary: {
       todayInflow: sourceData.summary.todayInflow,

@@ -1,1 +1,6 @@
-export type { ReportsViewModel } from "../types/types";
+import { ReportsState } from "../types/types";
+
+export interface ReportsViewModel {
+  state: ReportsState;
+  onRefreshPress(): Promise<void>;
+}

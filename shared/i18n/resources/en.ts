@@ -87,6 +87,8 @@ const en = {
     },
     account: {
       default: "Primary Account",
+      totalBalance: "Total Balance",
+      accountsLabel: "accounts",
     },
     shortcuts: {
       title: "Quick Actions",

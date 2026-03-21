@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { PaymentRecordDirection } from "@/features/transactions/paymentRecord/data/dataSource/paymentRecord.model";
 import type { TransactionsEntryFilter } from "../config/transactionHistoryFilterCatalog";
 import type { TransactionsViewModel } from "../types/types";
@@ -204,9 +205,11 @@ export const useTransactionsViewModel = (
     [dependencies.settleTransactionsPaymentRecordUseCase, loadOverview],
   );
 
-  useEffect((): void => {
-    void loadOverview();
-  }, [loadOverview]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadOverview();
+    }, [loadOverview]),
+  );
 
   return useMemo<TransactionsViewModel>(
     () => ({

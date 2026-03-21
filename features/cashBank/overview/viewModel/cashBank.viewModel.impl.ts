@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { CashBankViewModel } from "./cashBank.viewModel";
 import type { LoadCashBankOverviewUseCase } from "../useCase/loadCashBankOverview.useCase";
 import type { SetCashBankPrimaryAccountUseCase } from "../useCase/setCashBankPrimaryAccount.useCase";
@@ -71,9 +72,11 @@ export const useCashBankViewModel = (dependencies: Dependencies): CashBankViewMo
     [dependencies.setCashBankPrimaryAccountUseCase, loadOverview],
   );
 
-  useEffect((): void => {
-    void loadOverview();
-  }, [loadOverview]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadOverview();
+    }, [loadOverview]),
+  );
 
   return useMemo<CashBankViewModel>(() => {
     return {

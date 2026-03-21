@@ -1,10 +1,8 @@
 import type { Database } from "@nozbe/watermelondb";
-import { createAppSettingUseCases } from "@/features/auth/appSettings/factory/createAppSettingUseCases";
 import { createEnsureDefaultFinanceAccountsUseCase } from "@/features/finance/account/useCase/ensureDefaultFinanceAccounts.useCase.impl";
 import { createLocalFinanceAccountDataSource } from "@/features/finance/account/data/dataSource/localFinanceAccount.dataSource.impl";
 import { createFinanceAccountRepository } from "@/features/finance/account/data/repository/financeAccount.repository.impl";
 import { createGetFinanceAccountsByProfileUseCase } from "@/features/finance/account/useCase/getFinanceAccountsByProfile.useCase.impl";
-import { createGetPrimaryFinanceAccountUseCase } from "@/features/finance/account/useCase/getPrimaryFinanceAccount.useCase.impl";
 import { createGetFinanceSummaryUseCase } from "@/features/finance/transaction/useCase/getFinanceSummary.useCase.impl";
 import { createGetRecentFinanceTransactionsUseCase } from "@/features/finance/transaction/useCase/getRecentFinanceTransactions.useCase.impl";
 import { createLocalFinanceTransactionDataSource } from "@/features/finance/transaction/data/dataSource/localFinanceTransaction.dataSource.impl";
@@ -25,7 +23,6 @@ import { createUpdateTransferRecordStatusUseCase } from "@/features/transfers/re
 import { createGetFinanceAccountByIdUseCase } from "@/features/finance/account/useCase/getFinanceAccountById.useCase.impl";
 import { createAdjustFinanceAccountBalanceUseCase } from "@/features/finance/account/useCase/adjustFinanceAccountBalance.useCase.impl";
 import { createCreateFinanceTransactionUseCase } from "@/features/finance/transaction/useCase/createFinanceTransaction.useCase.impl";
-import { createGetActiveAccountUseCase } from "@/features/workspace/activeAccount/useCase/getActiveAccount.useCase.impl";
 import { createLocalActiveProfileDataSource } from "@/features/workspace/activeProfile/data/dataSource/localActiveProfile.dataSource.impl";
 import { createActiveProfileRepository } from "@/features/workspace/activeProfile/data/repository/activeProfile.repository.impl";
 import { createGetActiveProfileUseCase } from "@/features/workspace/activeProfile/useCase/getActiveProfile.useCase.impl";
@@ -61,19 +58,7 @@ export const createHomeDashboardDependencies = ({
   const transferRecordRepository = createTransferRecordRepository(
     createLocalTransferRecordDataSource(database),
   );
-  const appSettingUseCases = createAppSettingUseCases(database);
   const getActiveProfileUseCase = createGetActiveProfileUseCase(activeProfileRepository);
-  const getActiveAccountUseCase = createGetActiveAccountUseCase({
-    getActiveProfileUseCase,
-    getAppSettingUseCase: appSettingUseCases.getAppSettingUseCase,
-    getFinanceAccountsByProfileUseCase: createGetFinanceAccountsByProfileUseCase(
-      financeAccountRepository,
-    ),
-    getPrimaryFinanceAccountUseCase: createGetPrimaryFinanceAccountUseCase(
-      financeAccountRepository,
-    ),
-    setActiveAccountIdUseCase: appSettingUseCases.setActiveAccountIdUseCase,
-  });
   const executeTransferRecordUseCase = createExecuteTransferRecordUseCase({
     getFinanceAccountByIdUseCase: createGetFinanceAccountByIdUseCase(
       financeAccountRepository,
@@ -101,7 +86,9 @@ export const createHomeDashboardDependencies = ({
       ensureDefaultFinanceAccountsUseCase: createEnsureDefaultFinanceAccountsUseCase(
         financeAccountRepository,
       ),
-      getActiveAccountUseCase,
+      getFinanceAccountsByProfileUseCase: createGetFinanceAccountsByProfileUseCase(
+        financeAccountRepository,
+      ),
       ensureDefaultHomeShortcutsUseCase: createEnsureDefaultHomeShortcutsUseCase(
         homeShortcutRepository,
       ),

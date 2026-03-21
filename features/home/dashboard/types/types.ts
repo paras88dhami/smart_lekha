@@ -2,10 +2,9 @@ import type { FinanceTransaction } from "@/features/finance/transaction/types/ty
 import type { HomeShortcutKey } from "@/features/home/shortcut/data/dataSource/homeShortcut.model";
 
 export type HomeDashboardAccountOverview = {
-  accountName: string;
-  accountNumber: string;
   currencyCode: string;
-  balance: number;
+  totalBalance: number;
+  accountCount: number;
 };
 
 export type HomeDashboardFlowSummary = {

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { ReportsViewModel } from "./reports.viewModel";
 import type { LoadReportsOverviewUseCase } from "../useCase/loadReportsOverview.useCase";
 import { getReportsErrorMessage } from "./reportsErrorMessage";
@@ -40,9 +41,11 @@ export const useReportsViewModel = (dependencies: Dependencies): ReportsViewMode
     }
   }, [dependencies.loadReportsOverviewUseCase]);
 
-  useEffect((): void => {
-    void loadOverview();
-  }, [loadOverview]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadOverview();
+    }, [loadOverview]),
+  );
 
   return useMemo<ReportsViewModel>(() => {
     return { state, onRefreshPress: loadOverview };

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { TransferMethod } from "@/features/transfers/shared/types/transferMethod.types";
 import type { TransferRecordTargetType } from "@/features/transfers/record/data/dataSource/transferRecord.model";
 import type { SendMoneyViewModel } from "./sendMoney.viewModel";
@@ -135,9 +136,11 @@ export const useSendMoneyViewModel = (dependencies: Dependencies): SendMoneyView
     }
   }, [dependencies.submitSendMoneyTransferUseCase, loadOverview, state.form, state.selectedMethod]);
 
-  useEffect((): void => {
-    void loadOverview();
-  }, [loadOverview]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadOverview();
+    }, [loadOverview]),
+  );
 
   return useMemo<SendMoneyViewModel>(() => {
     return {

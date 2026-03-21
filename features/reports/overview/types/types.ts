@@ -41,7 +41,4 @@ export type ReportsState = {
   errorMessage: string;
 };
 
-export interface ReportsViewModel {
-  state: ReportsState;
-  onRefreshPress(): Promise<void>;
-}
+

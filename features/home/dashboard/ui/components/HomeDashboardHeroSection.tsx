@@ -40,7 +40,7 @@ export default function HomeDashboardHeroSection({
   onNotificationsPress,
   onProfilePress,
 }: Props): React.JSX.Element {
-  const { languageCode } = useTranslation();
+  const { t, languageCode } = useTranslation();
 
   return (
     <View style={styles.heroCard}>
@@ -62,13 +62,15 @@ export default function HomeDashboardHeroSection({
       </View>
 
       <KhataCard style={styles.accountCard}>
-        <Text style={styles.accountNameText}>{accountOverview.accountName}</Text>
-        {accountOverview.accountNumber ? (
-          <Text style={styles.accountNumberText}>{accountOverview.accountNumber}</Text>
+        <Text style={styles.accountNameText}>{t("home.account.totalBalance")}</Text>
+        {accountOverview.accountCount > 0 ? (
+          <Text style={styles.accountNumberText}>
+            {`${accountOverview.accountCount} ${t("home.account.accountsLabel")}`}
+          </Text>
         ) : null}
         <Text style={styles.balanceText}>
           {formatCurrencyAmount({
-            amount: accountOverview.balance,
+            amount: accountOverview.totalBalance,
             currencyCode: accountOverview.currencyCode,
             languageCode,
           })}

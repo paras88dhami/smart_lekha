@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { NotificationsViewModel } from "./notifications.viewModel";
 import type { LoadNotificationsTimelineUseCase } from "../useCase/loadNotificationsTimeline.useCase";
 import { getNotificationsErrorMessage } from "./notificationsErrorMessage";
@@ -45,9 +46,11 @@ export const useNotificationsViewModel = (
     }
   }, [dependencies.loadNotificationsTimelineUseCase]);
 
-  useEffect((): void => {
-    void loadTimeline();
-  }, [loadTimeline]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadTimeline();
+    }, [loadTimeline]),
+  );
 
   return useMemo<NotificationsViewModel>(() => {
     return { state, onRefreshPress: loadTimeline };

@@ -19,10 +19,9 @@ const getGreetingMessage = (): string => {
 
 const createEmptyAccountOverview = (): HomeDashboardState["accountOverview"] => {
   return {
-    accountName: translate("home.account.default"),
-    accountNumber: "",
     currencyCode: "NPR",
-    balance: 0,
+    totalBalance: 0,
+    accountCount: 0,
   };
 };
 
@@ -79,10 +78,9 @@ export const createSuccessHomeDashboardState = (
     greeting: getGreetingMessage(),
     profileName: data.profileName,
     accountOverview: {
-      accountName: data.accountOverview.accountName || translate("home.account.default"),
-      accountNumber: data.accountOverview.accountNumber,
       currencyCode: data.accountOverview.currencyCode,
-      balance: data.accountOverview.balance,
+      totalBalance: data.accountOverview.totalBalance,
+      accountCount: data.accountOverview.accountCount,
     },
     flowSummary: data.flowSummary,
     paymentSummary: data.paymentSummary,
